@@ -1,7 +1,12 @@
 package railwayPlanning;
 
+import java.awt.Color;
+import java.awt.geom.Line2D;
 
-public class TrackSection {
+import javax.swing.JLabel;
+
+
+public class TrackSection  {
 	
 	
 	private int tsID;
@@ -10,6 +15,10 @@ public class TrackSection {
 	private boolean isRightEnding;
 	private TrackSection leftTrack;
 	private TrackSection rightTrack;
+	
+	private JLabel tcLabel;
+	private Line2D.Double trackGraphic;
+	private Color trackColour;
 
 
 	/**
@@ -28,18 +37,29 @@ public class TrackSection {
 			this.leftTrack = nonEnding;
 		else
 			this.rightTrack = nonEnding;
+		
+		initTrackGraphic();
 	}
 	
 	public TrackSection(int tsID, TrackSection leftTrack, TrackSection rightTrack) {
 		this.tsID = tsID;
 		this.leftTrack = leftTrack;
 		this.rightTrack = rightTrack;
+		
+		initTrackGraphic();
 	}
 	
 	public TrackSection(int tsID) {
 		this.tsID = tsID;
+		
+		initTrackGraphic();
 	}
-
+	
+	private void initTrackGraphic() {
+		setTrackGraphic(new Line2D.Double(0,0,200,0));
+		setTrackColour(Color.BLACK);
+		tcLabel = new JLabel("TC"+tsID);
+	}
 	
 	/**
 	 * @return the tsID
@@ -109,6 +129,35 @@ public class TrackSection {
 
 	public boolean isRightEnding() {
 		return isRightEnding;
+	}
+
+	public Line2D.Double getTrackGraphic() {
+		return trackGraphic;
+	}
+
+	public void setTrackGraphic(Line2D.Double trackGraphic) {
+		this.trackGraphic = trackGraphic;
+	}
+
+	public void setTrackGraphicPoints(int x1, int y1, int x2, int y2) {
+		trackGraphic.setLine(x1, y1, x2, y2);
+	}
+
+	
+	public Color getTrackColour() {
+		return trackColour;
+	}
+
+	public void setTrackColour(Color trackColour) {
+		this.trackColour = trackColour;
+	}
+
+	public JLabel getTcLabel() {
+		return tcLabel;
+	}
+
+	public void setTcLabel(JLabel tcLabel) {
+		this.tcLabel = tcLabel;
 	}
 	
 	

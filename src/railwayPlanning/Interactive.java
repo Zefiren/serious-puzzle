@@ -13,6 +13,8 @@ import java.awt.event.MouseListener;
 import javax.swing.JPanel;
 
 public class Interactive  extends JPanel implements MouseListener{
+	private static final long serialVersionUID = 1L;
+
 	private Shape clickable;
 	private Color colour;
 	
@@ -37,6 +39,7 @@ public class Interactive  extends JPanel implements MouseListener{
 	@Override
 	public void paintComponent(Graphics g){
         Graphics2D g2d = (Graphics2D)g;
+        System.out.println("class is" + clickable.getClass());
         if(clickable.getClass() == Polygon.class) {
         	g2d.drawPolygon(((Polygon) clickable));
         	Color tmp = g2d.getColor();
@@ -47,8 +50,11 @@ public class Interactive  extends JPanel implements MouseListener{
         	g2d.setColor(tmp);
         	repaint();
         }
-        else
+        else {
+        	System.out.println("hello there");
+        	System.out.println(g2d.getTransform().getTranslateX() + ", "+ g2d.getTransform().getTranslateY());
         	g2d.draw(clickable);
+        }
 	}
 	
 	@Override

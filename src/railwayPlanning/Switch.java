@@ -18,7 +18,14 @@ public class Switch extends TrackSection {
 	 * @param isTurnRight
 	 * @param extraTrack
 	 */
-	public Switch(int tsID, TrackSection leftTrack, TrackSection rightTrack, boolean isRightDirection, boolean isTurnRight, TrackSection extraTrack) {
+	public Switch(
+		int tsID, 
+		TrackSection leftTrack, 
+		TrackSection rightTrack, 
+		boolean isRightDirection, 
+		boolean isTurnRight, 
+		TrackSection extraTrack) 
+		{
 		super(tsID,  leftTrack,  rightTrack);
 		this.isRightDirection = isRightDirection;
 		this.isTurnRight = isTurnRight;
