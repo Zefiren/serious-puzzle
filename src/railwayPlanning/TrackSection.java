@@ -1,9 +1,9 @@
 package railwayPlanning;
 
 import java.awt.Color;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.geom.Line2D;
-
-import javax.swing.JLabel;
 
 
 public class TrackSection  {
@@ -16,10 +16,10 @@ public class TrackSection  {
 	private TrackSection leftTrack;
 	private TrackSection rightTrack;
 	
-	private JLabel tcLabel;
+	private Rectangle labelBox;
 	private Line2D.Double trackGraphic;
 	private Color trackColour;
-
+	private Point textPlace;
 
 	/**
 	 * @param tsID
@@ -57,8 +57,9 @@ public class TrackSection  {
 	
 	private void initTrackGraphic() {
 		setTrackGraphic(new Line2D.Double(0,0,200,0));
-		setTrackColour(Color.BLACK);
-		tcLabel = new JLabel("TC"+tsID);
+		setTrackColour(Color.BLUE);
+		labelBox = new Rectangle(75,10,50,20);
+		textPlace = new Point(100,30);
 	}
 	
 	/**
@@ -139,6 +140,18 @@ public class TrackSection  {
 		this.trackGraphic = trackGraphic;
 	}
 
+	public Rectangle getLabelBox() {
+		return labelBox;
+	}
+
+	public void setLabelBox(Rectangle labelBox) {
+		this.labelBox = labelBox;
+	}
+	
+	public void setLabelBoxPoint( int x, int y, int width, int height) {
+		labelBox.setBounds(x, y, width, height);
+	}
+
 	public void setTrackGraphicPoints(int x1, int y1, int x2, int y2) {
 		trackGraphic.setLine(x1, y1, x2, y2);
 	}
@@ -152,14 +165,15 @@ public class TrackSection  {
 		this.trackColour = trackColour;
 	}
 
-	public JLabel getTcLabel() {
-		return tcLabel;
+	public Point getTextPlace() {
+		return textPlace;
 	}
 
-	public void setTcLabel(JLabel tcLabel) {
-		this.tcLabel = tcLabel;
+	public void setTextPlace(Point textPlace) {
+		this.textPlace = textPlace;
 	}
-	
+
+
 	
 
 
