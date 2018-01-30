@@ -30,11 +30,14 @@ class Surface extends JPanel implements MouseListener {
 	private static final long serialVersionUID = 1L;
 
 	int trainX = 50, trainY = 300;
+	int trackX = 50, trackY = 300;
+
 	public TrackSection start;
 	public Train train;
 	Polygon p;
 	public ArrayList<Integer> trackID;
 	List<TrackSection> tracks;
+	List<Signal> signals;
 
 	private final int trackLengthStraight = 200;
 
@@ -43,14 +46,21 @@ class Surface extends JPanel implements MouseListener {
 	private BasicStroke labelBrush = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND);;
 	// private final int track[] = { 1, 2, 1 };
 
-	Surface(ArrayList<Integer> IDs, TrackSection startSection, Train train, List<TrackSection> tracks) {
+	Surface(ArrayList<Integer> IDs, TrackSection startSection, Train train, List<TrackSection> tracks,List<Signal> signals) {
+		
+		addMouseListener(this);
+
 		trackID = IDs;
 		start = startSection;
 		this.train = train;
 		this.tracks = tracks;
+		this.signals = signals;
+
+		placeTracks(start, trackX, trackY);
+		placeSignals();
+		trackID.clear();
 		// drawTracks(start,,0,0);
 		p = new Polygon(new int[] { 50, 100, 80 }, new int[] { 50, 50, 100 }, 3);
-		addMouseListener(this);
 	}
 
 	private void doDrawing(Graphics g) {
@@ -59,7 +69,6 @@ class Surface extends JPanel implements MouseListener {
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		int trackX = 50, trackY = 300;
 		g2d.setPaint(Color.blue);
 
 		g2d.setStroke(trackBrush);
@@ -69,8 +78,9 @@ class Surface extends JPanel implements MouseListener {
 		trackID.clear();
 		g2d.setTransform(oldTransform);
 		g2d.translate(0, 0);
-		drawTracks(start, g2d, trackX, trackY);
-
+		drawTracks(start, g2d);
+		drawSignals(g2d);
+		
 		g2d.setTransform(oldTransform);
 
 		drawTrain(g2d);
@@ -78,88 +88,49 @@ class Surface extends JPanel implements MouseListener {
 		g2d.dispose();
 	}
 
-	private void drawTracks(TrackSection ts, Graphics2D g2d, int x, int y) {
-		drawTrack(ts, g2d, x, y);
+	private void drawTracks(TrackSection ts, Graphics2D g2d) {
+		drawTrack(ts, g2d);
 		if (ts.getClass() == Switch.class) {
-			Switch s = (Switch)ts;
-			int orig_x = x;
+			Switch s = (Switch) ts;
 			if (!trackID.contains(s.getLeftTrack().getTsID())) {
-				x -= trackLengthStraight;
-				drawTracks(s.getLeftTrack(), g2d, x, y);
+				drawTracks(s.getLeftTrack(), g2d);
 			}
 			if (!trackID.contains(s.getRightTrack().getTsID())) {
-				x += trackLengthStraight;
-				drawTracks(s.getRightTrack(), g2d, x, y);
+				drawTracks(s.getRightTrack(), g2d);
 			}
-			x = orig_x;
-			if (!trackID.contains(s.getExtraTrack().getTsID())) {
-				if(s.isRightDirection())		
-					x += trackLengthStraight;
-				else
-					x -= trackLengthStraight;
-				
-				if(s.isTurnRight())		
-					y += 100;
-				else
-					y -= 100;
-				
-				drawTracks(s.getExtraTrack(), g2d, x, y);
-			}
-		} else{
+			if (!trackID.contains(s.getExtraTrack().getTsID()))
+				drawTracks(s.getExtraTrack(), g2d);
+
+		} else {
 			if (ts.isEndTrack()) {
 				if (ts.isRightEnding()) {
-					if (!trackID.contains(ts.getLeftTrack().getTsID())) {
-						x -= trackLengthStraight;
-						drawTracks(ts.getLeftTrack(), g2d, x, y);
-					}
+					if (!trackID.contains(ts.getLeftTrack().getTsID()))
+						drawTracks(ts.getLeftTrack(), g2d);
 				} else {
-					if (!trackID.contains(ts.getRightTrack().getTsID())) {
-						x += trackLengthStraight;
-						drawTracks(ts.getRightTrack(), g2d, x, y);
-					}
+					if (!trackID.contains(ts.getRightTrack().getTsID()))
+						drawTracks(ts.getRightTrack(), g2d);
 				}
 			} else {
-				if (!trackID.contains(ts.getLeftTrack().getTsID())) {
-					x -= trackLengthStraight;
-					drawTracks(ts.getLeftTrack(), g2d, x, y);
-				}
-
-				if (!trackID.contains(ts.getRightTrack().getTsID())) {
-					x += trackLengthStraight;
-					drawTracks(ts.getRightTrack(), g2d, x, y);
-				}
+				if (!trackID.contains(ts.getLeftTrack().getTsID()))
+					drawTracks(ts.getLeftTrack(), g2d);
+				if (!trackID.contains(ts.getRightTrack().getTsID()))
+					drawTracks(ts.getRightTrack(), g2d);
 			}
 		}
-		
+
 	}
 
-	private void drawTrack(TrackSection ts, Graphics2D g2d, int x, int y) {
-		ts.setTrackGraphicPoints(x, y, (int) (x + trackLengthStraight * 0.95), y);
-		ts.setLabelBoxPoint(x + 85, y + 10, 30, 20);
-		
-		// g2d.drawLine(0, 0, trackLengthStraight, 0);
-		
+	private void drawTrack(TrackSection ts, Graphics2D g2d) {
 		g2d.setPaint(ts.getTrackColour());
-
 		g2d.setStroke(trackBrush);
-		if(ts.getClass() == Switch.class)
-		{
-			System.out.println("hey");
+		if (ts.getClass() == Switch.class) {
 			Switch s = (Switch) ts;
-			Line2D.Double eLine =  s.getExtraTrackGraphic();
-			int xs,ys,xe,ye;
-			xs = x+ (int)eLine.x1;
-			ys = y+(int)eLine.y1;
-			xe = (int) (x + (int)(eLine.x2 - eLine.x1)  * 0.95);
-			ye = y + (int)(eLine.y2 - eLine.y1);
-			Line2D.Double drawline = new Double(new Point(xs,ys), new Point(xe,ye));
-//			eLine.setLine(xs,ys,xe,ye);
-			if(!s.isDiverging())
+			if (!s.isDiverging())
 				g2d.setPaint(Color.red);
 			else
 				g2d.setPaint(Color.blue);
-			g2d.draw(drawline);
-			if(s.isDiverging())
+			g2d.draw(s.getExtraTrackGraphic());
+			if (s.isDiverging())
 				g2d.setPaint(Color.red);
 			else
 				g2d.setPaint(Color.blue);
@@ -170,12 +141,135 @@ class Surface extends JPanel implements MouseListener {
 		g2d.setStroke(labelBrush);
 
 		g2d.draw(ts.getLabelBox());
-		g2d.drawString("tc" + ts.getTsID(), x + 90, y + 25);
+		g2d.drawString("tc" + ts.getTsID(), ts.getTextPlace().x, ts.getTextPlace().y);
 
 		System.out.println("drew " + ts.getTsID());
 		trackID.add(ts.getTsID());
 	}
 
+	private void placeTracks(TrackSection ts, int x, int y) {
+		placeTrack(ts, x, y);
+		if (ts.getClass() == Switch.class) {
+			Switch s = (Switch) ts;
+			int orig_x = x;
+			if (!trackID.contains(s.getLeftTrack().getTsID())) {
+				x -= trackLengthStraight;
+				placeTracks(s.getLeftTrack(), x, y);
+			}
+			if (!trackID.contains(s.getRightTrack().getTsID())) {
+				x += trackLengthStraight;
+				placeTracks(s.getRightTrack(), x, y);
+			}
+			x = orig_x;
+			if (!trackID.contains(s.getExtraTrack().getTsID())) {
+				if (s.isRightDirection())
+					x += trackLengthStraight;
+				else
+					x -= trackLengthStraight;
+
+				if (s.isTurnRight())
+					y += 100;
+				else
+					y -= 100;
+
+				placeTracks(s.getExtraTrack(), x, y);
+			}
+		} else {
+			if (ts.isEndTrack()) {
+				if (ts.isRightEnding()) {
+					if (!trackID.contains(ts.getLeftTrack().getTsID())) {
+						x -= trackLengthStraight;
+						placeTracks(ts.getLeftTrack(), x, y);
+					}
+				} else {
+					if (!trackID.contains(ts.getRightTrack().getTsID())) {
+						x += trackLengthStraight;
+						placeTracks(ts.getRightTrack(), x, y);
+					}
+				}
+			} else {
+				if (!trackID.contains(ts.getLeftTrack().getTsID())) {
+					x -= trackLengthStraight;
+					placeTracks(ts.getLeftTrack(), x, y);
+				}
+
+				if (!trackID.contains(ts.getRightTrack().getTsID())) {
+					x += trackLengthStraight;
+					placeTracks(ts.getRightTrack(), x, y);
+				}
+			}
+		}
+
+	}
+
+	private void placeTrack(TrackSection ts, int x, int y) {
+		ts.setTrackGraphicPoints(x, y, (int) (x + trackLengthStraight * 0.95), y);
+		ts.setLabelBoxPoint(x + 85, y + 10, 40, 20);
+		ts.setTextPlace(new Point(x + 90, y + 25));
+		// g2d.drawLine(0, 0, trackLengthStraight, 0);
+
+		if (ts.getClass() == Switch.class) {
+			Switch s = (Switch) ts;
+			Line2D.Double eLine = s.getExtraTrackGraphic();
+			int xs, ys, xe, ye;
+			xs = x + (int) eLine.x1;
+			ys = y + (int) eLine.y1;
+			xe = (int) (x + (int) (eLine.x2 - eLine.x1) * 0.95);
+			ye = y + (int) (eLine.y2 - eLine.y1);
+			s.setExtraTrackGraphic(new Double(new Point(xs, ys), new Point(xe, ye)));
+
+			// eLine.setLine(xs,ys,xe,ye);
+
+		}
+		// g2d.draw(ts.getTrackGraphic());
+		//
+		// g2d.setPaint(Color.black);
+		// g2d.setStroke(labelBrush);
+		//
+		// g2d.draw(ts.getLabelBox());
+		// g2d.drawString("tc" + ts.getTsID(), x + 90, y + 25);
+
+		System.out.println("drew " + ts.getTsID());
+		trackID.add(ts.getTsID());
+	}
+	private void drawSignals(Graphics2D g2d) {
+		for (Signal signal : signals) {
+			SignalGraphic sg = signal.getSignalGraphic();
+			if(signal.isClear()) {
+				g2d.setPaint(signal.getSignalGraphic().getColourClear());
+				g2d.fill(sg.getCircleLeft());
+				g2d.setPaint(Color.BLACK);
+				g2d.draw(sg.getCircleRight());
+			}else {
+				g2d.setPaint(Color.BLACK);
+				g2d.draw(sg.getCircleLeft());
+				g2d.setPaint(signal.getSignalGraphic().getColourDanger());
+				g2d.fill(sg.getCircleRight());
+				g2d.setPaint(Color.BLACK);
+			}
+			g2d.draw(sg.getLabelBox());
+			g2d.drawString((signal.isDirectionLeft() ? "<sig":"sig>")  + signal.getId(), sg.getTextPlace().x, sg.getTextPlace().y);
+			
+		}
+	}
+	
+	private void placeSignals() {
+		for (Signal signal : signals) {
+			TrackSection tc = signal.getSignalTC();
+			SignalGraphic sg = signal.getSignalGraphic();
+			if(!signal.isDirectionLeft())
+				sg.setSignalPosition(new Point((int)tc.getTrackGraphic().getP2().getX()- 50,(int)tc.getTrackGraphic().getP2().getY() - 30));
+			else
+				sg.setSignalPosition(new Point((int)tc.getTrackGraphic().getP1().getX(),(int)tc.getTrackGraphic().getP1().getY() - 30));
+			Point pos = sg.getSignalPosition();
+			pos.y = pos.y + 40;
+//					ts.setLabelBoxPoint(x + 85, y + 10, 30, 20);
+//			ts.setTextPlace(new Point(x + 90, y + 25));
+			sg.setLabelBoxPoint(pos);
+			sg.setTextPlace(new Point(pos.x + 7,pos.y+15));
+		}
+	}
+	
 	private void drawTrain(Graphics2D g2d) {
 		g2d.translate(trainX, trainY - 20);
 		g2d.setPaint(new Color(150, 150, 150));
@@ -196,21 +290,29 @@ class Surface extends JPanel implements MouseListener {
 			pcolour = new Color(255 - pcolour.getRed(), 255 - pcolour.getGreen(), 255 - pcolour.getBlue());
 		}
 		System.out.println("clicked " + e.getPoint());
+		for(Signal sig : signals) {
+			if(sig.getSignalGraphic().getLabelBox().contains(e.getPoint())) {
+				sig.setClear(!sig.isClear());
+				repaint();
+				return;
+			}
+		}
 		for (TrackSection ts : tracks) {
 			if (ts.getLabelBox().contains(e.getPoint())) {
-				if(e.isMetaDown()){
-					if(ts.getClass() == Switch.class){
+				if (e.isMetaDown()) {
+					if (ts.getClass() == Switch.class) {
 						((Switch) ts).setDiverging(!((Switch) ts).isDiverging());
-						System.out.println("changeed "+ ((Switch) ts).isDiverging() );
+						System.out.println("changeed " + ((Switch) ts).isDiverging());
 						repaint();
-
+						return;
 					}
-				}else{
+				} else {
 					System.out.println("YOU CLICKED " + ts.getTsID());
 					Color tmp = ts.getTrackColour();
 					ts.setTrackColour(new Color(255 - tmp.getRed(), 255 - tmp.getGreen(), 255 - tmp.getBlue()));
 					System.out.println(ts.getTrackColour());
 					repaint();
+					return;
 				}
 			}
 		}
@@ -257,10 +359,10 @@ public class RailsDemo extends JFrame implements KeyListener {
 		end = new TrackSection(4, "end", true, middle2);
 		upRightEnd = new TrackSection(5, "upEnd", true, middle2);
 		s1 = new Switch(3, middle2, end, true, true, upRightEnd);
-		
+
 		upRightEnd.setLeftTrack(s1);
 		end.setLeftTrack(s1);
-		
+
 		middle.setLeftTrack(start);
 		middle.setRightTrack(middle2);
 
@@ -268,8 +370,12 @@ public class RailsDemo extends JFrame implements KeyListener {
 		middle2.setRightTrack(s1);
 
 		Train train = new Train(0, start, end, start);
+		
+		Signal sig1 = new Signal(0, middle, middle2, false);
+		Signal sig2 = new Signal(0, end, s1, true);
 
 		List<TrackSection> tracks = new ArrayList<TrackSection>();
+		List<Signal> signals = new ArrayList<Signal>();
 		tracks.add(start);
 		tracks.add(end);
 		tracks.add(s1);
@@ -277,7 +383,10 @@ public class RailsDemo extends JFrame implements KeyListener {
 		tracks.add(middle);
 		tracks.add(middle2);
 
-		Surface surf = new Surface(trackID, start, train, tracks);
+		signals.add(sig1);
+		signals.add(sig2);
+		
+		Surface surf = new Surface(trackID, start, train, tracks,signals);
 		return surf;
 	}
 
@@ -307,10 +416,14 @@ public class RailsDemo extends JFrame implements KeyListener {
 
 	/** Handle the key-pressed event from the text field. */
 	public void keyPressed(KeyEvent e) {
-		if (e.getKeyCode() == KeyEvent.VK_LEFT) s.trainX -= 5;
-		if (e.getKeyCode() == KeyEvent.VK_DOWN) s.trainY += 5;
-		if (e.getKeyCode() == KeyEvent.VK_UP) s.trainY -= 5;
-		if (e.getKeyCode() == KeyEvent.VK_RIGHT) s.trainX += 5;
+		if (e.getKeyCode() == KeyEvent.VK_LEFT)
+			s.trainX -= 5;
+		if (e.getKeyCode() == KeyEvent.VK_DOWN)
+			s.trainY += 5;
+		if (e.getKeyCode() == KeyEvent.VK_UP)
+			s.trainY -= 5;
+		if (e.getKeyCode() == KeyEvent.VK_RIGHT)
+			s.trainX += 5;
 		repaint();
 	}
 

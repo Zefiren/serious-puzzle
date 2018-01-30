@@ -6,13 +6,17 @@ public class Signal {
 	private TrackSection signalTC;
 	private TrackSection protectingTC;
 	private boolean isClear;
+	private boolean directionLeft;
+	
+	private SignalGraphic signalGraphic;
 
-	public Signal(int id, TrackSection signalTC, TrackSection protectingTC, boolean isClear) {
+	public Signal(int id, TrackSection signalTC, TrackSection protectingTC, boolean dirLeft) {
 		super();
 		this.setId(id);
 		this.setSignalTC(signalTC);
 		this.setProtectingTC(protectingTC);
-		this.setClear(isClear);
+		this.setDirectionLeft(dirLeft);
+		signalGraphic = new SignalGraphic(50);
 	}
 
 	public int getId() {
@@ -45,5 +49,21 @@ public class Signal {
 
 	public void setClear(boolean isClear) {
 		this.isClear = isClear;
+	}
+
+	public boolean isDirectionLeft() {
+		return directionLeft;
+	}
+
+	public void setDirectionLeft(boolean directionLeft) {
+		this.directionLeft = directionLeft;
+	}
+
+	public SignalGraphic getSignalGraphic() {
+		return signalGraphic;
+	}
+
+	public void setSignalGraphic(SignalGraphic signalGraphic) {
+		this.signalGraphic = signalGraphic;
 	}
 }
