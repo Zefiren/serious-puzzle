@@ -2,6 +2,7 @@ package railwayPlanning;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.geom.Line2D;
 
@@ -15,7 +16,7 @@ public class Switch extends TrackSection {
 	
 	private Rectangle labelBox;
 	private Line2D.Double trackGraphic;
-	private Line2D.Double extraTrackGraphic;
+	private Polygon extraTrackGraphic;
 	private Color trackColour;
 	private Point textPlace;
 	
@@ -56,17 +57,17 @@ public class Switch extends TrackSection {
 		int y,ystart;
 		if(isRightDirection){
 			if(isTurnRight())
-				ystart = 5;
+				ystart = 10;
 			else
-				ystart = -5;
+				ystart = -10;
 		}else{
-			ystart = 200;
+			ystart = 10;
 		}
 		if(isTurnRight())
 			y = 100;
 		else
 			y = -100;
-		setExtraTrackGraphic(new Line2D.Double(0, ystart, 200,y));
+		setExtraTrackGraphic(new Polygon(new int[] {0,170,200},new int[] {ystart,y,y},3));//0, ystart, 200,y
 		setTrackColour(Color.BLUE);
 		labelBox = new Rectangle(75,10,50,20);
 		textPlace = new Point(100,30);
@@ -95,18 +96,20 @@ public class Switch extends TrackSection {
 		this.extraTrack = extraTrack;
 	}
 
-	public Line2D.Double getExtraTrackGraphic() {
+	public Polygon getExtraTrackGraphic() {
 		return extraTrackGraphic;
 	}
 
 
-	public void setExtraTrackGraphic(Line2D.Double extraTrackGraphic) {
+	public void setExtraTrackGraphic(Polygon extraTrackGraphic) {
 		this.extraTrackGraphic = extraTrackGraphic;
 	}
 	
 
-	public void setExtraTrackGraphicPoints(int x1, int y1, int x2, int y2) {
-		extraTrackGraphic.setLine(x1, y1, x2, y2);
+	public void setExtraTrackGraphicPoints(int x1, int y1, int x2, int y2,int x3, int y3) {
+		extraTrackGraphic.addPoint(x1, y1);
+		extraTrackGraphic.addPoint(x2,y2);
+		extraTrackGraphic.addPoint(x3, y3);
 	}
 
 }

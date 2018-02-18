@@ -82,6 +82,8 @@ class Surface extends JPanel implements MouseListener {
 		drawSignals(g2d);
 		
 		g2d.setTransform(oldTransform);
+		g2d.translate(trainX, trainY);
+		g2d.rotate(Math.toRadians(1));
 
 		drawTrain(g2d);
 		System.out.println(g2d.getTransform().getTranslateX());
@@ -121,21 +123,58 @@ class Surface extends JPanel implements MouseListener {
 	}
 
 	private void drawTrack(TrackSection ts, Graphics2D g2d) {
+		Boolean isThrown = false;
+		Boolean isRightDirection = false;
 		g2d.setPaint(ts.getTrackColour());
 		g2d.setStroke(trackBrush);
 		if (ts.getClass() == Switch.class) {
 			Switch s = (Switch) ts;
-			if (!s.isDiverging())
-				g2d.setPaint(Color.red);
-			else
-				g2d.setPaint(Color.blue);
-			g2d.draw(s.getExtraTrackGraphic());
-			if (s.isDiverging())
-				g2d.setPaint(Color.red);
-			else
-				g2d.setPaint(Color.blue);
+			isThrown = s.isDiverging();
+			isRightDirection =s.isRightDirection();
+
+			AffineTransform oldTransform = g2d.getTransform();
+			Polygon p = new Polygon(s.getExtraTrackGraphic().xpoints, s.getExtraTrackGraphic().ypoints, s.getExtraTrackGraphic().npoints);
+			
+			
+			System.out.println(p.getBounds().getCenterX());
+			System.out.println((p.xpoints[0]-p.getBounds().getCenterX())+" switch\n");
+			g2d.translate(p.getBounds().getCenterX(), p.getBounds().getCenterY());
+			for(int i = 0; i < p.npoints; i++) {
+				System.out.println(p.xpoints[i] + ", " + p.ypoints[i] + " BEFORE switch \n");
+				p.xpoints[i] -= p.getBounds().getCenterX();
+				p.ypoints[i] -= p.getBounds().getCenterY();
+				System.out.println(p.xpoints[i] + ", " + p.ypoints[i] + " switch \n");
+			}
+			
+			if(s.isDiverging()) {
+				p.ypoints[0] -= 10;
+				p.ypoints[1] -= 10;
+			}
+			int xDir = 1;
+			int yDir = 1;
+			if(!isRightDirection) {
+				xDir = -1;
+				System.out.println("yo" + s.getTsID());
+			}
+			if(!s.isTurnRight()) {
+				if(!isRightDirection)
+					xDir = 1;
+				yDir = -1;
+			}
+			g2d.scale(xDir, yDir);
+			g2d.drawPolyline(p.xpoints,p.ypoints,p.npoints);
+			g2d.setTransform(oldTransform);
 		}
-		g2d.draw(ts.getTrackGraphic());
+		if(isThrown) {
+			Line2D.Double l = new Double(ts.getTrackGraphic().getP1(), ts.getTrackGraphic().getP2());
+			if(isRightDirection)
+				l.x1 += 40;
+			else
+				l.x2 -= 40;
+			g2d.draw(l);
+		}
+		else
+			g2d.draw(ts.getTrackGraphic());
 
 		g2d.setPaint(Color.black);
 		g2d.setStroke(labelBrush);
@@ -210,13 +249,15 @@ class Surface extends JPanel implements MouseListener {
 
 		if (ts.getClass() == Switch.class) {
 			Switch s = (Switch) ts;
-			Line2D.Double eLine = s.getExtraTrackGraphic();
-			int xs, ys, xe, ye;
-			xs = x + (int) eLine.x1;
-			ys = y + (int) eLine.y1;
-			xe = (int) (x + (int) (eLine.x2 - eLine.x1) * 0.95);
-			ye = y + (int) (eLine.y2 - eLine.y1);
-			s.setExtraTrackGraphic(new Double(new Point(xs, ys), new Point(xe, ye)));
+			Polygon eLine = s.getExtraTrackGraphic();
+			int xs, ys, xe, ye, xm;
+			xs = x + (int) eLine.xpoints[0];
+			ys = y + (int) eLine.ypoints[0];
+			xm = (int) (x + (int) (eLine.xpoints[2] - eLine.xpoints[0]) * 0.15);
+			xe = (int) (x + (int) (eLine.xpoints[2] - eLine.xpoints[0]) * 0.95);
+			ye = y + (int) (eLine.ypoints[2] - eLine.ypoints[0]);
+			s.setExtraTrackGraphic(new Polygon(new int[] {xs,xm,xe},new int[] {ys,ys,ye},3));
+			//new Point(xs, ys),new Point(xm, ye), new Point(xe, ye))
 
 			// eLine.setLine(xs,ys,xe,ye);
 
@@ -351,16 +392,21 @@ public class RailsDemo extends JFrame implements KeyListener {
 	private Surface createScene() {
 
 		ArrayList<Integer> trackID = new ArrayList<Integer>();
-		TrackSection start, middle, upRightEnd, middle2, end;
-		Switch s1;
+		TrackSection start, middle, upRightEnd, middle2, end,newEnd,newEnd2;
+		Switch s1,s2;
 		middle = new TrackSection(1);
 		middle2 = new TrackSection(2);
 		start = new TrackSection(0, "start", false, middle);
 		end = new TrackSection(4, "end", true, middle2);
-		upRightEnd = new TrackSection(5, "upEnd", true, middle2);
-		s1 = new Switch(3, middle2, end, true, true, upRightEnd);
+		upRightEnd = new TrackSection(5, "upEnd", false, middle2);
+		newEnd = new TrackSection(7);//, "endLeft2")//, true, s2);
+		newEnd2 = new TrackSection(8);//, "endLeft3")//, true, s2);
+		s1 = new Switch(3, middle2, end, false, false, upRightEnd);
+		s2 = new Switch(6, newEnd, upRightEnd, false, true, newEnd2);
 
-		upRightEnd.setLeftTrack(s1);
+		upRightEnd.setRightTrack(s1);
+		upRightEnd.setLeftTrack(s2);
+		upRightEnd.setEndTrack(false);
 		end.setLeftTrack(s1);
 
 		middle.setLeftTrack(start);
@@ -368,6 +414,16 @@ public class RailsDemo extends JFrame implements KeyListener {
 
 		middle2.setLeftTrack(middle);
 		middle2.setRightTrack(s1);
+		
+		
+		newEnd.setEndTrack(true);
+		newEnd.setRightEnding(false);
+		newEnd.setRightTrack(s2);
+		
+		newEnd2.setEndTrack(true);
+		newEnd2.setRightEnding(false);
+		newEnd2.setRightTrack(s2);
+
 
 		Train train = new Train(0, start, end, start);
 		
@@ -379,9 +435,12 @@ public class RailsDemo extends JFrame implements KeyListener {
 		tracks.add(start);
 		tracks.add(end);
 		tracks.add(s1);
+		tracks.add(s2);
 		tracks.add(upRightEnd);
 		tracks.add(middle);
 		tracks.add(middle2);
+		tracks.add(newEnd);
+		tracks.add(newEnd2);
 
 		signals.add(sig1);
 		signals.add(sig2);
