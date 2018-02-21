@@ -54,20 +54,30 @@ public class Switch extends TrackSection {
 		setTrackColour(Color.BLUE);
 		labelBox = new Rectangle(75,10,50,20);
 		textPlace = new Point(100,30);		
-		int y,ystart;
+		int y,ystart, xstart, xmid, xend;
 		if(isRightDirection){
-			if(isTurnRight())
-				ystart = 10;
-			else
-				ystart = -10;
+			xstart = 0;
+			xmid = 30;
+			xend = 200;
+
 		}else{
 			ystart = 10;
+			xstart = 200;
+			xmid = 170;
+			xend = 0;
+			
 		}
-		if(isTurnRight())
+		
+		if(isTurnRight()){
+			ystart = 10;
 			y = 100;
-		else
+		}
+		else{
+			ystart = -10;
 			y = -100;
-		setExtraTrackGraphic(new Polygon(new int[] {0,170,200},new int[] {ystart,y,y},3));//0, ystart, 200,y
+		}
+
+		setExtraTrackGraphic(new Polygon(new int[] {xstart,xmid,xend},new int[] {ystart,y,y},3));//0, ystart, 200,y
 		setTrackColour(Color.BLUE);
 		labelBox = new Rectangle(75,10,50,20);
 		textPlace = new Point(100,30);

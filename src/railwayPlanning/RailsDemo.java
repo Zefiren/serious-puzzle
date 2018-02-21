@@ -147,21 +147,25 @@ class Surface extends JPanel implements MouseListener {
 			}
 			
 			if(s.isDiverging()) {
-				p.ypoints[0] -= 10;
-				p.ypoints[1] -= 10;
+				p.ypoints[0] += 10;
+				p.ypoints[1] += 10;
 			}
-			int xDir = 1;
-			int yDir = 1;
-			if(!isRightDirection) {
-				xDir = -1;
-				System.out.println("yo" + s.getTsID());
-			}
-			if(!s.isTurnRight()) {
-				if(!isRightDirection)
-					xDir = 1;
-				yDir = -1;
-			}
-			g2d.scale(xDir, yDir);
+//			int xDir = 1;
+//			int yDir = 1;
+//			if(!isRightDirection) {
+//				xDir = -1;
+//				System.out.println("yo" + s.getTsID());
+//			}
+//			if(!s.isTurnRight()) {
+//				if(!isRightDirection){
+//					xDir = -1;
+//					yDir = 1;
+//				}
+//				else{
+//					yDir = -1;
+//				}
+//			}
+//			g2d.scale(xDir, yDir);
 			g2d.drawPolyline(p.xpoints,p.ypoints,p.npoints);
 			g2d.setTransform(oldTransform);
 		}
@@ -251,10 +255,17 @@ class Surface extends JPanel implements MouseListener {
 			Switch s = (Switch) ts;
 			Polygon eLine = s.getExtraTrackGraphic();
 			int xs, ys, xe, ye, xm;
-			xs = x + (int) eLine.xpoints[0];
+			if(!s.isRightDirection())
+				xs = x + (int) (eLine.xpoints[0]*0.95);
+			else
+				xs = x + (int) eLine.xpoints[0];
 			ys = y + (int) eLine.ypoints[0];
-			xm = (int) (x + (int) (eLine.xpoints[2] - eLine.xpoints[0]) * 0.15);
-			xe = (int) (x + (int) (eLine.xpoints[2] - eLine.xpoints[0]) * 0.95);
+			xm = (int) (x + (int)eLine.xpoints[1]);//(int) (eLine.xpoints[2] - eLine.xpoints[0]) * 0.15);
+			if(s.isRightDirection())
+				xe = (int) (x + (int)(eLine.xpoints[2]*0.95)); //(int) (eLine.xpoints[2] - eLine.xpoints[0]) * 0.95);
+			else
+				xe = (int) (x + (int)eLine.xpoints[2]); //(int) (eLine.xpoints[2] - eLine.xpoints[0]) * 0.95);
+//			ys = y
 			ye = y + (int) (eLine.ypoints[2] - eLine.ypoints[0]);
 			s.setExtraTrackGraphic(new Polygon(new int[] {xs,xm,xe},new int[] {ys,ys,ye},3));
 			//new Point(xs, ys),new Point(xm, ye), new Point(xe, ye))
@@ -401,8 +412,9 @@ public class RailsDemo extends JFrame implements KeyListener {
 		upRightEnd = new TrackSection(5, "upEnd", false, middle2);
 		newEnd = new TrackSection(7);//, "endLeft2")//, true, s2);
 		newEnd2 = new TrackSection(8);//, "endLeft3")//, true, s2);
+		//id, left, right, isRightDir, isRightTurn, extraTrack
 		s1 = new Switch(3, middle2, end, false, false, upRightEnd);
-		s2 = new Switch(6, newEnd, upRightEnd, false, true, newEnd2);
+		s2 = new Switch(6, newEnd, upRightEnd, false, false, newEnd2);
 
 		upRightEnd.setRightTrack(s1);
 		upRightEnd.setLeftTrack(s2);
