@@ -38,6 +38,7 @@ class Surface extends JPanel implements MouseListener {
 	public ArrayList<Integer> trackID;
 	List<TrackSection> tracks;
 	List<Signal> signals;
+	List<SolutionCmd> solCmds;
 
 	private final int trackLengthStraight = 200;
 
@@ -56,6 +57,7 @@ class Surface extends JPanel implements MouseListener {
 		this.tracks = tracks;
 		this.signals = signals;
 
+		solCmds = new ArrayList<SolutionCmd>();
 		placeTracks(start, trackX, trackY);
 		placeSignals();
 		trackID.clear();
@@ -344,6 +346,8 @@ class Surface extends JPanel implements MouseListener {
 		System.out.println("clicked " + e.getPoint());
 		for(Signal sig : signals) {
 			if(sig.getSignalGraphic().getLabelBox().contains(e.getPoint())) {
+				SolutionCmd newCmd = new SolutionCmd( sig, !sig.isClear());
+				solCmds.add(newCmd);
 				sig.setClear(!sig.isClear());
 				repaint();
 				return;
@@ -353,8 +357,11 @@ class Surface extends JPanel implements MouseListener {
 			if (ts.getLabelBox().contains(e.getPoint())) {
 				if (e.isMetaDown()) {
 					if (ts.getClass() == Switch.class) {
-						((Switch) ts).setDiverging(!((Switch) ts).isDiverging());
-						System.out.println("changeed " + ((Switch) ts).isDiverging());
+						Switch s = (Switch) ts;
+						SolutionCmd newCmd = new SolutionCmd( s, !s.isDiverging());
+						solCmds.add(newCmd);
+						s.setDiverging(!s.isDiverging());
+						System.out.println("changeed " + s.isDiverging());
 						repaint();
 						return;
 					}
@@ -495,6 +502,8 @@ public class RailsDemo extends JFrame implements KeyListener {
 			s.trainY -= 5;
 		if (e.getKeyCode() == KeyEvent.VK_RIGHT)
 			s.trainX += 5;
+		if (e.getKeyCode() == KeyEvent.VK_G)
+			System.out.println(s.solCmds);
 		repaint();
 	}
 

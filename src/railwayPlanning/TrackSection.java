@@ -6,7 +6,7 @@ import java.awt.Rectangle;
 import java.awt.geom.Line2D;
 
 
-public class TrackSection  {
+public class TrackSection  extends Interactable<TrackSection>{
 	
 	
 	private int tsID;
@@ -171,6 +171,10 @@ public class TrackSection  {
 
 	public void setTextPlace(Point textPlace) {
 		this.textPlace = textPlace;
+	}
+
+	public TrackSection getInteractable() {
+		return this;
 	}
 
 

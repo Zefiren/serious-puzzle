@@ -121,5 +121,10 @@ public class Switch extends TrackSection {
 		extraTrackGraphic.addPoint(x2,y2);
 		extraTrackGraphic.addPoint(x3, y3);
 	}
+	
+	public Switch getInteractable() {
+		return this;
+	}
+
 
 }

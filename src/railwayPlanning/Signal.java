@@ -1,6 +1,6 @@
 package railwayPlanning;
 
-public class Signal {
+public class Signal extends Interactable<Signal>{
 	
 	private int id;
 	private TrackSection signalTC;
@@ -65,6 +65,11 @@ public class Signal {
 
 	public void setSignalGraphic(SignalGraphic signalGraphic) {
 		this.signalGraphic = signalGraphic;
+	}
+
+	public Signal getInteractable() {
+		// TODO Auto-generated method stub
+		return this;
 	}
 	
 	
