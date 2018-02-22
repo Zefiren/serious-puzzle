@@ -447,7 +447,7 @@ public class RailsDemo extends JFrame implements KeyListener {
 		Train train = new Train(0, start, end, start);
 		
 		Signal sig1 = new Signal(0, middle, middle2, true);
-		Signal sig2 = new Signal(0, end, s1, false);
+		Signal sig2 = new Signal(1, end, s1, false);
 
 		List<TrackSection> tracks = new ArrayList<TrackSection>();
 		List<Signal> signals = new ArrayList<Signal>();
