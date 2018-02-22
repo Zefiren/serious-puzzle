@@ -10,13 +10,13 @@ public class Signal {
 	
 	private SignalGraphic signalGraphic;
 
-	public Signal(int id, TrackSection signalTC, TrackSection protectingTC, boolean dirLeft) {
+	public Signal(int id, TrackSection signalTC, TrackSection protectingTC, boolean facingLeft) {
 		super();
 		this.setId(id);
 		this.setSignalTC(signalTC);
 		this.setProtectingTC(protectingTC);
-		this.setDirectionLeft(dirLeft);
-		signalGraphic = new SignalGraphic(50);
+		this.setDirectionLeft(facingLeft);
+		signalGraphic = new SignalGraphic(50, facingLeft);
 	}
 
 	public int getId() {
@@ -51,7 +51,7 @@ public class Signal {
 		this.isClear = isClear;
 	}
 
-	public boolean isDirectionLeft() {
+	public boolean isFacingLeft() {
 		return directionLeft;
 	}
 
@@ -66,4 +66,6 @@ public class Signal {
 	public void setSignalGraphic(SignalGraphic signalGraphic) {
 		this.signalGraphic = signalGraphic;
 	}
+	
+	
 }

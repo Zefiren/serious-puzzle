@@ -16,14 +16,16 @@ public class SignalGraphic {
 	
 	private Rectangle labelBox;
 	private Point textPlace;
+	private Boolean facingLeft;
 	
-	public SignalGraphic(int widthSize) {
+	public SignalGraphic(int widthSize, Boolean facingLeft) {
 		width = widthSize;
 		setCircleLeft(new Ellipse2D.Double(0, 0,width/2 , width /2));
 		setCircleRight(new Ellipse2D.Double(width/2, 0,width/2 , width /2));
 		
 		labelBox = new Rectangle(75,10,60,20);
 		textPlace = new Point(100,30);
+		this.facingLeft = facingLeft;
 		// TODO Auto-generated constructor stub
 	}
 	public Ellipse2D.Double getCircleLeft() {
@@ -38,6 +40,33 @@ public class SignalGraphic {
 	public void setCircleRight(Ellipse2D.Double circleRight) {
 		this.circleRight = circleRight;
 	}
+	
+	public Ellipse2D.Double getCircleProceed() {
+		if(facingLeft)
+			return circleLeft;
+		else
+			return circleRight;
+	}
+	public void setCircleProceed(Ellipse2D.Double circleProceed) {
+		if(facingLeft)
+			this.circleLeft = circleProceed;
+		else
+			this.circleRight = circleProceed;
+	}
+	public Ellipse2D.Double getCircleDanger() {
+		if(!facingLeft)
+			return circleLeft;
+		else
+			return circleRight;	
+	}
+	
+	public void setCircleDanger(Ellipse2D.Double circleDanger) {
+		if(!facingLeft)
+			this.circleLeft= circleDanger;
+		else
+			this.circleRight = circleDanger;
+	}
+	
 	public Color getColourDanger() {
 		return colourDanger;
 	}

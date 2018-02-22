@@ -289,18 +289,18 @@ class Surface extends JPanel implements MouseListener {
 			SignalGraphic sg = signal.getSignalGraphic();
 			if(signal.isClear()) {
 				g2d.setPaint(signal.getSignalGraphic().getColourClear());
-				g2d.fill(sg.getCircleLeft());
+				g2d.fill(sg.getCircleProceed());
 				g2d.setPaint(Color.BLACK);
-				g2d.draw(sg.getCircleRight());
+				g2d.draw(sg.getCircleDanger());
 			}else {
 				g2d.setPaint(Color.BLACK);
-				g2d.draw(sg.getCircleLeft());
+				g2d.draw(sg.getCircleProceed());
 				g2d.setPaint(signal.getSignalGraphic().getColourDanger());
-				g2d.fill(sg.getCircleRight());
+				g2d.fill(sg.getCircleDanger());
 				g2d.setPaint(Color.BLACK);
 			}
 			g2d.draw(sg.getLabelBox());
-			g2d.drawString((signal.isDirectionLeft() ? "<sig":"sig>")  + signal.getId(), sg.getTextPlace().x, sg.getTextPlace().y);
+			g2d.drawString((signal.isFacingLeft() ? "<sig":"sig>")  + signal.getId(), sg.getTextPlace().x, sg.getTextPlace().y);
 			
 		}
 	}
@@ -309,7 +309,7 @@ class Surface extends JPanel implements MouseListener {
 		for (Signal signal : signals) {
 			TrackSection tc = signal.getSignalTC();
 			SignalGraphic sg = signal.getSignalGraphic();
-			if(!signal.isDirectionLeft())
+			if(signal.isFacingLeft())
 				sg.setSignalPosition(new Point((int)tc.getTrackGraphic().getP2().getX()- 50,(int)tc.getTrackGraphic().getP2().getY() - 30));
 			else
 				sg.setSignalPosition(new Point((int)tc.getTrackGraphic().getP1().getX(),(int)tc.getTrackGraphic().getP1().getY() - 30));
@@ -413,8 +413,8 @@ public class RailsDemo extends JFrame implements KeyListener {
 		newEnd = new TrackSection(7);//, "endLeft2")//, true, s2);
 		newEnd2 = new TrackSection(8);//, "endLeft3")//, true, s2);
 		//id, left, right, isRightDir, isRightTurn, extraTrack
-		s1 = new Switch(3, middle2, end, false, false, upRightEnd);
-		s2 = new Switch(6, newEnd, upRightEnd, false, false, newEnd2);
+		s1 = new Switch(3, middle2, end, false, true, upRightEnd);
+		s2 = new Switch(6, newEnd, upRightEnd, false, true, newEnd2);
 
 		upRightEnd.setRightTrack(s1);
 		upRightEnd.setLeftTrack(s2);
@@ -439,8 +439,8 @@ public class RailsDemo extends JFrame implements KeyListener {
 
 		Train train = new Train(0, start, end, start);
 		
-		Signal sig1 = new Signal(0, middle, middle2, false);
-		Signal sig2 = new Signal(0, end, s1, true);
+		Signal sig1 = new Signal(0, middle, middle2, true);
+		Signal sig2 = new Signal(0, end, s1, false);
 
 		List<TrackSection> tracks = new ArrayList<TrackSection>();
 		List<Signal> signals = new ArrayList<Signal>();
