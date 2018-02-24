@@ -7,7 +7,7 @@ import java.awt.Rectangle;
 import java.awt.geom.Line2D;
 
 public class Switch extends TrackSection {
-	
+	private int switchID;	
 	private boolean isRightDirection;
 	private boolean isTurnRight;
 	private boolean isDiverging;
@@ -29,6 +29,7 @@ public class Switch extends TrackSection {
 	 */
 	public Switch(
 		int tsID, 
+		int switchID,
 		TrackSection leftTrack, 
 		TrackSection rightTrack, 
 		boolean isRightDirection, 
@@ -36,6 +37,7 @@ public class Switch extends TrackSection {
 		TrackSection extraTrack) 
 		{
 		super(tsID,  leftTrack,  rightTrack);
+		this.switchID = switchID;
 		this.isRightDirection = isRightDirection;
 		this.isTurnRight = isTurnRight;
 		this.extraTrack = extraTrack;
@@ -45,6 +47,16 @@ public class Switch extends TrackSection {
 	}
 	
 	
+	public int getSwitchID() {
+		return switchID;
+	}
+
+
+	public void setSwitchID(int switchID) {
+		this.switchID = switchID;
+	}
+
+
 	public boolean isRightDirection() {
 		return isRightDirection;
 	}

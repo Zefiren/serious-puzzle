@@ -2,10 +2,13 @@ package railwayPlanning;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
@@ -20,8 +23,12 @@ import java.awt.geom.Line2D.Double;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JFrame;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 
 class Surface extends JPanel implements MouseListener {
 	/**
@@ -48,7 +55,8 @@ class Surface extends JPanel implements MouseListener {
 	// private final int track[] = { 1, 2, 1 };
 
 	Surface(ArrayList<Integer> IDs, TrackSection startSection, Train train, List<TrackSection> tracks,List<Signal> signals) {
-		
+        setPreferredSize(new Dimension(1280, 600));
+
 		addMouseListener(this);
 
 		trackID = IDs;
@@ -92,6 +100,10 @@ class Surface extends JPanel implements MouseListener {
 		g2d.dispose();
 	}
 
+	 public Dimension getPreferredSize() {
+	        return new Dimension(250,200);
+    }
+	
 	private void drawTracks(TrackSection ts, Graphics2D g2d) {
 		drawTrack(ts, g2d);
 		if (ts.getClass() == Switch.class) {
@@ -255,6 +267,8 @@ class Surface extends JPanel implements MouseListener {
 
 		if (ts.getClass() == Switch.class) {
 			Switch s = (Switch) ts;
+			s.setLabelBoxPoint(x + 85, y + 10, 40, 20);
+			s.setTextPlace(new Point(x + 90, y + 25));
 			Polygon eLine = s.getExtraTrackGraphic();
 			int xs, ys, xe, ye, xm;
 			if(!s.isRightDirection())
@@ -401,10 +415,14 @@ public class RailsDemo extends JFrame implements KeyListener {
 	 */
 	private static final long serialVersionUID = 1L;
 	Surface s;
-
+	JList list;
+	JScrollPane listScroller;
+	DefaultListModel vegName;
+	JPanel panel;
+	
 	public RailsDemo() {
 
-		initUI();
+//		createGUI	();
 	}
 
 	private Surface createScene() {
@@ -420,8 +438,8 @@ public class RailsDemo extends JFrame implements KeyListener {
 		newEnd = new TrackSection(7);//, "endLeft2")//, true, s2);
 		newEnd2 = new TrackSection(8);//, "endLeft3")//, true, s2);
 		//id, left, right, isRightDir, isRightTurn, extraTrack
-		s1 = new Switch(3, middle2, end, false, true, upRightEnd);
-		s2 = new Switch(6, newEnd, upRightEnd, false, true, newEnd2);
+		s1 = new Switch(3, 0, middle2, end, false, true, upRightEnd);
+		s2 = new Switch(6, 1, newEnd, upRightEnd, false, true, newEnd2);
 
 		upRightEnd.setRightTrack(s1);
 		upRightEnd.setLeftTrack(s2);
@@ -467,17 +485,51 @@ public class RailsDemo extends JFrame implements KeyListener {
 		Surface surf = new Surface(trackID, start, train, tracks,signals);
 		return surf;
 	}
+	
+   public void createGUI() {
+	   	s = createScene();
+        final JFrame frame = new JFrame();
+        JPanel panel = new JPanel();
+        panel.add(s);
+        frame.add(panel);
+        frame.pack();
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        add(frame);
+    }
 
 	private void initUI() {
 		s = createScene();
+//		setLayout(new GridLayout(3, 1));
+//		panel = new JPanel();
 		add(s);
+
 		addKeyListener(this);
 		setTitle("Translation");
 		setSize(1280, 600);
+		
+//		vegName = new DefaultListModel();
+//
+//		vegName.addElement("Lady Finger");
+//		vegName.addElement("Onion");
+//		vegName.addElement("Potato");
+//		vegName.addElement("Tomato");
+//		list = new JList(vegName); //data has type Object[]
+//		list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+//		list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+//		list.setVisibleRowCount(4);
+//
+//		listScroller = new JScrollPane(list);
+//		listScroller.setPreferredSize(new Dimension(200, 100));
+//		s.setPreferredSize(new Dimension(800, 600));
+		
+//		uIntf.add(listScroller);	
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		// createScene();
-
+		// createScene(); 
+//		add(panel);
+//		pack();	
+//		setVisible(true);
 	}
 
 	public static void main(String[] args) {
@@ -488,6 +540,7 @@ public class RailsDemo extends JFrame implements KeyListener {
 
 				RailsDemo ex = new RailsDemo();
 				ex.setVisible(true);
+				ex.createGUI();
 			}
 		});
 	}
