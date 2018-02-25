@@ -15,9 +15,7 @@ public class Switch extends TrackSection {
 
 	
 	private Rectangle labelBox;
-	private Line2D.Double trackGraphic;
 	private Polygon extraTrackGraphic;
-	private Color trackColour;
 	private Point textPlace;
 	
 	

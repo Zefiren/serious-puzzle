@@ -23,12 +23,19 @@ import java.awt.geom.Line2D.Double;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
+import javax.swing.table.DefaultTableModel;
 
 class Surface extends JPanel implements MouseListener {
 	/**
@@ -45,8 +52,8 @@ class Surface extends JPanel implements MouseListener {
 	public ArrayList<Integer> trackID;
 	List<TrackSection> tracks;
 	List<Signal> signals;
-	List<SolutionCmd> solCmds;
-
+	SolutionManager solMgr;
+	
 	private final int trackLengthStraight = 200;
 
 	private Color pcolour = Color.BLUE;
@@ -65,7 +72,7 @@ class Surface extends JPanel implements MouseListener {
 		this.tracks = tracks;
 		this.signals = signals;
 
-		solCmds = new ArrayList<SolutionCmd>();
+		solMgr = new SolutionManager();
 		placeTracks(start, trackX, trackY);
 		placeSignals();
 		trackID.clear();
@@ -101,7 +108,7 @@ class Surface extends JPanel implements MouseListener {
 	}
 
 	 public Dimension getPreferredSize() {
-	        return new Dimension(250,200);
+	        return new Dimension(1280, 800);
     }
 	
 	private void drawTracks(TrackSection ts, Graphics2D g2d) {
@@ -160,9 +167,14 @@ class Surface extends JPanel implements MouseListener {
 				System.out.println(p.xpoints[i] + ", " + p.ypoints[i] + " switch \n");
 			}
 			
-			if(s.isDiverging()) {
-				p.ypoints[0] += 10;
-				p.ypoints[1] += 10;
+			if(s.isDiverging() && s.isTurnRight()) {
+				p.ypoints[0] -= 10;
+				p.ypoints[1] -= 10;
+			}else{
+				if(s.isDiverging()){
+					p.ypoints[0] += 10;
+					p.ypoints[1] += 10;
+				}
 			}
 //			int xDir = 1;
 //			int yDir = 1;
@@ -361,7 +373,7 @@ class Surface extends JPanel implements MouseListener {
 		for(Signal sig : signals) {
 			if(sig.getSignalGraphic().getLabelBox().contains(e.getPoint())) {
 				SolutionCmd newCmd = new SolutionCmd( sig, !sig.isClear());
-				solCmds.add(newCmd);
+				solMgr.addStep(newCmd);
 				sig.setClear(!sig.isClear());
 				repaint();
 				return;
@@ -373,7 +385,7 @@ class Surface extends JPanel implements MouseListener {
 					if (ts.getClass() == Switch.class) {
 						Switch s = (Switch) ts;
 						SolutionCmd newCmd = new SolutionCmd( s, !s.isDiverging());
-						solCmds.add(newCmd);
+						solMgr.addStep(newCmd);
 						s.setDiverging(!s.isDiverging());
 						System.out.println("changeed " + s.isDiverging());
 						repaint();
@@ -415,10 +427,11 @@ public class RailsDemo extends JFrame implements KeyListener {
 	 */
 	private static final long serialVersionUID = 1L;
 	Surface s;
-	JList list;
+	JTable list;
+	JButton delBtn;
 	JScrollPane listScroller;
-	DefaultListModel vegName;
-	JPanel panel;
+	DefaultTableModel vegName;
+	JPanel panel,solPanel;
 	
 	public RailsDemo() {
 
@@ -485,51 +498,57 @@ public class RailsDemo extends JFrame implements KeyListener {
 		Surface surf = new Surface(trackID, start, train, tracks,signals);
 		return surf;
 	}
-	
-   public void createGUI() {
-	   	s = createScene();
-        final JFrame frame = new JFrame();
-        JPanel panel = new JPanel();
-        panel.add(s);
-        frame.add(panel);
-        frame.pack();
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        add(frame);
-    }
 
 	private void initUI() {
-		s = createScene();
-//		setLayout(new GridLayout(3, 1));
-//		panel = new JPanel();
-		add(s);
-
-		addKeyListener(this);
+		setLayout(new FlowLayout());
+	  	s = createScene();
+        panel = new JPanel();
+        solPanel = new JPanel();
+        panel.setLayout(new FlowLayout());
+		this.addKeyListener(this);
+		panel.addKeyListener(this);
+		s.addKeyListener(this);
 		setTitle("Translation");
-		setSize(1280, 600);
-		
-//		vegName = new DefaultListModel();
-//
+		s.setSize(getPreferredSize());
+		panel.setSize(1280, 600);
+		setSize(1600, 800);
+		panel.add(s);
+		solPanel.setLayout(new GridLayout(2,1));
+		String[] columns = {"Step","Operation"};
+		vegName = new DefaultTableModel(null,columns);
+
+		s.solMgr.listMod = vegName;
 //		vegName.addElement("Lady Finger");
 //		vegName.addElement("Onion");
 //		vegName.addElement("Potato");
 //		vegName.addElement("Tomato");
-//		list = new JList(vegName); //data has type Object[]
-//		list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-//		list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-//		list.setVisibleRowCount(4);
-//
-//		listScroller = new JScrollPane(list);
-//		listScroller.setPreferredSize(new Dimension(200, 100));
-//		s.setPreferredSize(new Dimension(800, 600));
+		list = new JTable(vegName); //data has type Object[] 
+		list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+
+		list.setDefaultRenderer(String.class, new SolutionCellRenderer());
+		list.setBackground(null);
+		list.setShowGrid(false);
+		list.setEnabled(false);
+		list.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		list.getColumnModel().getColumn(0).setMaxWidth(30);
+		list.setBorder(BorderFactory.createEmptyBorder());
+
+		listScroller = new JScrollPane(list);
+		listScroller.setBackground(null);
+		listScroller.setBorder(BorderFactory.createEmptyBorder());
+		listScroller.setPreferredSize(new Dimension(200, 300));
 		
-//		uIntf.add(listScroller);	
-		setLocationRelativeTo(null);
+		solPanel.add(listScroller);	
+		delBtn = new JButton("Delete");
+		solPanel.add(delBtn);
+		panel.add(solPanel);
+		panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("G"), 0);
+		panel.getActionMap().put(0, new MoveAction() );
+        add(panel);
+        setVisible(true);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		// createScene(); 
-//		add(panel);
-//		pack();	
-//		setVisible(true);
 	}
 
 	public static void main(String[] args) {
@@ -540,13 +559,14 @@ public class RailsDemo extends JFrame implements KeyListener {
 
 				RailsDemo ex = new RailsDemo();
 				ex.setVisible(true);
-				ex.createGUI();
+				ex.initUI();
 			}
 		});
 	}
 
 	/** Handle the key-pressed event from the text field. */
 	public void keyPressed(KeyEvent e) {
+		System.out.println("key press");
 		if (e.getKeyCode() == KeyEvent.VK_LEFT)
 			s.trainX -= 5;
 		if (e.getKeyCode() == KeyEvent.VK_DOWN)
@@ -556,10 +576,22 @@ public class RailsDemo extends JFrame implements KeyListener {
 		if (e.getKeyCode() == KeyEvent.VK_RIGHT)
 			s.trainX += 5;
 		if (e.getKeyCode() == KeyEvent.VK_G)
-			System.out.println(s.solCmds);
+			System.out.println("gheter");
 		repaint();
 	}
 
+	
+	private class MoveAction extends AbstractAction {
+
+        MoveAction() {
+        	System.out.println("HELLO VICTOR");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+//			System.out.println(s.solCmds);
+        }
+    }
 	/** Handle the key-released event from the text field. */
 	public void keyReleased(KeyEvent e) {
 	}

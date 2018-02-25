@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
 
 public class SignalGraphic {
 	private Ellipse2D.Double circleLeft, circleRight;

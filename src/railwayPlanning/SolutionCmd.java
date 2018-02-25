@@ -38,9 +38,9 @@ public class SolutionCmd {
 		// TODO Auto-generated method stub
 		switch (type) {
 		case SwitchChange:
-			return "Command: Switch " + ((Switch) target).getTsID() + " set to " + newValue +"\n ";
+			return "Switch : " + ((Switch) target).getTsID() + " -> " + newValue ;
 		case SignalChange:
-			return "Command: Signal " + ((Signal) target).getId() + " set to " + newValue +"\n ";
+			return "Signal : " + ((Signal) target).getId() + " ->" + newValue ;
 		case CheckLocation:
 			return "Command: Track Section" + ((TrackSection) target).getTsID() + " has to be occupied by Train" + targetTrain.getTrainID() +"\n ";
 		default:
