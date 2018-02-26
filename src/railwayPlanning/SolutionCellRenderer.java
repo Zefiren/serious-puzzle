@@ -2,66 +2,29 @@ package railwayPlanning;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Font;
 
 import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.ListCellRenderer;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.JTable;
+import javax.swing.table.TableCellRenderer;
 
-public class SolutionCellRenderer  extends DefaultTableCellRenderer {
-	
-		/**
+class SolutionCellRenderer extends JLabel implements TableCellRenderer {
+	  /**
 	 * 
 	 */
-	private static final long serialVersionUID = -4748552178668340389L;
+	private static final long serialVersionUID = -7644727625576296131L;
 
-		public SolutionCellRenderer() {
-	         setOpaque(true);
-	         setFont(new Font("Arial", Font.PLAIN, 14));
-//	         stepNumber.setFont(new Font("Arial", Font.BOLD, 20));
-	         
-	         setBorder(BorderFactory.createMatteBorder(1, 5, 1, 1, Color.blue));
-	         
-         }
+	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+	      boolean hasFocus, int rowIndex, int vColIndex) {
+	    setText(value.toString());
 
-	     public Component getListCellRendererComponent(JList<?> list,
-	                                                   Object value,
-	                                                   int index,
-	                                                   boolean isSelected,
-	                                                   boolean cellHasFocus) {
+	    setToolTipText((String) value);
 
-	         setText(value.toString());
-	         
-	         
-	         Color background;
-	         Color foreground;
-	
-	         // check if this cell represents the current DnD drop location
-	         JList.DropLocation dropLocation = list.getDropLocation();
-	         if (dropLocation != null
-	                 && !dropLocation.isInsert()
-	                 && dropLocation.getIndex() == index) {
-
-	             background = Color.BLUE;
-	             foreground = Color.WHITE;
-
-	         // check if this cell is selected
-	         } else if (isSelected) {
-	             background = Color.GREEN;
-	             foreground = Color.WHITE;
-
-	         // unselected, and not the DnD drop location
-	         } else {
-	             background = null;
-	             foreground = Color.BLACK;
-	         };
-
-	         setBackground(background);
-	         setForeground(foreground);
-
-	         return this;
-	     }
-	 }
+	    
+	    JComponent component = (JComponent)table.getTableHeader().getDefaultRenderer().getTableCellRendererComponent(table, value, false, false, -1, -2);
+        component.setBackground(new Color(250, 250, 250));
+        component.setBorder(BorderFactory.createEmptyBorder());
+	    return component;
+	  }
+	}

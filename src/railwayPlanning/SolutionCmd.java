@@ -17,6 +17,7 @@ public class SolutionCmd {
 	public SolutionCmd(Interactable<?> target, Boolean newValue) {
 		super();
 		this.target = target;
+		this.oldValue = !newValue;
 		this.newValue = newValue;
 		if(target.getInteractable().getClass() == Signal.class)
 			type = CommandType.SignalChange;
@@ -48,5 +49,23 @@ public class SolutionCmd {
 		}
 		
 		
+	}
+	
+	public void undoStep(){
+		switch (type) {
+		case SwitchChange:
+			System.out.println(((Switch)target).getTsID()+ " is the id");
+			((Switch)target).setDiverging(oldValue);
+			break;
+		case SignalChange:
+			System.out.println(((Signal)target).getId()+ " is the id");
+			((Signal)target).setClear(oldValue);
+			break;
+		case CheckLocation:
+			System.out.println("");
+			break;
+		default:
+			System.out.println("");
+		}
 	}
 }

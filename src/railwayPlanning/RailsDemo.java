@@ -13,6 +13,7 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -25,17 +26,19 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
-import javax.swing.DefaultListModel;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
+import javax.swing.plaf.basic.BasicArrowButton;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
 
 class Surface extends JPanel implements MouseListener {
 	/**
@@ -420,7 +423,7 @@ class Surface extends JPanel implements MouseListener {
 	}
 }
 
-public class RailsDemo extends JFrame implements KeyListener {
+public class RailsDemo extends JFrame implements KeyListener , ActionListener {
 
 	/**
 	 * 
@@ -428,10 +431,10 @@ public class RailsDemo extends JFrame implements KeyListener {
 	private static final long serialVersionUID = 1L;
 	Surface s;
 	JTable list;
-	JButton delBtn;
+	JButton delBtn, upOrder,downOrder;
 	JScrollPane listScroller;
-	DefaultTableModel vegName;
-	JPanel panel,solPanel;
+	DefaultTableModel tableModel;
+	JPanel panel,solPanel,solBtnPanel;
 	
 	public RailsDemo() {
 
@@ -504,6 +507,7 @@ public class RailsDemo extends JFrame implements KeyListener {
 	  	s = createScene();
         panel = new JPanel();
         solPanel = new JPanel();
+        solBtnPanel = new JPanel();
         panel.setLayout(new FlowLayout());
 		this.addKeyListener(this);
 		panel.addKeyListener(this);
@@ -513,25 +517,43 @@ public class RailsDemo extends JFrame implements KeyListener {
 		panel.setSize(1280, 600);
 		setSize(1600, 800);
 		panel.add(s);
-		solPanel.setLayout(new GridLayout(2,1));
+		solPanel.setLayout(new BoxLayout(solPanel, BoxLayout.Y_AXIS));
+		solBtnPanel.setLayout(new GridLayout(1,3));
 		String[] columns = {"Step","Operation"};
-		vegName = new DefaultTableModel(null,columns);
+		tableModel = new DefaultTableModel(null,columns){
+			 /**
+			 * 
+			 */
+			private static final long serialVersionUID = 715610582714642979L;
 
-		s.solMgr.listMod = vegName;
-//		vegName.addElement("Lady Finger");
-//		vegName.addElement("Onion");
-//		vegName.addElement("Potato");
-//		vegName.addElement("Tomato");
-		list = new JTable(vegName); //data has type Object[] 
+			@Override
+			    public boolean isCellEditable(int row, int column) {
+			        return false;
+			    }
+		};
+
+		s.solMgr.listMod = tableModel;
+
+		list = new JTable(tableModel); 
 		list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-
+		
+		TableCellRenderer baseRenderer = list.getTableHeader().getDefaultRenderer();
+		list.getTableHeader().setDefaultRenderer(new TableHeaderRenderer(baseRenderer,list));
 		list.setDefaultRenderer(String.class, new SolutionCellRenderer());
+		
 		list.setBackground(null);
 		list.setShowGrid(false);
-		list.setEnabled(false);
 		list.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-		list.getColumnModel().getColumn(0).setMaxWidth(30);
+		list.getColumnModel().getColumn(0).setMaxWidth(40);
 		list.setBorder(BorderFactory.createEmptyBorder());
+		
+		JTableHeader header = list.getTableHeader();
+		header.setBackground(Color.blue);
+		header.setForeground(Color.white);
+		header.setBorder(BorderFactory.createEmptyBorder());
+		header.setReorderingAllowed(false);
+		header.setResizingAllowed(false);
+		
 
 		listScroller = new JScrollPane(list);
 		listScroller.setBackground(null);
@@ -540,7 +562,15 @@ public class RailsDemo extends JFrame implements KeyListener {
 		
 		solPanel.add(listScroller);	
 		delBtn = new JButton("Delete");
-		solPanel.add(delBtn);
+		delBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, delBtn.getMinimumSize().height));
+		delBtn.addActionListener(this);
+		upOrder = new BasicArrowButton(BasicArrowButton.NORTH);
+		downOrder = new BasicArrowButton(BasicArrowButton.SOUTH);
+
+		solBtnPanel.add(delBtn);
+		solBtnPanel.add(upOrder);
+		solBtnPanel.add(downOrder);
+		solPanel.add(solBtnPanel);
 		panel.add(solPanel);
 		panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("G"), 0);
 		panel.getActionMap().put(0, new MoveAction() );
@@ -563,7 +593,7 @@ public class RailsDemo extends JFrame implements KeyListener {
 			}
 		});
 	}
-
+	
 	/** Handle the key-pressed event from the text field. */
 	public void keyPressed(KeyEvent e) {
 		System.out.println("key press");
@@ -580,7 +610,7 @@ public class RailsDemo extends JFrame implements KeyListener {
 		repaint();
 	}
 
-	
+	//use for key bindings
 	private class MoveAction extends AbstractAction {
 
         MoveAction() {
@@ -603,7 +633,26 @@ public class RailsDemo extends JFrame implements KeyListener {
 
 	/** Handle the button click. */
 	public void actionPerformed(ActionEvent e) {
-
+		if(e.getSource() == delBtn){
+			if(list.getSelectedRowCount()>1){
+				int[] selIndices = list.getSelectedRows();
+				for (int k = 0; k < selIndices.length; k++) {
+					selIndices[k] =  list.convertRowIndexToModel(selIndices[k]);
+				}
+				System.out.println("deleting selected indicees");
+				for (int i : selIndices) {
+					System.out.println(i);
+				}
+				s.solMgr.removeSteps(selIndices,selIndices.length);
+				s.repaint();
+			}else{
+				int selIndex = list.convertRowIndexToModel(list.getSelectedRow());
+				s.solMgr.removeStep(selIndex);
+				s.repaint();
+			}
+		}
 	}
+
+	
 
 }
