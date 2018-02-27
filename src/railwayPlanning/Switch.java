@@ -14,10 +14,10 @@ public class Switch extends TrackSection {
 	private TrackSection extraTrack;
 
 	
-	private Rectangle labelBox;
 	private Polygon extraTrackGraphic;
-	private Point textPlace;
-	
+	private Point switchTextPlace;
+	private Rectangle switchLabelBox;
+
 	
 
 	/**
@@ -60,10 +60,8 @@ public class Switch extends TrackSection {
 	}
 	
 	private void initTrackGraphic() {
-		setTrackGraphic(new Line2D.Double(0,0,200,0));
+		setTrackGraphic(new Line2D.Double(0,0,Surface.trackLengthStraight,0));
 		setTrackColour(Color.BLUE);
-		labelBox = new Rectangle(75,10,50,20);
-		textPlace = new Point(100,30);		
 		int y,ystart, xstart, xmid, xend;
 		if(isRightDirection){
 			xstart = 0;
@@ -86,12 +84,41 @@ public class Switch extends TrackSection {
 			ystart = -10;
 			y = -100;
 		}
+		int labelY=0 ;
+		System.out.println("switch init:" + ystart + " and " + y);
+		if(y > ystart)
+			labelY = y;
+		else
+			labelY = ystart;
+		labelBox = new Rectangle((int)(Surface.trackLengthStraight*0.375),labelY + 10,40,20);
+		textPlace = new Point((int)(Surface.trackLengthStraight*0.5)-labelBox.width/2,labelY + 25);		
+		
+		switchLabelBox = new Rectangle((int)(Surface.trackLengthStraight*0.375),labelY + 30,40,20);
+		switchTextPlace = new Point((int)(Surface.trackLengthStraight*0.5)-labelBox.width/2,labelY + 55);		
 
 		setExtraTrackGraphic(new Polygon(new int[] {xstart,xmid,xend},new int[] {ystart,y,y},3));//0, ystart, 200,y
 		setTrackColour(Color.BLUE);
-		labelBox = new Rectangle(75,10,50,20);
-		textPlace = new Point(100,30);
 	}
+
+	public Point getSwitchTextPlace() {
+		return switchTextPlace;
+	}
+
+
+	public void setSwitchTextPlace(Point switchTextPlace) {
+		this.switchTextPlace = switchTextPlace;
+	}
+
+
+	public Rectangle getSwitchLabelBox() {
+		return switchLabelBox;
+	}
+
+
+	public void setSwitchLabelBox(Rectangle switchLabelBox) {
+		this.switchLabelBox = switchLabelBox;
+	}
+
 
 	public boolean isTurnRight() {
 		return isTurnRight;

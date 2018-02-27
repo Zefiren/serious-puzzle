@@ -16,10 +16,10 @@ public class TrackSection  extends Interactable<TrackSection>{
 	private TrackSection leftTrack;
 	private TrackSection rightTrack;
 	
-	private Rectangle labelBox;
+	protected Rectangle labelBox;
 	private Line2D.Double trackGraphic;
 	private Color trackColour;
-	private Point textPlace;
+	protected Point textPlace;
 
 	/**
 	 * @param tsID
@@ -56,10 +56,10 @@ public class TrackSection  extends Interactable<TrackSection>{
 	}
 	
 	private void initTrackGraphic() {
-		setTrackGraphic(new Line2D.Double(0,0,200,0));
+		setTrackGraphic(new Line2D.Double(0,0,Surface.trackLengthStraight,0));
 		setTrackColour(Color.BLUE);
-		labelBox = new Rectangle(75,10,50,20);
-		textPlace = new Point(100,30);
+		labelBox = new Rectangle((int)(Surface.trackLengthStraight*0.375),10,40,20);
+		textPlace = new Point((int)(Surface.trackLengthStraight*0.5)-labelBox.width/2,25);
 	}
 	
 	/**

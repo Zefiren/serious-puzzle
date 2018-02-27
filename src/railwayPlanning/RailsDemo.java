@@ -46,8 +46,8 @@ class Surface extends JPanel implements MouseListener {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	int trainX = 50, trainY = 300;
-	int trackX = 50, trackY = 300;
+	int trainX = 50, trainY = 200;
+	int trackX = 50, trackY = 200;
 
 	public TrackSection start;
 	public Train train;
@@ -57,7 +57,7 @@ class Surface extends JPanel implements MouseListener {
 	List<Signal> signals;
 	SolutionManager solMgr;
 	
-	private final int trackLengthStraight = 200;
+	static final int trackLengthStraight = 200;
 
 	private Color pcolour = Color.BLUE;
 	private BasicStroke trackBrush = new BasicStroke(5, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND);;
@@ -179,24 +179,12 @@ class Surface extends JPanel implements MouseListener {
 					p.ypoints[1] += 10;
 				}
 			}
-//			int xDir = 1;
-//			int yDir = 1;
-//			if(!isRightDirection) {
-//				xDir = -1;
-//				System.out.println("yo" + s.getTsID());
-//			}
-//			if(!s.isTurnRight()) {
-//				if(!isRightDirection){
-//					xDir = -1;
-//					yDir = 1;
-//				}
-//				else{
-//					yDir = -1;
-//				}
-//			}
-//			g2d.scale(xDir, yDir);
+
 			g2d.drawPolyline(p.xpoints,p.ypoints,p.npoints);
 			g2d.setTransform(oldTransform);
+			g2d.draw(s.getSwitchLabelBox());
+			g2d.drawString("tc" + s.getSwitchID(), s.getSwitchLabelBox().x, s.getSwitchLabelBox().y);
+
 		}
 		if(isThrown) {
 			Line2D.Double l = new Double(ts.getTrackGraphic().getP1(), ts.getTrackGraphic().getP2());
@@ -276,14 +264,14 @@ class Surface extends JPanel implements MouseListener {
 
 	private void placeTrack(TrackSection ts, int x, int y) {
 		ts.setTrackGraphicPoints(x, y, (int) (x + trackLengthStraight * 0.95), y);
-		ts.setLabelBoxPoint(x + 85, y + 10, 40, 20);
-		ts.setTextPlace(new Point(x + 90, y + 25));
+		ts.setLabelBoxPoint(x + ts.getLabelBox().x, y + ts.getLabelBox().y, ts.getLabelBox().width, ts.getLabelBox().height);
+		ts.setTextPlace(new Point(x + ts.getTextPlace().x, y + ts.getTextPlace().y));
 		// g2d.drawLine(0, 0, trackLengthStraight, 0);
 
 		if (ts.getClass() == Switch.class) {
 			Switch s = (Switch) ts;
-			s.setLabelBoxPoint(x + 85, y + 10, 40, 20);
-			s.setTextPlace(new Point(x + 90, y + 25));
+//			s.setLabelBoxPoint(x + 85, y + 10, 40, 20);
+//			s.setTextPlace(new Point(x + 90, y + 25));
 			Polygon eLine = s.getExtraTrackGraphic();
 			int xs, ys, xe, ye, xm;
 			if(!s.isRightDirection())
@@ -515,7 +503,7 @@ public class RailsDemo extends JFrame implements KeyListener , ActionListener {
 		setTitle("Translation");
 		s.setSize(getPreferredSize());
 		panel.setSize(1280, 600);
-		setSize(1600, 800);
+		setSize(1280, 600);
 		panel.add(s);
 		solPanel.setLayout(new BoxLayout(solPanel, BoxLayout.Y_AXIS));
 		solBtnPanel.setLayout(new GridLayout(1,3));
