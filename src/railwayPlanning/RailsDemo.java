@@ -58,10 +58,12 @@ class Surface extends JPanel implements MouseListener {
 	SolutionManager solMgr;
 	
 	static final int trackLengthStraight = 200;
+	static final int trackVerticalSpace = 100;
 
 	private Color pcolour = Color.BLUE;
 	private BasicStroke trackBrush = new BasicStroke(5, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND);;
-	private BasicStroke labelBrush = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND);;
+	private BasicStroke labelBrush = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND);
+
 	// private final int track[] = { 1, 2, 1 };
 
 	Surface(ArrayList<Integer> IDs, TrackSection startSection, Train train, List<TrackSection> tracks,List<Signal> signals) {
@@ -101,9 +103,9 @@ class Surface extends JPanel implements MouseListener {
 		drawTracks(start, g2d);
 		drawSignals(g2d);
 		
-		g2d.setTransform(oldTransform);
-		g2d.translate(trainX, trainY);
-		g2d.rotate(Math.toRadians(1));
+//		g2d.setTransform(oldTransform);
+//		g2d.translate(trainX, trainY);
+//		g2d.rotate(Math.toRadians(1));
 
 		drawTrain(g2d);
 		System.out.println(g2d.getTransform().getTranslateX());
@@ -228,9 +230,9 @@ class Surface extends JPanel implements MouseListener {
 					x -= trackLengthStraight;
 
 				if (s.isTurnRight())
-					y += 100;
+					y +=  trackVerticalSpace;
 				else
-					y -= 100;
+					y -= trackVerticalSpace;
 
 				placeTracks(s.getExtraTrack(), x, y);
 			}
@@ -342,9 +344,12 @@ class Surface extends JPanel implements MouseListener {
 	}
 	
 	private void drawTrain(Graphics2D g2d) {
-		g2d.translate(trainX, trainY - 20);
-		g2d.setPaint(new Color(150, 150, 150));
-		g2d.fillRect(0, 0, 70, 40);
+		TrackSection curLoc = train.getLocation();
+		Point drawLoc = curLoc.getPosAlongTrack(0.5);
+		g2d.translate(drawLoc.x, drawLoc.y - 15);
+		g2d.setPaint(new Color(0.6f, 0.6f, 0.6f,0.5f));
+		g2d.fillRect(0, 0, 40, 30);
+		g2d.fillPolygon(new int[]{40,60,40}, new int[]{0,15,30}, 3);
 	}
 
 	@Override

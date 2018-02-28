@@ -176,6 +176,12 @@ public class TrackSection  extends Interactable<TrackSection>{
 	public TrackSection getInteractable() {
 		return this;
 	}
+	
+	public Point getPosAlongTrack(double percent){
+		int x = (int) (getTrackGraphic().x1 + (getTrackGraphic().x2 - getTrackGraphic().x1)*percent);
+		int y = (int) (getTrackGraphic().y1 + (getTrackGraphic().y2 - getTrackGraphic().y1)*percent);
+		return new Point(x,y);
+	}
 
 
 	
