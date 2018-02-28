@@ -94,7 +94,7 @@ public class Switch extends TrackSection {
 		textPlace = new Point((int)(Surface.trackLengthStraight*0.5)-labelBox.width/2,labelY + 25);		
 		
 		switchLabelBox = new Rectangle((int)(Surface.trackLengthStraight*0.375),labelY + 30,40,20);
-		switchTextPlace = new Point((int)(Surface.trackLengthStraight*0.5)-labelBox.width/2,labelY + 55);		
+		switchTextPlace = new Point((int)(Surface.trackLengthStraight*0.5)-labelBox.width/2,labelY + 45);		
 
 		setExtraTrackGraphic(new Polygon(new int[] {xstart,xmid,xend},new int[] {ystart,y,y},3));//0, ystart, 200,y
 		setTrackColour(Color.BLUE);
@@ -161,6 +161,10 @@ public class Switch extends TrackSection {
 	
 	public Switch getInteractable() {
 		return this;
+	}
+
+	public void setSwitchLabelBoxPoint( int x, int y, int width, int height) {
+		switchLabelBox.setBounds(x, y, width, height);
 	}
 
 

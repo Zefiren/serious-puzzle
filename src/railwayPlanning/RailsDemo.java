@@ -184,9 +184,15 @@ class Surface extends JPanel implements MouseListener {
 
 			g2d.drawPolyline(p.xpoints,p.ypoints,p.npoints);
 			g2d.setTransform(oldTransform);
+		
+			
+			g2d.setPaint(Color.black);
+			g2d.setStroke(labelBrush);
 			g2d.draw(s.getSwitchLabelBox());
-			g2d.drawString("tc" + s.getSwitchID(), s.getSwitchLabelBox().x, s.getSwitchLabelBox().y);
-
+			g2d.drawString("sw" + s.getSwitchID(), s.getSwitchTextPlace().x, s.getSwitchTextPlace().y);
+		
+			g2d.setPaint(ts.getTrackColour());
+			g2d.setStroke(trackBrush);
 		}
 		if(isThrown) {
 			Line2D.Double l = new Double(ts.getTrackGraphic().getP1(), ts.getTrackGraphic().getP2());
@@ -209,6 +215,10 @@ class Surface extends JPanel implements MouseListener {
 		trackID.add(ts.getTsID());
 	}
 
+//	private void drawInfo(Interactable<?> i, Graphics2D g2d) {
+//		g2d.draw(s);
+//	}
+	
 	private void placeTracks(TrackSection ts, int x, int y) {
 		placeTrack(ts, x, y);
 		if (ts.getClass() == Switch.class) {
@@ -272,8 +282,9 @@ class Surface extends JPanel implements MouseListener {
 
 		if (ts.getClass() == Switch.class) {
 			Switch s = (Switch) ts;
-//			s.setLabelBoxPoint(x + 85, y + 10, 40, 20);
-//			s.setTextPlace(new Point(x + 90, y + 25));
+			s.setSwitchLabelBoxPoint(x + s.getSwitchLabelBox().x, y + s.getSwitchLabelBox().y, s.getSwitchLabelBox().width, s.getSwitchLabelBox().height);
+			s.setSwitchTextPlace(new Point(x + s.getSwitchTextPlace().x, y + s.getSwitchTextPlace().y));
+		
 			Polygon eLine = s.getExtraTrackGraphic();
 			int xs, ys, xe, ye, xm;
 			if(!s.isRightDirection())
