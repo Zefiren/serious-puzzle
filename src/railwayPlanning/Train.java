@@ -1,12 +1,14 @@
 package railwayPlanning;
 
+import java.awt.Rectangle;
+
 public class Train {
 	
 	private int trainID;
 	private TrackSection source;
 	private TrackSection destination;
 	private TrackSection location;
-
+	private Rectangle trainBox;
 	/**
 	 * @param trainID
 	 * @param source
@@ -19,6 +21,7 @@ public class Train {
 		this.source = source;
 		this.destination = destination;
 		this.location = location;
+		setTrainBox(new Rectangle(0, 0, 40, 30));
 	}
 	
 	
@@ -63,5 +66,15 @@ public class Train {
 	 */
 	public int getTrainID() {
 		return trainID;
+	}
+
+
+	public Rectangle getTrainBox() {
+		return trainBox;
+	}
+
+
+	public void setTrainBox(Rectangle trainBox) {
+		this.trainBox = trainBox;
 	}
 }

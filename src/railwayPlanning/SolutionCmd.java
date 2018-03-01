@@ -43,7 +43,7 @@ public class SolutionCmd {
 		case SignalChange:
 			return "Signal : " + ((Signal) target).getId() + " ->" + newValue ;
 		case CheckLocation:
-			return "Command: Track Section" + ((TrackSection) target).getTsID() + " has to be occupied by Train" + targetTrain.getTrainID() +"\n ";
+			return "Track Section :" + ((TrackSection) target).getTsID() + " to be occupied by Train" + targetTrain.getTrainID() +"\n ";
 		default:
 			return "no known type";
 		}
