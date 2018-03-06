@@ -8,7 +8,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="300.0" prefWidth="600.0" stylesheets="@DarkTheme.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="grzegorz.address.view.RailwayPlannerController">
+<AnchorPane prefHeight="300.0" prefWidth="600.0" stylesheets="@DarkTheme.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="grzegorz.rail.view.RailwayPlannerController">
    <children>
       <SplitPane fx:id="splitPane" dividerPositions="0.7" layoutX="6.0" prefHeight="300.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <items>
@@ -16,12 +16,12 @@
           <AnchorPane fx:id="stepsAnchor" minHeight="0.0" minWidth="0.0" styleClass="background">
                <children>
                   <Label layoutX="8.0" layoutY="6.0" styleClass="label-header" text="Steps" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0" />
-                  <ButtonBar layoutX="28.0" layoutY="239.0" prefHeight="46.0" prefWidth="120.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="28.0" AnchorPane.rightAnchor="28.0">
+                  <ButtonBar layoutX="28.0" layoutY="239.0" prefHeight="46.0" prefWidth="120.0" AnchorPane.bottomAnchor="6.0" AnchorPane.leftAnchor="28.0" AnchorPane.rightAnchor="28.0">
                     <buttons>
-                      <Button mnemonicParsing="false" prefWidth="126.0" text="Button" />
+                      <Button fx:id="stepDelButton" mnemonicParsing="false" prefWidth="126.0" text="Delete" />
                     </buttons>
                   </ButtonBar>
-                  <TableView fx:id="stepsTable" layoutX="-12.0" layoutY="50.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="60.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="60.0">
+                  <TableView fx:id="stepsTable" layoutX="-12.0" layoutY="50.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="60.0">
                     <columns>
                       <TableColumn fx:id="stepNumColumn" prefWidth="75.0" text="#" />
                       <TableColumn fx:id="stepColumn" prefWidth="75.0" text="Step" />

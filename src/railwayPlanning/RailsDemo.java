@@ -1,4 +1,4 @@
-package railwayPlanning;
+/*package railwayPlanning;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -41,9 +41,9 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 
 class Surface extends JPanel implements MouseListener {
-	/**
+	*//**
 	 *
-	 */
+	 *//*
 	private static final long serialVersionUID = 1L;
 
 	int trainX = 50, trainY = 200;
@@ -450,9 +450,9 @@ class Surface extends JPanel implements MouseListener {
 
 public class RailsDemo extends JFrame implements KeyListener, ActionListener {
 
-	/**
+	*//**
 	 *
-	 */
+	 *//*
 	private static final long serialVersionUID = 1L;
 	Surface s;
 	JTable list;
@@ -544,9 +544,9 @@ public class RailsDemo extends JFrame implements KeyListener, ActionListener {
 		solBtnPanel.setLayout(new GridLayout(1, 3));
 		String[] columns = { "Step", "Operation" };
 		tableModel = new DefaultTableModel(null, columns) {
-			/**
+			*//**
 			*
-			*/
+			*//*
 			private static final long serialVersionUID = 715610582714642979L;
 
 			@Override
@@ -616,7 +616,7 @@ public class RailsDemo extends JFrame implements KeyListener, ActionListener {
 		});
 	}
 
-	/** Handle the key-pressed event from the text field. */
+	*//** Handle the key-pressed event from the text field. *//*
 	public void keyPressed(KeyEvent e) {
 		System.out.println("key press");
 		if (e.getKeyCode() == KeyEvent.VK_LEFT) s.trainX -= 5;
@@ -640,16 +640,16 @@ public class RailsDemo extends JFrame implements KeyListener, ActionListener {
 		}
 	}
 
-	/** Handle the key-released event from the text field. */
+	*//** Handle the key-released event from the text field. *//*
 	public void keyReleased(KeyEvent e) {
 	}
 
-	/** Handle the key typed event from the text field. */
+	*//** Handle the key typed event from the text field. *//*
 	public void keyTyped(KeyEvent e) {
 
 	}
 
-	/** Handle the button click. */
+	*//** Handle the button click. *//*
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == delBtn) {
 			if (list.getSelectedRowCount() > 1) {
@@ -671,4 +671,4 @@ public class RailsDemo extends JFrame implements KeyListener, ActionListener {
 		}
 	}
 
-}
+}*/

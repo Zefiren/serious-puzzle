@@ -1,22 +1,18 @@
-package grzegorz.address;
+package grzegorz.rail;
 
 
 import java.io.IOException;
 
-import grzegorz.address.model.Person;
-import grzegorz.address.view.RailwayPlannerController;
-import javafx.animation.AnimationTimer;
+import grzegorz.rail.model.Person;
+import grzegorz.rail.view.RailwayPlannerController;
 import javafx.application.Application;
-import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class MainApp extends Application {

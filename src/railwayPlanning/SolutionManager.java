@@ -1,10 +1,9 @@
 package railwayPlanning;
 
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-import javax.swing.table.DefaultTableModel;
-
+import javafx.beans.property.IntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -37,13 +36,38 @@ public class SolutionManager {
 		saved = false;
 	}
 
-	public void removeSteps(int[] indices, int num){
-		int min = indices[0];
-		for(int i = indices.length-1; i>= 0; i--){
-			solution.get(indices[i]).undoStep();
-			solution.remove(indices[i]);
-
+	public void removeSteps(List<SolutionCmd> steps){
+		int min = steps.get(0).getStepNumber().getValue()-1;
+		Iterator<SolutionCmd> it = solution.iterator();
+		System.out.println(solution.size());
+		System.out.println(solution.get(0).getStep().getValue());
+//		solution.remove(0);
+//		it.next();
+//		it.remove();
+		while(it.hasNext()) {
+			SolutionCmd step = it.next();
+			System.out.println("checking "+step.getStep().getValue());
+			if(steps.contains(step)) {
+				System.out.println("REMOVING "+step.getStep().getValue());
+				steps.remove(step);
+				it.remove();
+				
+				
+			}
+			System.out.println("next");
 		}
+//		steps.forEach(step -> 
+//		{
+//			step.undoStep(); 
+//			System.out.println("REMOVING "+step.getStep().getValue());
+//			solution.remove(step);
+//		});
+//		for(int i = indices.length-1; i>= 0; i--){
+//			solution.get(indices[i]).un doStep();
+//			solution.remove(indices[i]);
+//
+//		}
+		System.out.println("hey " + solution.size());
 		for(int row = min; row< solution.size(); row++){
 			solution.get(row).setStepNumber(row+1);
 		}

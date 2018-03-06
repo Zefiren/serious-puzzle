@@ -1,4 +1,4 @@
-package grzegorz.address;
+package grzegorz.rail;
 
 
 import java.time.LocalDate;
