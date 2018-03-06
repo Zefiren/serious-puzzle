@@ -1,14 +1,14 @@
 package railwayPlanning;
 
 public class Signal extends Interactable<Signal>{
-	
+
 	private int id;
 	private TrackSection signalTC;
 	private TrackSection protectingTC;
 	private boolean isClear;
 	private boolean directionLeft;
-	
-	private SignalGraphic signalGraphic;
+
+//	private SignalGraphic signalGraphic;
 
 	public Signal(int id, TrackSection signalTC, TrackSection protectingTC, boolean facingLeft) {
 		super();
@@ -16,7 +16,7 @@ public class Signal extends Interactable<Signal>{
 		this.setSignalTC(signalTC);
 		this.setProtectingTC(protectingTC);
 		this.setDirectionLeft(facingLeft);
-		signalGraphic = new SignalGraphic(50, facingLeft);
+//		signalGraphic = new SignalGraphic(50, facingLeft);
 	}
 
 	public int getId() {
@@ -59,18 +59,10 @@ public class Signal extends Interactable<Signal>{
 		this.directionLeft = directionLeft;
 	}
 
-	public SignalGraphic getSignalGraphic() {
-		return signalGraphic;
-	}
-
-	public void setSignalGraphic(SignalGraphic signalGraphic) {
-		this.signalGraphic = signalGraphic;
-	}
-
 	public Signal getInteractable() {
 		// TODO Auto-generated method stub
 		return this;
 	}
-	
-	
+
+
 }

@@ -42,7 +42,7 @@ import javax.swing.table.TableCellRenderer;
 
 class Surface extends JPanel implements MouseListener {
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 
@@ -257,7 +257,7 @@ class Surface extends JPanel implements MouseListener {
 				if (!trackID.contains(ts.getRightTrack().getTsID())) {
 					x += trackLengthStraight;
 					placeTracks(ts.getRightTrack(), x, y);
-				}
+				} 
 			}
 		}
 
@@ -354,6 +354,12 @@ class Surface extends JPanel implements MouseListener {
 
 	}
 
+	public Point getPosAlongTrack(double percent){
+		int x = (int) (getTrackGraphic().x1 + (getTrackGraphic().x2 - getTrackGraphic().x1)*percent);
+		int y = (int) (getTrackGraphic().y1 + (getTrackGraphic().y2 - getTrackGraphic().y1)*percent);
+		return new Point(x,y);
+	}
+
 	@Override
 	public void paintComponent(Graphics g) {
 
@@ -445,7 +451,7 @@ class Surface extends JPanel implements MouseListener {
 public class RailsDemo extends JFrame implements KeyListener, ActionListener {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 	Surface s;
@@ -539,7 +545,7 @@ public class RailsDemo extends JFrame implements KeyListener, ActionListener {
 		String[] columns = { "Step", "Operation" };
 		tableModel = new DefaultTableModel(null, columns) {
 			/**
-			* 
+			*
 			*/
 			private static final long serialVersionUID = 715610582714642979L;
 

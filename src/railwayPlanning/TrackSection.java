@@ -1,25 +1,20 @@
 package railwayPlanning;
 
-import java.awt.Color;
 import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.geom.Line2D;
 
 
 public class TrackSection  extends Interactable<TrackSection>{
-	
-	
+
+
 	private int tsID;
 	private String label;
 	private boolean isEndTrack;
 	private boolean isRightEnding;
 	private TrackSection leftTrack;
 	private TrackSection rightTrack;
-	
-	protected Rectangle labelBox;
-	private Line2D.Double trackGraphic;
-	private Color trackColour;
-	protected Point textPlace;
+
+	private Point location;
+
 
 	/**
 	 * @param tsID
@@ -37,31 +32,31 @@ public class TrackSection  extends Interactable<TrackSection>{
 			this.leftTrack = nonEnding;
 		else
 			this.rightTrack = nonEnding;
-		
-		initTrackGraphic();
+
+//		initTrackGraphic();
 	}
-	
+
 	public TrackSection(int tsID, TrackSection leftTrack, TrackSection rightTrack) {
 		this.tsID = tsID;
 		this.leftTrack = leftTrack;
 		this.rightTrack = rightTrack;
-		
-		initTrackGraphic();
+
+//		initTrackGraphic();
 	}
-	
+
 	public TrackSection(int tsID) {
 		this.tsID = tsID;
-		
-		initTrackGraphic();
+
+//		initTrackGraphic();
 	}
-	
-	private void initTrackGraphic() {
-		setTrackGraphic(new Line2D.Double(0,0,Surface.trackLengthStraight,0));
-		setTrackColour(Color.BLUE);
-		labelBox = new Rectangle((int)(Surface.trackLengthStraight*0.375),10,40,20);
-		textPlace = new Point((int)(Surface.trackLengthStraight*0.5)-labelBox.width/2,25);
-	}
-	
+//
+//	private void initTrackGraphic() {
+//		setTrackGraphic(new Line2D.Double(0,0,Surface.trackLengthStraight,0));
+//		setTrackColour(Color.BLUE);
+////		labelBox = new Rectangle((int)(Surface.trackLengthStraight*0.375),10,40,20);
+////		textPlace = new Point((int)(Surface.trackLengthStraight*0.5)-labelBox.width/2,25);
+//	}
+
 	/**
 	 * @return the tsID
 	 */
@@ -113,7 +108,7 @@ public class TrackSection  extends Interactable<TrackSection>{
 	public TrackSection getRightTrack() {
 		return rightTrack;
 	}
-	
+
 	/**
 	 * @param leftTrack the leftTrack to set
 	 */
@@ -132,59 +127,25 @@ public class TrackSection  extends Interactable<TrackSection>{
 		return isRightEnding;
 	}
 
-	public Line2D.Double getTrackGraphic() {
-		return trackGraphic;
-	}
 
-	public void setTrackGraphic(Line2D.Double trackGraphic) {
-		this.trackGraphic = trackGraphic;
-	}
 
-	public Rectangle getLabelBox() {
-		return labelBox;
-	}
-
-	public void setLabelBox(Rectangle labelBox) {
-		this.labelBox = labelBox;
-	}
-	
-	public void setLabelBoxPoint( int x, int y, int width, int height) {
-		labelBox.setBounds(x, y, width, height);
-	}
-
-	public void setTrackGraphicPoints(int x1, int y1, int x2, int y2) {
-		trackGraphic.setLine(x1, y1, x2, y2);
-	}
-
-	
-	public Color getTrackColour() {
-		return trackColour;
-	}
-
-	public void setTrackColour(Color trackColour) {
-		this.trackColour = trackColour;
-	}
-
-	public Point getTextPlace() {
-		return textPlace;
-	}
-
-	public void setTextPlace(Point textPlace) {
-		this.textPlace = textPlace;
-	}
 
 	public TrackSection getInteractable() {
 		return this;
 	}
-	
-	public Point getPosAlongTrack(double percent){
-		int x = (int) (getTrackGraphic().x1 + (getTrackGraphic().x2 - getTrackGraphic().x1)*percent);
-		int y = (int) (getTrackGraphic().y1 + (getTrackGraphic().y2 - getTrackGraphic().y1)*percent);
-		return new Point(x,y);
+
+	public Point getLocation() {
+		return location;
+	}
+
+	public void setLocation(Point location) {
+		this.location = location;
 	}
 
 
-	
+
+
+
 
 
 }

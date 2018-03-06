@@ -5,55 +5,63 @@ import java.util.List;
 
 import javax.swing.table.DefaultTableModel;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 public class SolutionManager {
-	List<SolutionCmd> solution;
-	DefaultTableModel listMod;
+	ObservableList<SolutionCmd> solution;
 	Boolean editedSinceLastRender;
 	Boolean saved;
-	
+
 	public SolutionManager() {
-		solution = new ArrayList<SolutionCmd>();
+		solution = FXCollections.observableArrayList();
 		saved = false;
 	}
-	
+
 	public void addStep(SolutionCmd newStep){
+		newStep.setStepNumber(solution.size()+1);
 		solution.add(newStep);
-		Object[] newRow = {listMod.getRowCount()+1,newStep};
-		listMod.addRow(newRow);
 		saved = false;
 		editedSinceLastRender = false;
 	}
-	
+
 	public void removeStep(int index){
 		solution.get(index).undoStep();
-		
-		solution.remove(index);
-		listMod.removeRow(index);
 
-		for(int row = index; row< listMod.getRowCount(); row++){
-			listMod.setValueAt(row+1, row, 0);
+		solution.remove(index);
+
+		for(int row = index; row< solution.size(); row++){
+			solution.get(row).setStepNumber(row+1);
 		}
 		editedSinceLastRender = true;
 		saved = false;
 	}
-	
+
 	public void removeSteps(int[] indices, int num){
 		int min = indices[0];
 		for(int i = indices.length-1; i>= 0; i--){
-			System.out.println("removing from index"+ i + " : " + listMod.getValueAt(i, 1));
 			solution.get(indices[i]).undoStep();
 			solution.remove(indices[i]);
-			listMod.removeRow(indices[i]);
-			
+
 		}
-		for(int row = min; row< listMod.getRowCount(); row++){
-			listMod.setValueAt(row+1, row, 0);
+		for(int row = min; row< solution.size(); row++){
+			solution.get(row).setStepNumber(row+1);
 		}
 		editedSinceLastRender = true;
 		saved = false;
 	}
-	
+
+
+
 	public void save(){
 		saved = true;
+	}
+
+	public ObservableList<SolutionCmd> getSolution() {
+		return solution;
+	}
+
+	public void setSolution(ObservableList<SolutionCmd> solution) {
+		this.solution = solution;
 	}
 }
