@@ -10,6 +10,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sun.javafx.scene.control.skin.TableHeaderRow;
+
 import grzegorz.rail.MainApp;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.value.ChangeListener;
@@ -30,6 +32,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
 import railwayPlanning.Interactable;
 import railwayPlanning.Scenario;
@@ -68,6 +71,8 @@ public class RailwayPlannerController {
 	// private GraphicsContext gc;
 	List<SolutionCmd> selected = new ArrayList<SolutionCmd>();
 
+	private Map<Train,Rectangle> trainBox = new HashMap<Train,Rectangle>();
+
 	private List<Point> shapes = new ArrayList<Point>();
 	private Map<Interactable<?>, ArrayList<Button>> scenarioBtns;
 	// Reference to the main application.
@@ -99,6 +104,8 @@ public class RailwayPlannerController {
 	private int layoutVerticalSize = 0;
 	private int layoutHorizontalSize = 0;
 	protected boolean deletingFlag;
+	private boolean initialFlag = true;
+	private boolean animationFlag = false;
 
 	/**
 	 * The constructor. The constructor is called before the initialize() method.
@@ -113,8 +120,7 @@ public class RailwayPlannerController {
 	// });
 
 	/**
-	 * Initializes the controller class. This method is automatically called after
-	 * the fxml file has been loaded.
+	 * Initializes the controller class. This method is automatically called after the fxml file has been loaded.
 	 */
 	@FXML
 	private void initialize() {
@@ -123,28 +129,33 @@ public class RailwayPlannerController {
 		stepNumColumn.setCellValueFactory(cellData -> cellData.getValue().getStepNumberString());
 		stepColumn.setCellValueFactory(cellData -> cellData.getValue().getStep());
 		stepsTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		stepsTable.getColumns().forEach(col -> {
+			col.setSortable(false);
+		});
+		stepsTable.widthProperty().addListener(new ChangeListener<Number>() {
+			@Override
+			public void changed(ObservableValue<? extends Number> source, Number oldWidth, Number newWidth) {
+				TableHeaderRow header = (TableHeaderRow) stepsTable.lookup("TableHeaderRow");
+				header.reorderingProperty().addListener(new ChangeListener<Boolean>() {
+					@Override
+					public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+						header.setReordering(false);
+					}
+				});
+			}
+		});
 		stepsTable.getSelectionModel().selectedItemProperty().addListener((obs, ov, nv) -> {
 			if (!deletingFlag) {
 				selected.clear();
 				selected.addAll((stepsTable.getSelectionModel().getSelectedItems()));
-//						.stream().map(s -> s.getStepNumber())
-//						.collect(Collectors.toList())));
+				// .stream().map(s -> s.getStepNumber())
+				// .collect(Collectors.toList())));
 				// selected.forEach(step -> System.out.println("#"+step);
 				// ));
 				System.out.println(selected.size() + " SELECTED");
 			}
 		});
 
-		stepDelButton.setOnAction(new EventHandler<ActionEvent>() {
-
-			@Override
-			public void handle(ActionEvent arg0) {
-				deletingFlag = true;
-				stepsTable.getSelectionModel().clearSelection();
-				solMgr.removeSteps(selected);
-				deletingFlag = false;
-			}
-		});
 		System.out.println(scenarioAnchor.getHeight());
 		CanvasPane canvasPane = new CanvasPane(MainApp.MINIMUM_WINDOW_WIDTH, MainApp.MINIMUM_WINDOW_HEIGHT);
 		scenarioAnchor.getChildren().add(canvasPane);
@@ -170,6 +181,8 @@ public class RailwayPlannerController {
 		scenarioAnchor.getChildren().add(overlay);
 		GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 		drawScenario(g);
+		initialFlag = false;
+		animationFlag = true;
 
 		stepsAnchor.maxWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
 		stepsAnchor.minWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
@@ -178,22 +191,19 @@ public class RailwayPlannerController {
 
 		scenarioAnchor.widthProperty().addListener(new ChangeListener<Number>() {
 			@Override
-			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth,
-					Number newSceneWidth) {
+			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
 				trackLength = (int) (newSceneWidth.doubleValue() * 0.8) / scenario.getWidth();
 				hPadding = (int) (newSceneWidth.doubleValue() * 0.1);
 				System.out.println("Width: " + newSceneWidth);
 				Number n = (Number) scenarioAnchor.getWidth();
-				System.out.println(
-						"RATIO: " + newSceneWidth.doubleValue() / (newSceneWidth.doubleValue() + n.doubleValue()));
+				System.out.println("RATIO: " + newSceneWidth.doubleValue() / (newSceneWidth.doubleValue() + n.doubleValue()));
 				// GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 				drawScenario(g);
 			}
 		});
 		scenarioAnchor.heightProperty().addListener(new ChangeListener<Number>() {
 			@Override
-			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight,
-					Number newSceneHeight) {
+			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
 				System.out.println("scen height" + scenario.getHeight());
 				System.out.println("scene size" + scenario.TrackCount());
 				trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
@@ -206,29 +216,44 @@ public class RailwayPlannerController {
 
 		stepsAnchor.widthProperty().addListener(new ChangeListener<Number>() {
 			@Override
-			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth,
-					Number newSceneWidth) {
+			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
 				System.out.println("Width: " + newSceneWidth);
 				Number n = (Number) scenarioAnchor.getWidth();
-				System.out.println(
-						"RATIO: " + newSceneWidth.doubleValue() / (newSceneWidth.doubleValue() + n.doubleValue()));
+				System.out.println("RATIO: " + newSceneWidth.doubleValue() / (newSceneWidth.doubleValue() + n.doubleValue()));
 			}
 		});
 		stepsAnchor.heightProperty().addListener(new ChangeListener<Number>() {
 			@Override
-			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight,
-					Number newSceneHeight) {
+			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
 				System.out.println("Height: " + newSceneHeight);
 			}
 		});
 
-		scenarioAnchor.setOnMouseClicked(event -> {
+		stepDelButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				if (selected.size() > 0) {
+					deletingFlag = true;
+					stepsTable.getSelectionModel().clearSelection();
+
+					if (selected.size() == 1) solMgr.removeStep(selected.get(0));
+					else solMgr.removeSteps(selected);
+
+					deletingFlag = false;
+					drawScenario(g);
+				}
+			}
+		});
+
+		/*scenarioAnchor.setOnMouseClicked(event -> {
 			double x = event.getX(), y = event.getY();
 			shapes.add(new Point((int) x, (int) y));
 			System.out.println(scenario.getTrack(new Point(1, 1)).getClass());
 			((Switch) scenario.getTrack(new Point(1, 1))).setDiverging(true);
 			drawScenario(g);
-		});
+		});*/
+
 		// // Listen for selection changes and show the person details when changed.
 		// personTable.getSelectionModel().selectedItemProperty().addListener(
 		// (observable, oldValue, newValue) -> showPersonDetails(newValue));
@@ -257,13 +282,40 @@ public class RailwayPlannerController {
 			Entry<TrackSection, Signal> mentry = iterator1.next();
 			drawSignal(gc, mentry.getValue());
 		}
+		if (initialFlag || animationFlag) {
+			List<Train> trains = scenario.getTrains();
+			Iterator<Train> iterator2 = trains.iterator();
+			while (iterator2.hasNext()) {
+				Train train = iterator2.next();
+				if(animationFlag)
+					updateTrain(train);
+				else
+					createTrain(train);
+			}
+		}
+	}
+
+	private void createTrain(Train tr) {
+		Rectangle newTrain = new Rectangle(trackLength/6,trackVertGap / 4);
+		System.out.println("hello train at " + tr.getLocation().getLocation());
+		overlay.getChildren().add(newTrain);
+		newTrain.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
+		newTrain.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - newTrain.getHeight()/2);
+		newTrain.setFill(Color.BLUE);
+		newTrain.setOpacity(0.8);
+		trainBox.put(tr,newTrain);
+	}
+
+	private void updateTrain(Train tr) {
+		Rectangle trainRect = trainBox.get(tr);
+		trainRect.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
+		trainRect.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - trainRect.getHeight()/2);
 	}
 
 	private void drawSignal(GraphicsContext gc, Signal sig) {
 		// CREA.TE GRAPHICS using GC
 		double diameter = (trackLength / signalScaleFraction);
-		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding,
-				(int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5));
+		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding, (int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5));
 		Color left, right;
 		if (sig.isFacingLeft()) {
 			sigLoc.x += trackLength * trackLengthRatio - diameter * 2;
@@ -382,38 +434,26 @@ public class RailwayPlannerController {
 			int xstart = loc.x * trackLength + hPadding;
 
 			if (s.isDiverging()) {
-				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding,
-						loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)),
-						loc.y * trackVertGap + vPadding);
+				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding);
 			} else {
-				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding,
-						loc.x * trackLength + hPadding + (trackLength * trackLengthRatio),
-						loc.y * trackVertGap + vPadding);
+				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding);
 				yLevel = (int) (trackVertGap * 0.1);
 			}
 
 			if (s.isRightDirection()) {
-				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart,
-						(int) (trackLength * trackLengthRatio) + xstart };
-				if (s.isTurnRight())
-					yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap + ystart };
-				else
-					yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap + ystart };
+				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
+				if (s.isTurnRight()) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap + ystart };
+				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap + ystart };
 			} else {
-				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart,
-						(int) (trackLength * trackLengthRatio) + xstart };
-				if (!s.isTurnRight())
-					yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
-				else
-					yPts = new double[] { -trackVertGap + ystart, ystart - yLevel, ystart - yLevel };
+				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
+				if (!s.isTurnRight()) yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
+				else yPts = new double[] { -trackVertGap + ystart, ystart - yLevel, ystart - yLevel };
 			}
 
 			gc.strokePolyline(xPts, yPts, 3);
 			double yBtn;
-			if ((loc.y * trackVertGap + vPadding) > yPts[2])
-				yBtn = loc.y * trackVertGap + vPadding;
-			else
-				yBtn = yPts[2];
+			if ((loc.y * trackVertGap + vPadding) > yPts[2]) yBtn = loc.y * trackVertGap + vPadding;
+			else yBtn = yPts[2];
 
 			Button tsLabel = scenarioBtns.get(ts).get(0);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
@@ -454,8 +494,7 @@ public class RailwayPlannerController {
 			 * swLabel.layoutYProperty().set(tsLabel.getBoundsInParent().getMaxY()+20);
 			 */
 		} else {
-			gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding,
-					loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding);
+			gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding);
 			gc.setTextBaseline(VPos.CENTER);
 			gc.setTextAlign(TextAlignment.CENTER);
 		}
@@ -587,7 +626,9 @@ public class RailwayPlannerController {
 		newEnd2.setRightTrack(s2);
 
 		Train train = new Train(0, start, end, start);
+		Train train2 = new Train(1, end, newEnd2, end);
 		scenario.addTrain(train);
+		scenario.addTrain(train2);
 		Signal sig1 = new Signal(0, middle, middle2, true);
 		Signal sig2 = new Signal(1, end, s1, false);
 
@@ -612,17 +653,13 @@ public class RailwayPlannerController {
 	}
 
 	private void updateScenarioSizes(TrackSection ts, int x, int y) {
-		if (x > layoutHorizontalMax)
-			layoutHorizontalMax = x;
+		if (x > layoutHorizontalMax) layoutHorizontalMax = x;
 
-		if (x < layoutHorizontalMin)
-			layoutHorizontalMin = x;
+		if (x < layoutHorizontalMin) layoutHorizontalMin = x;
 
-		if (y > layoutVerticalMax)
-			layoutVerticalMax = y;
+		if (y > layoutVerticalMax) layoutVerticalMax = y;
 
-		if (y < layoutVerticalMin)
-			layoutVerticalMin = y;
+		if (y < layoutVerticalMin) layoutVerticalMin = y;
 
 		// System.out.println("next" + ts.getLocation());
 		// System.out.println("current" + topLeft.getLocation());
@@ -701,13 +738,13 @@ public class RailwayPlannerController {
 	 * ts.getLabelBox().width, ts.getLabelBox().height); ts.setTextPlace(new Point(x
 	 * + ts.getTextPlace().x, y + ts.getTextPlace().y)); // g2d.drawLine(0, 0,
 	 * trackLengthStraight, 0);
-	 * 
+	 *
 	 * if (ts.getClass() == Switch.class) { Switch s = (Switch) ts;
 	 * s.setSwitchLabelBoxPoint(x + s.getSwitchLabelBox().x, y +
 	 * s.getSwitchLabelBox().y, s.getSwitchLabelBox().width,
 	 * s.getSwitchLabelBox().height); s.setSwitchTextPlace(new Point(x +
 	 * s.getSwitchTextPlace().x, y + s.getSwitchTextPlace().y));
-	 * 
+	 *
 	 * Polygon eLine = s.getExtraTrackGraphic(); int xs, ys, xe, ye, xm; if
 	 * (!s.isRightDirection()) xs = x + (int) (eLine.xpoints[0] * 0.95); else xs = x
 	 * + (int) eLine.xpoints[0]; ys = y + (int) eLine.ypoints[0]; xm = (int) (x +
@@ -719,13 +756,13 @@ public class RailwayPlannerController {
 	 * eLine.ypoints[0]); s.setExtraTrackGraphic(new Polygon(new int[] { xs, xm, xe
 	 * }, new int[] { ys, ys, ye }, 3)); // new Point(xs, ys),new Point(xm, ye), new
 	 * Point(xe, ye))
-	 * 
+	 *
 	 * // eLine.setLine(xs,ys,xe,ye);
-	 * 
+	 *
 	 * } // g2d.draw(ts.getTrackGraphic()); // // g2d.setPaint(Color.black); //
 	 * g2d.setStroke(labelBrush); // // g2d.draw(ts.getLabelBox()); //
 	 * g2d.drawString("tc" + ts.getTsID(), x + 90, y + 25);
-	 * 
+	 *
 	 * System.out.println("drew " + ts.getTsID()); trackID.add(ts.getTsID()); }
 	 */
 
@@ -770,8 +807,7 @@ public class RailwayPlannerController {
 	}
 
 	/**
-	 * Fills all text fields to show details about the person. If the specified
-	 * person is null, all text fields are cleared.
+	 * Fills all text fields to show details about the person. If the specified person is null, all text fields are cleared.
 	 *
 	 * @param person
 	 *            the person or null
@@ -784,7 +820,7 @@ public class RailwayPlannerController {
 	 * streetLabel.setText(person.getStreet());
 	 * postalCodeLabel.setText(Integer.toString(person.getPostalCode()));
 	 * cityLabel.setText(person.getCity());
-	 * 
+	 *
 	 * // TODO: We need a way to convert the birthday into a String!
 	 * birthdayLabel.setText(DateUtil.format(person.getBirthday())); } else { //
 	 * Person is null, remove all the text. firstNameLabel.setText("");

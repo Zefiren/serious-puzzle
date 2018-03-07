@@ -24,10 +24,11 @@ public class SolutionManager {
 		editedSinceLastRender = false;
 	}
 
-	public void removeStep(int index){
-		solution.get(index).undoStep();
+	public void removeStep(SolutionCmd cmd){
+		int index = cmd.getStepNumber().getValue() - 1;
+		cmd.undoStep();
 
-		solution.remove(index);
+		solution.remove(cmd);
 
 		for(int row = index; row< solution.size(); row++){
 			solution.get(row).setStepNumber(row+1);
@@ -51,14 +52,12 @@ public class SolutionManager {
 				System.out.println("REMOVING "+step.getStep().getValue());
 				steps.remove(step);
 				it.remove();
-				
-				
 			}
 			System.out.println("next");
 		}
-//		steps.forEach(step -> 
+//		steps.forEach(step ->
 //		{
-//			step.undoStep(); 
+//			step.undoStep();
 //			System.out.println("REMOVING "+step.getStep().getValue());
 //			solution.remove(step);
 //		});
