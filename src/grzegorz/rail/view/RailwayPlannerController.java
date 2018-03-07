@@ -8,12 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import com.sun.javafx.scene.control.skin.TableHeaderRow;
 
 import grzegorz.rail.MainApp;
-import javafx.beans.property.IntegerProperty;
+import javafx.scene.input.MouseEvent;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -24,12 +21,14 @@ import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -68,6 +67,7 @@ public class RailwayPlannerController {
 
 	private CanvasPane canvasPane;
 	private Pane overlay;
+	private Pane notifierPane;
 	// private GraphicsContext gc;
 	List<SolutionCmd> selected = new ArrayList<SolutionCmd>();
 
@@ -106,6 +106,11 @@ public class RailwayPlannerController {
 	protected boolean deletingFlag;
 	private boolean initialFlag = true;
 	private boolean animationFlag = false;
+	
+	private Label messageLabel;
+	private Label helpLabel;
+	private boolean midstepFlag = false;
+	private TrackSection tempTarget;
 
 	/**
 	 * The constructor. The constructor is called before the initialize() method.
@@ -132,18 +137,9 @@ public class RailwayPlannerController {
 		stepsTable.getColumns().forEach(col -> {
 			col.setSortable(false);
 		});
-		stepsTable.widthProperty().addListener(new ChangeListener<Number>() {
-			@Override
-			public void changed(ObservableValue<? extends Number> source, Number oldWidth, Number newWidth) {
-				TableHeaderRow header = (TableHeaderRow) stepsTable.lookup("TableHeaderRow");
-				header.reorderingProperty().addListener(new ChangeListener<Boolean>() {
-					@Override
-					public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-						header.setReordering(false);
-					}
-				});
-			}
-		});
+		stepNumColumn.setReorderable(false);
+		stepColumn.setReorderable(false);
+
 		stepsTable.getSelectionModel().selectedItemProperty().addListener((obs, ov, nv) -> {
 			if (!deletingFlag) {
 				selected.clear();
@@ -171,7 +167,10 @@ public class RailwayPlannerController {
 
 			System.out.println(sizeCube);
 		});
-
+		
+		
+		
+		
 		createScenario();
 		scenarioBtns = new HashMap<Interactable<?>, ArrayList<Button>>();
 		// AnimationTimer loop = new AnimationTimer() {
@@ -183,11 +182,33 @@ public class RailwayPlannerController {
 		drawScenario(g);
 		initialFlag = false;
 		animationFlag = true;
+		
+		messageLabel = new Label("hello");
+		helpLabel = new Label("hello");
+		notifierPane = new AnchorPane(messageLabel,helpLabel);
+		notifierPane.setMaxSize(200, 100);
+		notifierPane.setMinSize(200, 100);
+		String enteredByUser = "abcdef";
+		notifierPane.setStyle("-fx-background-color: #" + enteredByUser);		
+		overlay.getChildren().add(notifierPane);
+//		bind(overlay.widthProperty().subtract(notifierPane.widthProperty().multiply(0.95)));
+		notifierPane.setTranslateY(30);
+		System.out.println(notifierPane.getLayoutX()+ " and width = " + overlay.getWidth());
+//		AnchorPane.setTopAnchor(notifierPane, 10.0);
+//		AnchorPane.setRightAnchor(notifierPane, 10.0);
+		
+		AnchorPane.setTopAnchor(messageLabel, 5.0);
+//		AnchorPane.setLeftAnchor(messageLabel, 0.0);
+		AnchorPane.setRightAnchor(messageLabel, 0.0);
+		AnchorPane.setBottomAnchor(helpLabel, 5.0);
+//		messageLabel.layoutXProperty().bind(notifierPane.widthProperty().subtract(messageLabel.widthProperty()).divide(2));
+//		helpLabel.layoutXProperty().bind(notifierPane.widthProperty().subtract(helpLabel.widthProperty()).divide(2));
 
 		stepsAnchor.maxWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
 		stepsAnchor.minWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
 		stepNumColumn.minWidthProperty().bind(stepsTable.widthProperty().multiply(0.25));
 		stepNumColumn.maxWidthProperty().bind(stepsTable.widthProperty().multiply(0.25));
+		notifierPane.setTranslateX(overlay.getWidth() - notifierPane.getWidth()/2 - notifierPane.getWidth()*0.1  );
 
 		scenarioAnchor.widthProperty().addListener(new ChangeListener<Number>() {
 			@Override
@@ -196,6 +217,8 @@ public class RailwayPlannerController {
 				hPadding = (int) (newSceneWidth.doubleValue() * 0.1);
 				System.out.println("Width: " + newSceneWidth);
 				Number n = (Number) scenarioAnchor.getWidth();
+				notifierPane.setTranslateX(overlay.getWidth() - notifierPane.getWidth()/2 - notifierPane.getWidth()*0.1 );
+
 				System.out.println("RATIO: " + newSceneWidth.doubleValue() / (newSceneWidth.doubleValue() + n.doubleValue()));
 				// GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 				drawScenario(g);
@@ -303,6 +326,13 @@ public class RailwayPlannerController {
 		newTrain.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - newTrain.getHeight()/2);
 		newTrain.setFill(Color.BLUE);
 		newTrain.setOpacity(0.8);
+		newTrain.setOnMouseClicked(new EventHandler<MouseEvent>()
+        {
+            @Override
+            public void handle(MouseEvent t) {
+                newTrain.setFill(Color.RED);
+            }
+        });
 		trainBox.put(tr,newTrain);
 	}
 
@@ -416,10 +446,8 @@ public class RailwayPlannerController {
 
 			@Override
 			public void handle(ActionEvent event) {
-				SolutionCmd newCmd = new SolutionCmd(ts, scenario.getTrain(0), 0);
-				solMgr.addStep(newCmd);
-				System.out.println("helloo?");
-				// s.setDiverging(!s.isDiverging());
+//				SolutionCmd newCmd = new SolutionCmd(ts, scenario.getTrain(0), 0);
+//				solMgr.addStep(newCmd);
 				GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 				drawScenario(g);
 			}
