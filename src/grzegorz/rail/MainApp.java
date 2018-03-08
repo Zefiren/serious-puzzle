@@ -58,6 +58,9 @@ public class MainApp extends Application {
         this.primaryStage.setTitle("AddressApp");
         this.primaryStage.setMinWidth(MINIMUM_WINDOW_WIDTH);
         this.primaryStage.setMinHeight(MINIMUM_WINDOW_HEIGHT);
+        this.primaryStage.setWidth(MINIMUM_WINDOW_WIDTH);
+        this.primaryStage.setHeight(MINIMUM_WINDOW_HEIGHT);
+        System.out.println("INIT WIDTH = "+this.primaryStage.getWidth());
         // Set the application icon.
         this.primaryStage.getIcons().add(new Image("file:resources/images/if_address-book_299084.png"));
 

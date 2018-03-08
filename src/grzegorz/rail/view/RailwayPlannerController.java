@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import grzegorz.rail.MainApp;
-import javafx.scene.input.MouseEvent;
+import javafx.animation.FadeTransition;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -18,6 +18,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
@@ -26,13 +27,14 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Border;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
+import javafx.util.Duration;
 import railwayPlanning.Interactable;
 import railwayPlanning.Scenario;
 import railwayPlanning.Signal;
@@ -44,15 +46,28 @@ import railwayPlanning.Train;
 
 public class RailwayPlannerController {
 
+	//solution
 	@FXML
 	private TableView<SolutionCmd> stepsTable;
 	@FXML
 	private TableColumn<SolutionCmd, String> stepNumColumn;
 	@FXML
 	private TableColumn<SolutionCmd, String> stepColumn;
-
 	@FXML
 	private Button stepDelButton;
+
+
+	//notification
+	@FXML
+	private AnchorPane notifAnchor;
+	@FXML
+	private Label notifTitle;
+	@FXML
+	private Label notifMessage;
+	@FXML
+	private Button closeButton;
+
+
 
 	@FXML
 	private AnchorPane scenarioAnchor;
@@ -66,7 +81,8 @@ public class RailwayPlannerController {
 	public Canvas scenarioCanvas;
 
 	private CanvasPane canvasPane;
-	private Pane overlay;
+
+	private AnchorPane overlay;
 	private Pane notifierPane;
 	// private GraphicsContext gc;
 	List<SolutionCmd> selected = new ArrayList<SolutionCmd>();
@@ -106,7 +122,7 @@ public class RailwayPlannerController {
 	protected boolean deletingFlag;
 	private boolean initialFlag = true;
 	private boolean animationFlag = false;
-	
+
 	private Label messageLabel;
 	private Label helpLabel;
 	private boolean midstepFlag = false;
@@ -151,8 +167,6 @@ public class RailwayPlannerController {
 				System.out.println(selected.size() + " SELECTED");
 			}
 		});
-
-		System.out.println(scenarioAnchor.getHeight());
 		CanvasPane canvasPane = new CanvasPane(MainApp.MINIMUM_WINDOW_WIDTH, MainApp.MINIMUM_WINDOW_HEIGHT);
 		scenarioAnchor.getChildren().add(canvasPane);
 		canvasPane.setPadding(new Insets(0));
@@ -167,88 +181,58 @@ public class RailwayPlannerController {
 
 			System.out.println(sizeCube);
 		});
-		
-		
-		
-		
+
+
 		createScenario();
 		scenarioBtns = new HashMap<Interactable<?>, ArrayList<Button>>();
 		// AnimationTimer loop = new AnimationTimer() {
 		// @Override
 		// public void handle(long now) {
-		overlay = new Pane();
+		overlay = new AnchorPane();
 		scenarioAnchor.getChildren().add(overlay);
+		AnchorPane.setTopAnchor(overlay, 0.0);
+		AnchorPane.setBottomAnchor(overlay, 0.0);
+		AnchorPane.setLeftAnchor(overlay, 0.0);
+		AnchorPane.setRightAnchor(overlay, 0.0);
+
 		GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 		drawScenario(g);
 		initialFlag = false;
 		animationFlag = true;
-		
-		messageLabel = new Label("hello");
-		helpLabel = new Label("hello");
-		notifierPane = new AnchorPane(messageLabel,helpLabel);
-		notifierPane.setMaxSize(200, 100);
-		notifierPane.setMinSize(200, 100);
-		String enteredByUser = "abcdef";
-		notifierPane.setStyle("-fx-background-color: #" + enteredByUser);		
-		overlay.getChildren().add(notifierPane);
-//		bind(overlay.widthProperty().subtract(notifierPane.widthProperty().multiply(0.95)));
-		notifierPane.setTranslateY(30);
-		System.out.println(notifierPane.getLayoutX()+ " and width = " + overlay.getWidth());
-//		AnchorPane.setTopAnchor(notifierPane, 10.0);
-//		AnchorPane.setRightAnchor(notifierPane, 10.0);
-		
-		AnchorPane.setTopAnchor(messageLabel, 5.0);
-//		AnchorPane.setLeftAnchor(messageLabel, 0.0);
-		AnchorPane.setRightAnchor(messageLabel, 0.0);
-		AnchorPane.setBottomAnchor(helpLabel, 5.0);
-//		messageLabel.layoutXProperty().bind(notifierPane.widthProperty().subtract(messageLabel.widthProperty()).divide(2));
-//		helpLabel.layoutXProperty().bind(notifierPane.widthProperty().subtract(helpLabel.widthProperty()).divide(2));
+		overlay.getChildren().add(notifAnchor);
+		notifAnchor.setVisible(false);
+
+		AnchorPane.setTopAnchor(notifAnchor, 10.0);
+		AnchorPane.setRightAnchor(notifAnchor, 10.0);
 
 		stepsAnchor.maxWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
 		stepsAnchor.minWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
 		stepNumColumn.minWidthProperty().bind(stepsTable.widthProperty().multiply(0.25));
 		stepNumColumn.maxWidthProperty().bind(stepsTable.widthProperty().multiply(0.25));
-		notifierPane.setTranslateX(overlay.getWidth() - notifierPane.getWidth()/2 - notifierPane.getWidth()*0.1  );
 
 		scenarioAnchor.widthProperty().addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
 				trackLength = (int) (newSceneWidth.doubleValue() * 0.8) / scenario.getWidth();
 				hPadding = (int) (newSceneWidth.doubleValue() * 0.1);
-				System.out.println("Width: " + newSceneWidth);
-				Number n = (Number) scenarioAnchor.getWidth();
-				notifierPane.setTranslateX(overlay.getWidth() - notifierPane.getWidth()/2 - notifierPane.getWidth()*0.1 );
 
-				System.out.println("RATIO: " + newSceneWidth.doubleValue() / (newSceneWidth.doubleValue() + n.doubleValue()));
-				// GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 				drawScenario(g);
 			}
 		});
 		scenarioAnchor.heightProperty().addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
-				System.out.println("scen height" + scenario.getHeight());
-				System.out.println("scene size" + scenario.TrackCount());
 				trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
 				vPadding = (int) (newSceneHeight.doubleValue() * 0.1);
-				System.out.println("Height: " + newSceneHeight);
-				// GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
+
 				drawScenario(g);
 			}
 		});
 
-		stepsAnchor.widthProperty().addListener(new ChangeListener<Number>() {
+		closeButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
-			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
-				System.out.println("Width: " + newSceneWidth);
-				Number n = (Number) scenarioAnchor.getWidth();
-				System.out.println("RATIO: " + newSceneWidth.doubleValue() / (newSceneWidth.doubleValue() + n.doubleValue()));
-			}
-		});
-		stepsAnchor.heightProperty().addListener(new ChangeListener<Number>() {
-			@Override
-			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
-				System.out.println("Height: " + newSceneHeight);
+			public void handle(ActionEvent arg0) {
+				notifAnchor.setVisible(false);
 			}
 		});
 
@@ -276,10 +260,6 @@ public class RailwayPlannerController {
 			((Switch) scenario.getTrack(new Point(1, 1))).setDiverging(true);
 			drawScenario(g);
 		});*/
-
-		// // Listen for selection changes and show the person details when changed.
-		// personTable.getSelectionModel().selectedItemProperty().addListener(
-		// (observable, oldValue, newValue) -> showPersonDetails(newValue));
 
 	}
 
@@ -318,6 +298,47 @@ public class RailwayPlannerController {
 		}
 	}
 
+	private void setNotification(String title, String message, boolean fading) {
+		notifAnchor.setVisible(true);
+		if(title!=null)
+			notifTitle.setText(title);
+		if(message!=null)
+			notifMessage.setText(message);
+		if(fading) {
+			FadeTransition ft = new FadeTransition(Duration.millis(3000), notifAnchor);
+			ft.setFromValue(1.0);
+			ft.setToValue(0.0);
+			ft.play();
+			ft.setOnFinished(new EventHandler<ActionEvent>() {
+
+				@Override
+				public void handle(ActionEvent arg0) {
+					notifAnchor.setOpacity(1);
+					notifAnchor.setVisible(false);
+				}
+			});
+		}
+	}
+
+	private void createOccupyStep(TrackSection ts, Train tr) {
+		if(ts != null) {
+			tempTarget = ts;
+			midstepFlag = true;
+			setNotification("Step : Occupies", "Selected TC"+ts.getTsID()+".\nSelect a train to complete step.", false);
+		}
+		if(tr!=null && midstepFlag ) {
+			midstepFlag = false;
+			SolutionCmd newCmd = new SolutionCmd(tempTarget,tr,0);
+			solMgr.addStep(newCmd);
+			setNotification("Step : Occupies", "Occupies step added to solution.", true);
+			ts = null;
+			tr = null;
+			stepsTable.refresh();
+
+//			notifAnchor.setVisible(false);
+		}
+	}
+
 	private void createTrain(Train tr) {
 		Rectangle newTrain = new Rectangle(trackLength/6,trackVertGap / 4);
 		System.out.println("hello train at " + tr.getLocation().getLocation());
@@ -330,7 +351,7 @@ public class RailwayPlannerController {
         {
             @Override
             public void handle(MouseEvent t) {
-                newTrain.setFill(Color.RED);
+            	createOccupyStep(null, tr);
             }
         });
 		trainBox.put(tr,newTrain);
@@ -426,7 +447,7 @@ public class RailwayPlannerController {
 		Point loc = ts.getLocation();
 		// Create TS button
 		if (!scenarioBtns.containsKey(ts)) {
-			Button tsLabel = new Button("TS" + ts.getTsID());
+			Button tsLabel = new Button("TC" + ts.getTsID());
 			overlay.getChildren().add(tsLabel);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
 			tsLabel.layoutYProperty().set(loc.y * trackVertGap + vPadding + trackVertGap * 0.05);
@@ -446,8 +467,7 @@ public class RailwayPlannerController {
 
 			@Override
 			public void handle(ActionEvent event) {
-//				SolutionCmd newCmd = new SolutionCmd(ts, scenario.getTrain(0), 0);
-//				solMgr.addStep(newCmd);
+				createOccupyStep(ts, null);
 				GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 				drawScenario(g);
 			}

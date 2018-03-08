@@ -64,7 +64,7 @@ public class SolutionCmd {
 		case SignalChange:
 			return new SimpleStringProperty("Signal : " + ((Signal) target).getId() + " ->" + newValue.getValue() );
 		case CheckLocation:
-			return new SimpleStringProperty("Track Section :" + ((TrackSection) target).getTsID() + " to be occupied by Train" + targetTrain.getTrainID());
+			return new SimpleStringProperty("Occupies : TC" + ((TrackSection) target).getTsID() + " by Train" + targetTrain.getTrainID());
 		default:
 			return new SimpleStringProperty("no known type");
 		}

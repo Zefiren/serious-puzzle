@@ -2,6 +2,12 @@
     -fx-background-color: #1d1d1d;
 }
 
+.card {
+    -fx-background-color: rgb(0,0,128);
+    -fx-background-radius: 5;
+	-fx-effect: dropshadow(three-pass-box, rgba(255,255,255,0.8), 10, 0.3, 0, 0);
+}
+
 .label {
     -fx-font-size: 11pt;
     -fx-font-family: "Segoe UI Semibold";
@@ -10,12 +16,19 @@
 }
 
 .label-bright {
-    -fx-font-size: 11pt;
+    -fx-font-size: 10pt;
     -fx-font-family: "Segoe UI Semibold";
     -fx-text-fill: white;
     -fx-opacity: 1;
 }
 
+
+.label-subtitle {
+	-fx-font-family: "Roboto sans-serif";
+    -fx-font-size: 20pt;
+    -fx-font-weight: bold ;
+
+}
 .label-header {
     -fx-font-size: 32pt;
     -fx-font-family: "Segoe UI Light";
@@ -110,6 +123,13 @@
     -fx-background-insets: 0 0 0 0, 0, 1, 2;
 }
 
+.close{
+	-fx-padding: 0;
+    -fx-background-radius: 100;
+    -fx-border-radius: 100;
+
+}
+
 .scen{
     -fx-padding: 2 2 2 2;
     -fx-font-size: 9pt;
@@ -126,11 +146,11 @@
 }
 
 .button:focused {
-    -fx-border-color: white, white;
+/*    -fx-border-color: white, white;
     -fx-border-width: 1, 1;
     -fx-border-style: solid, segments(1, 1);
     -fx-border-radius: 0, 0;
-    -fx-border-insets: 1 1 1 1, 0;
+    -fx-border-insets: 1 1 1 1, 0;  */
 }
 
 .button:disabled, .button:default:disabled {
