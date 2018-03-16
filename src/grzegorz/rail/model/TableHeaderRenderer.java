@@ -1,4 +1,4 @@
-package railwayPlanning;
+package grzegorz.rail.model;
 
 import java.awt.Component;
 

@@ -1,3 +1,4 @@
+package grzegorz.rail.model;
 /*package railwayPlanning;
 
 import java.awt.BasicStroke;

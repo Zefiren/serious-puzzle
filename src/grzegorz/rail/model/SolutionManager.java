@@ -1,9 +1,8 @@
-package railwayPlanning;
+package grzegorz.rail.model;
 
 import java.util.Iterator;
 import java.util.List;
 
-import javafx.beans.property.IntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 

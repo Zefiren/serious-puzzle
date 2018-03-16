@@ -10,6 +10,15 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import grzegorz.rail.MainApp;
+import grzegorz.rail.model.Direction;
+import grzegorz.rail.model.Interactable;
+import grzegorz.rail.model.Scenario;
+import grzegorz.rail.model.Signal;
+import grzegorz.rail.model.SolutionCmd;
+import grzegorz.rail.model.SolutionManager;
+import grzegorz.rail.model.Switch;
+import grzegorz.rail.model.TrackSection;
+import grzegorz.rail.model.Train;
 import javafx.animation.FadeTransition;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -18,7 +27,6 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
@@ -35,14 +43,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Duration;
-import railwayPlanning.Interactable;
-import railwayPlanning.Scenario;
-import railwayPlanning.Signal;
-import railwayPlanning.SolutionCmd;
-import railwayPlanning.SolutionManager;
-import railwayPlanning.Switch;
-import railwayPlanning.TrackSection;
-import railwayPlanning.Train;
 
 public class RailwayPlannerController {
 
@@ -111,20 +111,19 @@ public class RailwayPlannerController {
 	List<Integer> trackID = new ArrayList<Integer>();
 	Scenario scenario;
 	SolutionManager solMgr;
-	private int layoutVerticalMax = 0;
-	private int layoutHorizontalMax = 0;
+//	private int layoutVerticalMax = 0;
+//	private int layoutHorizontalMax = 0;
+//
+//	private int layoutVerticalMin = 0;
+//	private int layoutHorizontalMin = 0;
+//
+//	private int layoutVerticalSize = 0;
+//	private int layoutHorizontalSize = 0;
 
-	private int layoutVerticalMin = 0;
-	private int layoutHorizontalMin = 0;
-
-	private int layoutVerticalSize = 0;
-	private int layoutHorizontalSize = 0;
 	protected boolean deletingFlag;
 	private boolean initialFlag = true;
 	private boolean animationFlag = false;
 
-	private Label messageLabel;
-	private Label helpLabel;
 	private boolean midstepFlag = false;
 	private TrackSection tempTarget;
 
@@ -132,6 +131,19 @@ public class RailwayPlannerController {
 	 * The constructor. The constructor is called before the initialize() method.
 	 */
 	public RailwayPlannerController() {
+	}
+
+	/**
+	 * Is called by the main application to give a reference back to itself.
+	 *
+	 * @param mainApp
+	 */
+	public void setMainApp(MainApp mainApp) {
+		this.mainApp = mainApp;
+
+		// Add observable list data to the table
+		scenario = mainApp.getScenarioData();
+		stepsTable.setItems(solMgr.getSolution());
 	}
 
 	// while(it.hasNext())
@@ -160,10 +172,7 @@ public class RailwayPlannerController {
 			if (!deletingFlag) {
 				selected.clear();
 				selected.addAll((stepsTable.getSelectionModel().getSelectedItems()));
-				// .stream().map(s -> s.getStepNumber())
-				// .collect(Collectors.toList())));
-				// selected.forEach(step -> System.out.println("#"+step);
-				// ));
+
 				System.out.println(selected.size() + " SELECTED");
 			}
 		});
@@ -183,7 +192,6 @@ public class RailwayPlannerController {
 		});
 
 
-		createScenario();
 		scenarioBtns = new HashMap<Interactable<?>, ArrayList<Button>>();
 		// AnimationTimer loop = new AnimationTimer() {
 		// @Override
@@ -196,9 +204,9 @@ public class RailwayPlannerController {
 		AnchorPane.setRightAnchor(overlay, 0.0);
 
 		GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
-		drawScenario(g);
-		initialFlag = false;
-		animationFlag = true;
+		if(scenario!=null)
+			drawScenario(g);
+
 		overlay.getChildren().add(notifAnchor);
 		notifAnchor.setVisible(false);
 
@@ -215,8 +223,8 @@ public class RailwayPlannerController {
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
 				trackLength = (int) (newSceneWidth.doubleValue() * 0.8) / scenario.getWidth();
 				hPadding = (int) (newSceneWidth.doubleValue() * 0.1);
-
-				drawScenario(g);
+				if(scenario!=null)
+					drawScenario(g);
 			}
 		});
 		scenarioAnchor.heightProperty().addListener(new ChangeListener<Number>() {
@@ -224,8 +232,8 @@ public class RailwayPlannerController {
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
 				trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
 				vPadding = (int) (newSceneHeight.doubleValue() * 0.1);
-
-				drawScenario(g);
+				if(scenario!=null)
+					drawScenario(g);
 			}
 		});
 
@@ -248,7 +256,8 @@ public class RailwayPlannerController {
 					else solMgr.removeSteps(selected);
 
 					deletingFlag = false;
-					drawScenario(g);
+					if(scenario!=null)
+						drawScenario(g);
 				}
 			}
 		});
@@ -295,6 +304,8 @@ public class RailwayPlannerController {
 				else
 					createTrain(train);
 			}
+			animationFlag = true;
+			initialFlag = false;
 		}
 	}
 
@@ -340,7 +351,7 @@ public class RailwayPlannerController {
 	}
 
 	private void createTrain(Train tr) {
-		Rectangle newTrain = new Rectangle(trackLength/6,trackVertGap / 4);
+		Rectangle newTrain = new Rectangle(trackLength/4,trackVertGap / 4);
 		System.out.println("hello train at " + tr.getLocation().getLocation());
 		overlay.getChildren().add(newTrain);
 		newTrain.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
@@ -361,6 +372,8 @@ public class RailwayPlannerController {
 		Rectangle trainRect = trainBox.get(tr);
 		trainRect.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
 		trainRect.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - trainRect.getHeight()/2);
+		trainRect.setWidth(trackLength/3);
+		trainRect.setHeight(trackVertGap / 6);
 	}
 
 	private void drawSignal(GraphicsContext gc, Signal sig) {
@@ -368,7 +381,7 @@ public class RailwayPlannerController {
 		double diameter = (trackLength / signalScaleFraction);
 		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding, (int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5));
 		Color left, right;
-		if (sig.isFacingLeft()) {
+		if (sig.getDirection() == Direction.left) {
 			sigLoc.x += trackLength * trackLengthRatio - diameter * 2;
 			if (sig.isClear()) {
 				left = Color.GREEN;
@@ -436,6 +449,8 @@ public class RailwayPlannerController {
 				GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 				drawScenario(g);
 			}
+
+
 		});
 	}
 
@@ -488,13 +503,13 @@ public class RailwayPlannerController {
 				yLevel = (int) (trackVertGap * 0.1);
 			}
 
-			if (s.isRightDirection()) {
+			if (s.getSwitchDirection() == Direction.right) {
 				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.isTurnRight()) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap + ystart };
+				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap + ystart };
 				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap + ystart };
 			} else {
 				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (!s.isTurnRight()) yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
+				if (s.getTurnDirection() == Direction.left ) yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
 				else yPts = new double[] { -trackVertGap + ystart, ystart - yLevel, ystart - yLevel };
 			}
 
@@ -549,270 +564,7 @@ public class RailwayPlannerController {
 
 	}
 
-	private void createScenario() {
-		scenario = new Scenario(layoutHorizontalSize, layoutVerticalSize);
 
-		TrackSection startTs = createScene();
-		// need to create grid of track circuits
-		// first calculate sizes
-		placeTracks(startTs, 0, 0);
-
-		trackID.clear();
-		// remake grid locations
-		relocateTracks(startTs, layoutHorizontalMin, layoutVerticalMin, scenario);
-
-		layoutHorizontalSize = layoutHorizontalMax - layoutHorizontalMin + 1;
-		layoutVerticalSize = layoutVerticalMax - layoutVerticalMin + 1;
-
-		scenario.setWidth(layoutHorizontalSize);
-		scenario.setHeight(layoutVerticalSize);
-
-		System.out.println(layoutHorizontalSize + " by " + layoutVerticalSize);
-		System.out.println("Number of tracks = " + scenario.TrackCount());
-		System.out.println("tracks added:");
-		Set<Entry<Point, TrackSection>> tracks = scenario.getTrackSet();
-		Iterator<Entry<Point, TrackSection>> iterator = tracks.iterator();
-		while (iterator.hasNext()) {
-			Entry<Point, TrackSection> mentry = iterator.next();
-			System.out.print("key is: " + mentry.getKey() + " & Value is: ");
-			System.out.println(mentry.getValue().getTsID() + " & Type is: " + mentry.getValue().getClass());
-		}
-	}
-
-	private void relocateTracks(TrackSection ts, int horizontalOffset, int verticalOffset, Scenario scen) {
-		Point loc = ts.getLocation();
-		loc.setLocation(loc.getX() + Math.abs(horizontalOffset), loc.getY() + Math.abs(verticalOffset));
-		scen.addTrack(ts);
-		trackID.add(ts.getTsID());
-
-		if (ts.getClass() == Switch.class) {
-			Switch s = (Switch) ts;
-			// left track if it does not exist in list
-			if (!trackID.contains(s.getLeftTrack().getTsID())) {
-				relocateTracks(s.getLeftTrack(), horizontalOffset, verticalOffset, scen);
-			}
-			// right track if it does not exist in list
-			if (!trackID.contains(s.getRightTrack().getTsID())) {
-				relocateTracks(s.getRightTrack(), horizontalOffset, verticalOffset, scen);
-			}
-			// additional switch track if it does not exist in list
-			if (!trackID.contains(s.getExtraTrack().getTsID())) {
-				if (s.isRightDirection()) {
-					if (s.isTurnRight()) {
-						// RIGHT = RIGHT direction and RIGHT TURN = DOWN direction
-						relocateTracks(s.getExtraTrack(), horizontalOffset, verticalOffset, scen);
-					} else {
-						// NOT RIGHT TURN = UP direction
-						relocateTracks(s.getExtraTrack(), horizontalOffset, verticalOffset, scen);
-					}
-				} else {
-					if (s.isTurnRight()) {
-						// LEFT = LEFT direction and RIGHT TURN = UP direction
-						relocateTracks(s.getExtraTrack(), horizontalOffset, verticalOffset, scen);
-					} else {
-						// NOT RIGHT TURN = DOWN direction
-						relocateTracks(s.getExtraTrack(), horizontalOffset, verticalOffset, scen);
-					}
-				}
-			}
-		} else {
-			if (ts.isEndTrack()) {
-				if (ts.isRightEnding()) {
-					if (!trackID.contains(ts.getLeftTrack().getTsID())) {
-						relocateTracks(ts.getLeftTrack(), horizontalOffset, verticalOffset, scen);
-					}
-				} else {
-					if (!trackID.contains(ts.getRightTrack().getTsID())) {
-						relocateTracks(ts.getRightTrack(), horizontalOffset, verticalOffset, scen);
-					}
-				}
-			} else {
-				if (!trackID.contains(ts.getLeftTrack().getTsID())) {
-					relocateTracks(ts.getLeftTrack(), horizontalOffset, verticalOffset, scen);
-				}
-
-				if (!trackID.contains(ts.getRightTrack().getTsID())) {
-					relocateTracks(ts.getRightTrack(), horizontalOffset, verticalOffset, scen);
-				}
-			}
-		}
-	}
-
-	private TrackSection createScene() {
-
-		TrackSection start, middle, upRightEnd, middle2, end, newEnd, newEnd2;
-		Switch s1, s2;
-		middle = new TrackSection(1);
-		middle2 = new TrackSection(2);
-		start = new TrackSection(0, "start", false, middle);
-		end = new TrackSection(4, "end", true, middle2);
-		upRightEnd = new TrackSection(5, "upEnd", false, middle2);
-		newEnd = new TrackSection(7);// , "endLeft2")//, true, s2);
-		newEnd2 = new TrackSection(8);// , "endLeft3")//, true, s2);
-		// id, left, right, isRightDir, isRightTurn, extraTrack
-		s1 = new Switch(3, 0, middle2, end, false, true, upRightEnd);
-		s2 = new Switch(6, 1, newEnd, upRightEnd, false, true, newEnd2);
-
-		upRightEnd.setRightTrack(s1);
-		upRightEnd.setLeftTrack(s2);
-		upRightEnd.setEndTrack(false);
-
-		end.setLeftTrack(s1);
-
-		middle.setLeftTrack(start);
-		middle.setRightTrack(middle2);
-
-		middle2.setLeftTrack(middle);
-		middle2.setRightTrack(s1);
-
-		newEnd.setEndTrack(true);
-		newEnd.setRightEnding(false);
-		newEnd.setRightTrack(s2);
-
-		newEnd2.setEndTrack(true);
-		newEnd2.setRightEnding(false);
-		newEnd2.setRightTrack(s2);
-
-		Train train = new Train(0, start, end, start);
-		Train train2 = new Train(1, end, newEnd2, end);
-		scenario.addTrain(train);
-		scenario.addTrain(train2);
-		Signal sig1 = new Signal(0, middle, middle2, true);
-		Signal sig2 = new Signal(1, end, s1, false);
-
-		List<TrackSection> tracks = new ArrayList<TrackSection>();
-		List<Signal> signals = new ArrayList<Signal>();
-		tracks.add(start);
-		tracks.add(end);
-		tracks.add(s1);
-		tracks.add(s2);
-		tracks.add(upRightEnd);
-		tracks.add(middle);
-		tracks.add(middle2);
-		tracks.add(newEnd);
-		tracks.add(newEnd2);
-
-		signals.add(sig1);
-		signals.add(sig2);
-		scenario.addSignal(sig1);
-		scenario.addSignal(sig2);
-
-		return start;
-	}
-
-	private void updateScenarioSizes(TrackSection ts, int x, int y) {
-		if (x > layoutHorizontalMax) layoutHorizontalMax = x;
-
-		if (x < layoutHorizontalMin) layoutHorizontalMin = x;
-
-		if (y > layoutVerticalMax) layoutVerticalMax = y;
-
-		if (y < layoutVerticalMin) layoutVerticalMin = y;
-
-		// System.out.println("next" + ts.getLocation());
-		// System.out.println("current" + topLeft.getLocation());
-		// if( y <= topLeft.getLocation().y) {
-		// topLeft = ts;
-		// if(x < topLeft.getLocation().x)
-		// topLeft = ts;
-		// }
-
-	}
-
-	private void placeTracks(TrackSection ts, int x, int y) {
-		ts.setLocation(new Point(x, y));
-		updateScenarioSizes(ts, x, y);
-		trackID.add(ts.getTsID());
-		System.out.println("ID " + ts.getTsID());
-
-		if (ts.getClass() == Switch.class) {
-			Switch s = (Switch) ts;
-			// left track if it does not exist in list
-			if (!trackID.contains(s.getLeftTrack().getTsID())) {
-				placeTracks(s.getLeftTrack(), x - 1, y);
-			}
-			// right track if it does not exist in list
-			if (!trackID.contains(s.getRightTrack().getTsID())) {
-				placeTracks(s.getRightTrack(), x + 1, y);
-			}
-			// additional switch track if it does not exist in list
-			if (!trackID.contains(s.getExtraTrack().getTsID())) {
-				if (s.isRightDirection()) {
-					if (s.isTurnRight()) {
-						// RIGHT = RIGHT direction and RIGHT TURN = DOWN direction
-						placeTracks(s.getExtraTrack(), x + 1, y + 1);
-					} else {
-						// NOT RIGHT TURN = UP direction
-						placeTracks(s.getExtraTrack(), x + 1, y - 1);
-					}
-				} else {
-					if (s.isTurnRight()) {
-						// LEFT = LEFT direction and RIGHT TURN = UP direction
-						placeTracks(s.getExtraTrack(), x - 1, y - 1);
-					} else {
-						// NOT RIGHT TURN = DOWN direction
-						placeTracks(s.getExtraTrack(), x - 1, y + 1);
-					}
-				}
-			}
-		} else {
-			if (ts.isEndTrack()) {
-				if (ts.isRightEnding()) {
-					if (!trackID.contains(ts.getLeftTrack().getTsID())) {
-						placeTracks(ts.getLeftTrack(), x - 1, y);
-					}
-				} else {
-					if (!trackID.contains(ts.getRightTrack().getTsID())) {
-						placeTracks(ts.getRightTrack(), x + 1, y);
-					}
-				}
-			} else {
-				if (!trackID.contains(ts.getLeftTrack().getTsID())) {
-					placeTracks(ts.getLeftTrack(), x - 1, y);
-				}
-
-				if (!trackID.contains(ts.getRightTrack().getTsID())) {
-					placeTracks(ts.getRightTrack(), x + 1, y);
-				}
-			}
-		}
-
-	}
-
-	/*
-	 * private void placeTrack(TrackSection ts, int x, int y) {
-	 * ts.setTrackGraphicPoints(x, y, (int) (x + trackLengthStraight * 0.95), y);
-	 * ts.setLabelBoxPoint(x + ts.getLabelBox().x, y + ts.getLabelBox().y,
-	 * ts.getLabelBox().width, ts.getLabelBox().height); ts.setTextPlace(new Point(x
-	 * + ts.getTextPlace().x, y + ts.getTextPlace().y)); // g2d.drawLine(0, 0,
-	 * trackLengthStraight, 0);
-	 *
-	 * if (ts.getClass() == Switch.class) { Switch s = (Switch) ts;
-	 * s.setSwitchLabelBoxPoint(x + s.getSwitchLabelBox().x, y +
-	 * s.getSwitchLabelBox().y, s.getSwitchLabelBox().width,
-	 * s.getSwitchLabelBox().height); s.setSwitchTextPlace(new Point(x +
-	 * s.getSwitchTextPlace().x, y + s.getSwitchTextPlace().y));
-	 *
-	 * Polygon eLine = s.getExtraTrackGraphic(); int xs, ys, xe, ye, xm; if
-	 * (!s.isRightDirection()) xs = x + (int) (eLine.xpoints[0] * 0.95); else xs = x
-	 * + (int) eLine.xpoints[0]; ys = y + (int) eLine.ypoints[0]; xm = (int) (x +
-	 * (int) eLine.xpoints[1]);// (int) (eLine.xpoints[2] - eLine.xpoints[0]) *
-	 * 0.15); if (s.isRightDirection()) xe = (int) (x + (int) (eLine.xpoints[2] *
-	 * 0.95)); // (int) (eLine.xpoints[2] - eLine.xpoints[0]) * 0.95); else xe =
-	 * (int) (x + (int) eLine.xpoints[2]); // (int) (eLine.xpoints[2] -
-	 * eLine.xpoints[0]) * 0.95); // ys = y ye = y + (int) (eLine.ypoints[2] -
-	 * eLine.ypoints[0]); s.setExtraTrackGraphic(new Polygon(new int[] { xs, xm, xe
-	 * }, new int[] { ys, ys, ye }, 3)); // new Point(xs, ys),new Point(xm, ye), new
-	 * Point(xe, ye))
-	 *
-	 * // eLine.setLine(xs,ys,xe,ye);
-	 *
-	 * } // g2d.draw(ts.getTrackGraphic()); // // g2d.setPaint(Color.black); //
-	 * g2d.setStroke(labelBrush); // // g2d.draw(ts.getLabelBox()); //
-	 * g2d.drawString("tc" + ts.getTsID(), x + 90, y + 25);
-	 *
-	 * System.out.println("drew " + ts.getTsID()); trackID.add(ts.getTsID()); }
-	 */
 
 	private static class CanvasPane extends Pane {
 
@@ -842,38 +594,5 @@ public class RailwayPlannerController {
 		}
 	}
 
-	/**
-	 * Is called by the main application to give a reference back to itself.
-	 *
-	 * @param mainApp
-	 */
-	public void setMainApp(MainApp mainApp) {
-		this.mainApp = mainApp;
 
-		// Add observable list data to the table
-		stepsTable.setItems(solMgr.getSolution());
-	}
-
-	/**
-	 * Fills all text fields to show details about the person. If the specified person is null, all text fields are cleared.
-	 *
-	 * @param person
-	 *            the person or null
-	 */
-	/*
-	 * private void showPersonDetails(Person person) { if (person != null) { // Fill
-	 * the labels with info from the person object.
-	 * firstNameLabel.setText(person.getFirstName());
-	 * lastNameLabel.setText(person.getLastName());
-	 * streetLabel.setText(person.getStreet());
-	 * postalCodeLabel.setText(Integer.toString(person.getPostalCode()));
-	 * cityLabel.setText(person.getCity());
-	 *
-	 * // TODO: We need a way to convert the birthday into a String!
-	 * birthdayLabel.setText(DateUtil.format(person.getBirthday())); } else { //
-	 * Person is null, remove all the text. firstNameLabel.setText("");
-	 * lastNameLabel.setText(""); streetLabel.setText("");
-	 * postalCodeLabel.setText(""); cityLabel.setText("");
-	 * birthdayLabel.setText(""); } }
-	 */
 }

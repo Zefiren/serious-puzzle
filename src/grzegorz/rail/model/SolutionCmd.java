@@ -1,4 +1,4 @@
-package railwayPlanning;
+package grzegorz.rail.model;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;

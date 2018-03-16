@@ -1,30 +1,29 @@
-package railwayPlanning;
-
-import java.awt.Rectangle;
+package grzegorz.rail.model;
 
 public class Train {
-	
+
 	private int trainID;
 	private TrackSection source;
 	private TrackSection destination;
 	private TrackSection location;
-	private Rectangle trainBox;
+	private Direction headingDirection;
 	/**
 	 * @param trainID
 	 * @param source
 	 * @param destination
 	 * @param location
 	 */
-	public Train(int trainID, TrackSection source, TrackSection destination, TrackSection location) {
+	public Train(int trainID, TrackSection source, TrackSection destination, Direction headingDirection) {
 		super();
 		this.trainID = trainID;
 		this.source = source;
 		this.destination = destination;
-		this.location = location;
-		setTrainBox(new Rectangle(0, 0, 40, 30));
+		this.location = source;
+		this.headingDirection = headingDirection;
+
 	}
-	
-	
+
+
 	/**
 	 * @return the source
 	 */
@@ -69,12 +68,4 @@ public class Train {
 	}
 
 
-	public Rectangle getTrainBox() {
-		return trainBox;
-	}
-
-
-	public void setTrainBox(Rectangle trainBox) {
-		this.trainBox = trainBox;
-	}
 }
