@@ -1,0 +1,606 @@
+package grzegorz.rail.view;
+
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import grzegorz.rail.MainApp;
+import grzegorz.rail.model.Direction;
+import grzegorz.rail.model.Interactable;
+import grzegorz.rail.model.Scenario;
+import grzegorz.rail.model.Signal;
+import grzegorz.rail.model.SolutionCmd;
+import grzegorz.rail.model.SolutionManager;
+import grzegorz.rail.model.Switch;
+import grzegorz.rail.model.TrackSection;
+import grzegorz.rail.model.Train;
+import javafx.animation.FadeTransition;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.TextAlignment;
+import javafx.util.Duration;
+
+public class RailwayAnimationController {
+
+	//solution
+	@FXML
+	private TableView<SolutionCmd> stepsTable;
+	@FXML
+	private TableColumn<SolutionCmd, String> stepNumColumn;
+	@FXML
+	private TableColumn<SolutionCmd, String> stepColumn;
+	@FXML
+	private Button stepPlayButton;
+	@FXML
+	private Button stepStopButton;
+	@FXML
+	private Button stepBackSingleButton;
+	@FXML
+	private Button stepForwardSingleButton;
+
+	//notification
+	@FXML
+	private AnchorPane notifAnchor;
+	@FXML
+	private Label notifTitle;
+	@FXML
+	private Label notifMessage;
+	@FXML
+	private Button closeButton;
+
+
+
+	@FXML
+	private AnchorPane scenarioAnchor;
+
+	@FXML
+	private AnchorPane stepsAnchor;
+
+	@FXML
+	private SplitPane splitPane;
+
+	public Canvas scenarioCanvas;
+
+	private CanvasPane canvasPane;
+
+	private AnchorPane overlay;
+	private Pane notifierPane;
+	// private GraphicsContext gc;
+	List<SolutionCmd> selected = new ArrayList<SolutionCmd>();
+
+	private Map<Train,Rectangle> trainBox = new HashMap<Train,Rectangle>();
+
+	private List<Point> shapes = new ArrayList<Point>();
+	private Map<Interactable<?>, ArrayList<Button>> scenarioBtns;
+	// Reference to the main application.
+	private MainApp mainApp;
+
+	private int sizeCube = 10;
+	private int trackLength = 200;
+	private int trackVertGap = 100;
+
+	private double trackLengthRatio = 0.9;
+
+	private int hPadding = 200;
+	private int vPadding = 100;
+
+	// the scale for the size of signal graphical objects in relation to track
+	// length
+	// eg X = 4 -> size = trackLength / 4
+	private int signalScaleFraction = 5;
+
+	List<Integer> trackID = new ArrayList<Integer>();
+	Scenario scenario;
+	SolutionManager solMgr;
+//	private int layoutVerticalMax = 0;
+//	private int layoutHorizontalMax = 0;
+//
+//	private int layoutVerticalMin = 0;
+//	private int layoutHorizontalMin = 0;
+//
+//	private int layoutVerticalSize = 0;
+//	private int layoutHorizontalSize = 0;
+
+	protected boolean deletingFlag;
+	private boolean initialFlag = true;
+	private boolean animationFlag = false;
+
+	private boolean midstepFlag = false;
+	private TrackSection tempTarget;
+
+	/**
+	 * The constructor. The constructor is called before the initialize() method.
+	 */
+	public RailwayAnimationController() {
+	}
+
+	/**
+	 * Is called by the main application to give a reference back to itself.
+	 *
+	 * @param mainApp
+	 */
+	public void setMainApp(MainApp mainApp) {
+		this.mainApp = mainApp;
+
+		// Add observable list data to the table
+		scenario = mainApp.getScenarioData();
+		solMgr = mainApp.getSolutionData();
+		stepsTable.setItems(solMgr.getSolution());
+	}
+
+	// while(it.hasNext())
+	// {
+	// ((SolutionCmd) it).undoStep();
+	// System.out.println("REMOVING "+step.getStep().getValue());
+	// });
+
+	/**
+	 * Initializes the controller class. This method is automatically called after the fxml file has been loaded.
+	 */
+	@FXML
+	private void initialize() {
+		solMgr = new SolutionManager();
+		// Initialize the person table with the two columns.
+		stepNumColumn.setCellValueFactory(cellData -> cellData.getValue().getStepNumberString());
+		stepColumn.setCellValueFactory(cellData -> cellData.getValue().getStep());
+		stepsTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		stepsTable.getColumns().forEach(col -> {
+			col.setSortable(false);
+		});
+		stepNumColumn.setReorderable(false);
+		stepColumn.setReorderable(false);
+
+		stepsTable.getSelectionModel().selectedItemProperty().addListener((obs, ov, nv) -> {
+			if (!deletingFlag) {
+				selected.clear();
+				selected.addAll((stepsTable.getSelectionModel().getSelectedItems()));
+
+				System.out.println(selected.size() + " SELECTED");
+			}
+		});
+		CanvasPane canvasPane = new CanvasPane(MainApp.MINIMUM_WINDOW_WIDTH, MainApp.MINIMUM_WINDOW_HEIGHT);
+		scenarioAnchor.getChildren().add(canvasPane);
+		canvasPane.setPadding(new Insets(0));
+		AnchorPane.setTopAnchor(canvasPane, 0.0);
+		AnchorPane.setBottomAnchor(canvasPane, 0.0);
+		AnchorPane.setLeftAnchor(canvasPane, 0.0);
+		AnchorPane.setRightAnchor(canvasPane, 0.0);
+		scenarioCanvas = canvasPane.getCanvas();
+		scenarioAnchor.setOnScroll((ScrollEvent event) -> {
+
+			sizeCube += (event.getDeltaY() / (Math.abs(event.getDeltaY()))) * 2;
+
+			System.out.println(sizeCube);
+		});
+
+
+		scenarioBtns = new HashMap<Interactable<?>, ArrayList<Button>>();
+		// AnimationTimer loop = new AnimationTimer() {
+		// @Override
+		// public void handle(long now) {
+		overlay = new AnchorPane();
+		scenarioAnchor.getChildren().add(overlay);
+		AnchorPane.setTopAnchor(overlay, 0.0);
+		AnchorPane.setBottomAnchor(overlay, 0.0);
+		AnchorPane.setLeftAnchor(overlay, 0.0);
+		AnchorPane.setRightAnchor(overlay, 0.0);
+
+		GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
+		if(scenario!=null)
+			drawScenario(g);
+
+		overlay.getChildren().add(notifAnchor);
+		notifAnchor.setVisible(false);
+
+		AnchorPane.setTopAnchor(notifAnchor, 10.0);
+		AnchorPane.setRightAnchor(notifAnchor, 10.0);
+
+		stepsAnchor.maxWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
+		stepsAnchor.minWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
+		stepNumColumn.minWidthProperty().bind(stepsTable.widthProperty().multiply(0.25));
+		stepNumColumn.maxWidthProperty().bind(stepsTable.widthProperty().multiply(0.25));
+
+		scenarioAnchor.widthProperty().addListener(new ChangeListener<Number>() {
+			@Override
+			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
+				trackLength = (int) (newSceneWidth.doubleValue() * 0.8) / scenario.getWidth();
+				hPadding = (int) (newSceneWidth.doubleValue() * 0.1);
+				if(scenario!=null)
+					drawScenario(g);
+			}
+		});
+		scenarioAnchor.heightProperty().addListener(new ChangeListener<Number>() {
+			@Override
+			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
+				trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
+				vPadding = (int) (newSceneHeight.doubleValue() * 0.1);
+				if(scenario!=null)
+					drawScenario(g);
+			}
+		});
+
+		closeButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent arg0) {
+				notifAnchor.setVisible(false);
+			}
+		});
+
+		stepPlayButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				if (selected.size() > 0) {
+					deletingFlag = true;
+					stepsTable.getSelectionModel().clearSelection();
+
+					if (selected.size() == 1) solMgr.removeStep(selected.get(0));
+					else solMgr.removeSteps(selected);
+
+					deletingFlag = false;
+					if(scenario!=null)
+						drawScenario(g);
+				}
+			}
+		});
+
+		/*scenarioAnchor.setOnMouseClicked(event -> {
+			double x = event.getX(), y = event.getY();
+			shapes.add(new Point((int) x, (int) y));
+			System.out.println(scenario.getTrack(new Point(1, 1)).getClass());
+			((Switch) scenario.getTrack(new Point(1, 1))).setDiverging(true);
+			drawScenario(g);
+		});*/
+
+	}
+
+	private void drawScenario(GraphicsContext gc) {
+
+		gc.setFill(Color.BLACK);
+		gc.fillRect(0, 0, scenarioCanvas.getWidth(), scenarioCanvas.getHeight());
+		gc.setFill(Color.BLUE);
+		for (Point p : shapes) {
+			gc.fillRect(p.x, p.y, sizeCube, sizeCube);
+		}
+
+		Set<Entry<Point, TrackSection>> tracks = scenario.getTrackSet();
+		Iterator<Entry<Point, TrackSection>> iterator = tracks.iterator();
+		while (iterator.hasNext()) {
+			Entry<Point, TrackSection> mentry = iterator.next();
+			drawTrack(gc, mentry.getValue());
+		}
+
+		Set<Entry<TrackSection, Signal>> signals = scenario.getSignalSet();
+		Iterator<Entry<TrackSection, Signal>> iterator1 = signals.iterator();
+		while (iterator1.hasNext()) {
+			Entry<TrackSection, Signal> mentry = iterator1.next();
+			drawSignal(gc, mentry.getValue());
+		}
+		if (initialFlag || animationFlag) {
+			List<Train> trains = scenario.getTrains();
+			Iterator<Train> iterator2 = trains.iterator();
+			while (iterator2.hasNext()) {
+				Train train = iterator2.next();
+				if(animationFlag)
+					updateTrain(train);
+				else
+					createTrain(train);
+			}
+			animationFlag = true;
+			initialFlag = false;
+		}
+	}
+
+	private void setNotification(String title, String message, boolean fading) {
+		notifAnchor.setVisible(true);
+		if(title!=null)
+			notifTitle.setText(title);
+		if(message!=null)
+			notifMessage.setText(message);
+		if(fading) {
+			FadeTransition ft = new FadeTransition(Duration.millis(3000), notifAnchor);
+			ft.setFromValue(1.0);
+			ft.setToValue(0.0);
+			ft.play();
+			ft.setOnFinished(new EventHandler<ActionEvent>() {
+
+				@Override
+				public void handle(ActionEvent arg0) {
+					notifAnchor.setOpacity(1);
+					notifAnchor.setVisible(false);
+				}
+			});
+		}
+	}
+
+	private void createOccupyStep(TrackSection ts, Train tr) {
+		if(ts != null) {
+			tempTarget = ts;
+			midstepFlag = true;
+			setNotification("Step : Occupies", "Selected TC"+ts.getTsID()+".\nSelect a train to complete step.", false);
+		}
+		if(tr!=null && midstepFlag ) {
+			midstepFlag = false;
+			SolutionCmd newCmd = new SolutionCmd(tempTarget,tr,0);
+			solMgr.addStep(newCmd);
+			setNotification("Step : Occupies", "Occupies step added to solution.", true);
+			ts = null;
+			tr = null;
+			stepsTable.refresh();
+
+//			notifAnchor.setVisible(false);
+		}
+	}
+
+	private void createTrain(Train tr) {
+		Rectangle newTrain = new Rectangle(trackLength/4,trackVertGap / 4);
+		System.out.println("hello train at " + tr.getLocation().getLocation());
+		overlay.getChildren().add(newTrain);
+		newTrain.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
+		newTrain.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - newTrain.getHeight()/2);
+		newTrain.setFill(Color.BLUE);
+		newTrain.setOpacity(0.8);
+		newTrain.setOnMouseClicked(new EventHandler<MouseEvent>()
+        {
+            @Override
+            public void handle(MouseEvent t) {
+            	createOccupyStep(null, tr);
+            }
+        });
+		trainBox.put(tr,newTrain);
+	}
+
+	private void updateTrain(Train tr) {
+		Rectangle trainRect = trainBox.get(tr);
+		trainRect.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
+		trainRect.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - trainRect.getHeight()/2);
+		trainRect.setWidth(trackLength/3);
+		trainRect.setHeight(trackVertGap / 6);
+	}
+
+	private void drawSignal(GraphicsContext gc, Signal sig) {
+		// CREA.TE GRAPHICS using GC
+		double diameter = (trackLength / signalScaleFraction);
+		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding, (int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5));
+		Color left, right;
+		if (sig.getDirection() == Direction.left) {
+			sigLoc.x += trackLength * trackLengthRatio - diameter * 2;
+			if (sig.isClear()) {
+				left = Color.GREEN;
+				right = Color.BLACK;
+			} else {
+				left = Color.BLACK;
+				right = Color.RED;
+			}
+		} else {
+			if (sig.isClear()) {
+				right = Color.GREEN;
+				left = Color.BLACK;
+			} else {
+				right = Color.BLACK;
+				left = Color.RED;
+			}
+		}
+
+		// if (signal.isFacingLeft()) sg.setSignalPosition(new Point((int)
+		// tc.getTrackGraphic().getP2().getX() - 50, (int)
+		// tc.getTrackGraphic().getP2().getY() - 30));
+		// else sg.setSignalPosition(new Point((int)
+		// tc.getTrackGraphic().getP1().getX(), (int)
+		// tc.getTrackGraphic().getP1().getY() - 30));
+		double oldWidth = gc.getLineWidth();
+		gc.setStroke(Color.WHITE);
+		gc.setLineWidth(2);
+
+		gc.setFill(left);
+		gc.fillOval(sigLoc.x, sigLoc.y, diameter, diameter);
+		gc.strokeOval(sigLoc.x, sigLoc.y, diameter, diameter);
+
+		gc.setFill(right);
+		gc.fillOval(sigLoc.x + diameter, sigLoc.y, diameter, diameter);
+		gc.strokeOval(sigLoc.x + diameter, sigLoc.y, diameter, diameter);
+
+		gc.setLineWidth(oldWidth);
+
+		// CREATE BUTTON FOR SIGNAL using Node Button
+		if (!scenarioBtns.containsKey(sig)) {
+			Button sigLabel = new Button("SIG" + sig.getId());
+			overlay.getChildren().add(sigLabel);
+			sigLabel.layoutXProperty().set(sigLoc.x + trackLength * 0.3);
+			sigLabel.layoutYProperty().set(sigLoc.y + trackVertGap * 0.05);
+			sigLabel.getStyleClass().add("scen");
+			sigLabel.setMaxSize(50, 30);
+
+			scenarioBtns.put(sig, new ArrayList<Button>());
+			scenarioBtns.get(sig).add(sigLabel);
+
+		} else {
+			Button sigLabel = scenarioBtns.get(sig).get(0);
+			sigLabel.layoutXProperty().set(sigLoc.x);
+			sigLabel.layoutYProperty().set(sigLoc.y - diameter * 1.5);
+
+		}
+
+		scenarioBtns.get(sig).get(0).setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				SolutionCmd newCmd = new SolutionCmd(sig, !sig.isClear());
+				solMgr.addStep(newCmd);
+				sig.setClear(!sig.isClear());
+				GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
+				drawScenario(g);
+				setNotification( "Step : Signal", "Signal Set step added to solution.", true);
+			}
+
+
+		});
+	}
+
+	private void drawTrack(GraphicsContext gc, TrackSection ts) {
+		gc.setFill(Color.WHITE);
+		gc.setStroke(Color.WHITE);
+		gc.setLineWidth(3);
+
+		Point loc = ts.getLocation();
+		// Create TS button
+		if (!scenarioBtns.containsKey(ts)) {
+			Button tsLabel = new Button("TC" + ts.getTsID());
+			overlay.getChildren().add(tsLabel);
+			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
+			tsLabel.layoutYProperty().set(loc.y * trackVertGap + vPadding + trackVertGap * 0.05);
+			tsLabel.getStyleClass().add("scen");
+			tsLabel.setMaxSize(50, 30);
+
+			scenarioBtns.put(ts, new ArrayList<Button>());
+			scenarioBtns.get(ts).add(tsLabel);
+
+		} else {
+			Button tsLabel = scenarioBtns.get(ts).get(0);
+			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
+			tsLabel.layoutYProperty().set(loc.y * trackVertGap + vPadding + trackVertGap * 0.05);
+
+		}
+		scenarioBtns.get(ts).get(0).setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				createOccupyStep(ts, null);
+				GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
+				drawScenario(g);
+			}
+		});
+
+		if (ts.getClass() == Switch.class) {
+			Switch s = (Switch) ts;
+			double xPts[];
+			double yPts[];
+			int ystart = loc.y * trackVertGap + vPadding;
+			int yLevel = 0;
+			int xstart = loc.x * trackLength + hPadding;
+
+			if (s.isDiverging()) {
+				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding);
+			} else {
+				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding);
+				yLevel = (int) (trackVertGap * 0.1);
+			}
+
+			if (s.getSwitchDirection() == Direction.right) {
+				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
+				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap + ystart };
+				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap + ystart };
+			} else {
+				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
+				if (s.getTurnDirection() == Direction.left ) yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
+				else yPts = new double[] { -trackVertGap + ystart, ystart - yLevel, ystart - yLevel };
+			}
+
+			gc.strokePolyline(xPts, yPts, 3);
+			double yBtn;
+			if ((loc.y * trackVertGap + vPadding) > yPts[2]) yBtn = loc.y * trackVertGap + vPadding;
+			else yBtn = yPts[2];
+
+			Button tsLabel = scenarioBtns.get(ts).get(0);
+			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
+			tsLabel.layoutYProperty().set(yBtn + trackVertGap * 0.05);
+
+			if (scenarioBtns.get(ts).size() < 2) {
+				Button swLabel = new Button("SW" + s.getSwitchID());
+				overlay.getChildren().add(swLabel);
+
+				swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
+				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2);
+				swLabel.getStyleClass().add("scen");
+				swLabel.setMaxSize(50, 30);
+
+				scenarioBtns.get(ts).add(swLabel);
+
+			} else {
+
+				Button swLabel = scenarioBtns.get(ts).get(1);
+				swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
+				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2);
+			}
+			scenarioBtns.get(s).get(1).setOnAction(new EventHandler<ActionEvent>() {
+
+				@Override
+				public void handle(ActionEvent event) {
+					SolutionCmd newCmd = new SolutionCmd(s, !s.isDiverging());
+					solMgr.addStep(newCmd);
+					s.setDiverging(!s.isDiverging());
+					GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
+					drawScenario(g);
+					setNotification( "Step : Switch", "Switch Set step added to solution.", true);
+				}
+			});
+			/*
+			 * Button swLabel = scenarioBtns.get(ts).get(1);
+			 * swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength *
+			 * 0.3);
+			 * swLabel.layoutYProperty().set(tsLabel.getBoundsInParent().getMaxY()+20);
+			 */
+		} else {
+			gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding);
+			gc.setTextBaseline(VPos.CENTER);
+			gc.setTextAlign(TextAlignment.CENTER);
+		}
+
+	}
+
+
+
+	private static class CanvasPane extends Pane {
+
+		private final Canvas canvas;
+
+		public CanvasPane(double width, double height) {
+			canvas = new Canvas(width, height);
+			getChildren().add(canvas);
+		}
+
+		public Canvas getCanvas() {
+			return canvas;
+		}
+
+		@Override
+		protected void layoutChildren() {
+			super.layoutChildren();
+
+			final double x = snappedLeftInset();
+			final double y = snappedTopInset();
+			final double w = snapSize(getWidth()) - x - snappedRightInset();
+			final double h = snapSize(getHeight()) - y - snappedBottomInset();
+			canvas.setLayoutX(x);
+			canvas.setLayoutY(y);
+			canvas.setWidth(w);
+			canvas.setHeight(h);
+		}
+	}
+
+
+}

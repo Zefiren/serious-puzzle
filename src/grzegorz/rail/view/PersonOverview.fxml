@@ -22,7 +22,8 @@
                   <Label layoutX="8.0" layoutY="6.0" styleClass="label-header" text="Solution" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0" />
                   <ButtonBar layoutX="28.0" layoutY="239.0" prefHeight="46.0" prefWidth="120.0" AnchorPane.bottomAnchor="6.0" AnchorPane.leftAnchor="28.0" AnchorPane.rightAnchor="28.0">
                     <buttons>
-                      <Button fx:id="stepDelButton" mnemonicParsing="false" prefWidth="126.0" text="Delete" />
+                      <Button fx:id="stepDelButton" mnemonicParsing="false" prefHeight="33.0" prefWidth="126.0" text="Delete" ButtonBar.buttonData="LEFT" />
+                        <Button fx:id="solutionFinishButton" mnemonicParsing="false" prefWidth="126.0" text="Finish" ButtonBar.buttonData="RIGHT" />
                     </buttons>
                   </ButtonBar>
                   <TableView fx:id="stepsTable" layoutX="-12.0" layoutY="50.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="60.0">

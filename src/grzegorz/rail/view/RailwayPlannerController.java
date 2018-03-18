@@ -55,6 +55,8 @@ public class RailwayPlannerController {
 	private TableColumn<SolutionCmd, String> stepColumn;
 	@FXML
 	private Button stepDelButton;
+	@FXML
+	private Button solutionFinishButton;
 
 
 	//notification
@@ -262,6 +264,14 @@ public class RailwayPlannerController {
 			}
 		});
 
+		solutionFinishButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				mainApp.SwitchToAnimation(solMgr);
+			}
+		});
+
 		/*scenarioAnchor.setOnMouseClicked(event -> {
 			double x = event.getX(), y = event.getY();
 			shapes.add(new Point((int) x, (int) y));
@@ -448,6 +458,7 @@ public class RailwayPlannerController {
 				sig.setClear(!sig.isClear());
 				GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 				drawScenario(g);
+				setNotification( "Step : Signal", "Signal Set step added to solution.", true);
 			}
 
 
@@ -548,6 +559,7 @@ public class RailwayPlannerController {
 					s.setDiverging(!s.isDiverging());
 					GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 					drawScenario(g);
+					setNotification( "Step : Switch", "Switch Set step added to solution.", true);
 				}
 			});
 			/*
