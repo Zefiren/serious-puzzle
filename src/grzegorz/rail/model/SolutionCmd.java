@@ -89,6 +89,24 @@ public class SolutionCmd {
 			System.out.println("");
 		}
 	}
+	
+	public void performStep(){
+		switch (type) {
+		case SwitchChange:
+			System.out.println(((Switch)target).getTsID()+ " is the id");
+			((Switch)target).setDiverging(newValue.getValue());
+			break;
+		case SignalChange:
+			System.out.println(((Signal)target).getId()+ " is the id set to" + newValue);
+			((Signal)target).setClear(newValue.getValue());
+			break;
+		case CheckLocation:
+			System.out.println("");
+			break;
+		default:
+			System.out.println("");
+		}
+	}
 
 	public IntegerProperty getStepNumber() {
 		return stepNumber;

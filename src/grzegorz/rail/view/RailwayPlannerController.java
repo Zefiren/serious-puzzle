@@ -27,6 +27,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
+import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
@@ -39,6 +40,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
@@ -89,7 +91,7 @@ public class RailwayPlannerController {
 	// private GraphicsContext gc;
 	List<SolutionCmd> selected = new ArrayList<SolutionCmd>();
 
-	private Map<Train,Rectangle> trainBox = new HashMap<Train,Rectangle>();
+	private Map<Train,StackPane> trainBox = new HashMap<Train,StackPane>();
 
 	private List<Point> shapes = new ArrayList<Point>();
 	private Map<Interactable<?>, ArrayList<Button>> scenarioBtns;
@@ -113,14 +115,7 @@ public class RailwayPlannerController {
 	List<Integer> trackID = new ArrayList<Integer>();
 	Scenario scenario;
 	SolutionManager solMgr;
-//	private int layoutVerticalMax = 0;
-//	private int layoutHorizontalMax = 0;
-//
-//	private int layoutVerticalMin = 0;
-//	private int layoutHorizontalMin = 0;
-//
-//	private int layoutVerticalSize = 0;
-//	private int layoutHorizontalSize = 0;
+
 
 	protected boolean deletingFlag;
 	private boolean initialFlag = true;
@@ -268,6 +263,10 @@ public class RailwayPlannerController {
 
 			@Override
 			public void handle(ActionEvent arg0) {
+				for (int i =  solMgr.getSolution().size()-1; i >= 0; i--) {
+					solMgr.getSolution().get(i).undoStep();
+				}
+//				solMgr.getSolution().forEach(step -> step.undoStep());
 				mainApp.SwitchToAnimation(solMgr);
 			}
 		});
@@ -361,30 +360,43 @@ public class RailwayPlannerController {
 	}
 
 	private void createTrain(Train tr) {
+		StackPane trainPane = new StackPane();
 		Rectangle newTrain = new Rectangle(trackLength/4,trackVertGap / 4);
 		System.out.println("hello train at " + tr.getLocation().getLocation());
-		overlay.getChildren().add(newTrain);
-		newTrain.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
-		newTrain.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - newTrain.getHeight()/2);
+		overlay.getChildren().add(trainPane);
+		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
+		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - newTrain.getHeight()/2);
 		newTrain.setFill(Color.BLUE);
 		newTrain.setOpacity(0.8);
-		newTrain.setOnMouseClicked(new EventHandler<MouseEvent>()
+		
+		Label trainInfo = new Label(tr.getSource().getLabel() + "->" + tr.getDestination().getLabel());
+		trainInfo.getStyleClass().add("label-train");
+		int fontSize = (int) (newTrain.getHeight() / 2); 
+		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
+		
+		trainPane.getChildren().addAll(newTrain,trainInfo);
+		trainPane.setOnMouseClicked(new EventHandler<MouseEvent>()
         {
             @Override
             public void handle(MouseEvent t) {
             	createOccupyStep(null, tr);
             }
         });
-		trainBox.put(tr,newTrain);
+		trainBox.put(tr,trainPane);
 	}
 
 	private void updateTrain(Train tr) {
-		Rectangle trainRect = trainBox.get(tr);
-		trainRect.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
-		trainRect.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - trainRect.getHeight()/2);
+		StackPane trainPane = trainBox.get(tr);
+		Rectangle trainRect = (Rectangle) trainPane.getChildren().get(0);
 		trainRect.setWidth(trackLength/3);
 		trainRect.setHeight(trackVertGap / 6);
+		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
+		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - trainRect.getHeight()/2);
+		int fontSize = (int) (trainRect.getHeight() / 2); 
+		Node trainInfo =trainPane.lookup(".label-train");
+		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 	}
+
 
 	private void drawSignal(GraphicsContext gc, Signal sig) {
 		// CREA.TE GRAPHICS using GC
@@ -473,12 +485,15 @@ public class RailwayPlannerController {
 		Point loc = ts.getLocation();
 		// Create TS button
 		if (!scenarioBtns.containsKey(ts)) {
-			Button tsLabel = new Button("TC" + ts.getTsID());
+			String tcString = "TC" + ts.getTsID();
+			if(ts.getLabel()!=null)
+				tcString +=  ":" + ts.getLabel();
+			Button tsLabel = new Button(tcString);
 			overlay.getChildren().add(tsLabel);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
 			tsLabel.layoutYProperty().set(loc.y * trackVertGap + vPadding + trackVertGap * 0.05);
 			tsLabel.getStyleClass().add("scen");
-			tsLabel.setMaxSize(50, 30);
+			tsLabel.setMaxSize(55, 30);
 
 			scenarioBtns.put(ts, new ArrayList<Button>());
 			scenarioBtns.get(ts).add(tsLabel);

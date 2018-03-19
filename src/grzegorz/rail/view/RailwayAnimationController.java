@@ -19,6 +19,7 @@ import grzegorz.rail.model.SolutionManager;
 import grzegorz.rail.model.Switch;
 import grzegorz.rail.model.TrackSection;
 import grzegorz.rail.model.Train;
+import javafx.animation.AnimationTimer;
 import javafx.animation.FadeTransition;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -27,6 +28,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
+import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
@@ -39,6 +41,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
@@ -92,7 +95,7 @@ public class RailwayAnimationController {
 	// private GraphicsContext gc;
 	List<SolutionCmd> selected = new ArrayList<SolutionCmd>();
 
-	private Map<Train,Rectangle> trainBox = new HashMap<Train,Rectangle>();
+	private Map<Train,StackPane> trainBox = new HashMap<Train,StackPane>();
 
 	private List<Point> shapes = new ArrayList<Point>();
 	private Map<Interactable<?>, ArrayList<Button>> scenarioBtns;
@@ -131,6 +134,11 @@ public class RailwayAnimationController {
 
 	private boolean midstepFlag = false;
 	private TrackSection tempTarget;
+	
+	private int lastStepIndex = 0;
+	private float timeSinceStepChange = 0;
+	private float lastNanoTime;
+	private boolean movingStep = false;
 
 	/**
 	 * The constructor. The constructor is called before the initialize() method.
@@ -199,9 +207,24 @@ public class RailwayAnimationController {
 
 
 		scenarioBtns = new HashMap<Interactable<?>, ArrayList<Button>>();
-		// AnimationTimer loop = new AnimationTimer() {
-		// @Override
-		// public void handle(long now) {
+		 new AnimationTimer() {
+		        public void handle(long currentNanoTime) {
+		        	if(lastNanoTime == 0) lastNanoTime = currentNanoTime;
+		        	
+		        	timeSinceStepChange += currentNanoTime - lastNanoTime;
+		        	if(timeSinceStepChange > 1000000000)
+		        	{
+		        		System.out.println("performing step" + lastStepIndex);
+		        		solMgr.getSolution().get(lastStepIndex).performStep();
+		        		lastStepIndex++;
+		        		if(lastStepIndex > (solMgr.getSolution().size()-1))
+		        			super.stop();
+		        		timeSinceStepChange -= 1000000000;
+		        	}
+		        	lastNanoTime = currentNanoTime;
+		            
+		        }
+		    }.start();
 		overlay = new AnchorPane();
 		scenarioAnchor.getChildren().add(overlay);
 		AnchorPane.setTopAnchor(overlay, 0.0);
@@ -268,13 +291,7 @@ public class RailwayAnimationController {
 			}
 		});
 
-		/*scenarioAnchor.setOnMouseClicked(event -> {
-			double x = event.getX(), y = event.getY();
-			shapes.add(new Point((int) x, (int) y));
-			System.out.println(scenario.getTrack(new Point(1, 1)).getClass());
-			((Switch) scenario.getTrack(new Point(1, 1))).setDiverging(true);
-			drawScenario(g);
-		});*/
+
 
 	}
 
@@ -337,49 +354,36 @@ public class RailwayAnimationController {
 		}
 	}
 
-	private void createOccupyStep(TrackSection ts, Train tr) {
-		if(ts != null) {
-			tempTarget = ts;
-			midstepFlag = true;
-			setNotification("Step : Occupies", "Selected TC"+ts.getTsID()+".\nSelect a train to complete step.", false);
-		}
-		if(tr!=null && midstepFlag ) {
-			midstepFlag = false;
-			SolutionCmd newCmd = new SolutionCmd(tempTarget,tr,0);
-			solMgr.addStep(newCmd);
-			setNotification("Step : Occupies", "Occupies step added to solution.", true);
-			ts = null;
-			tr = null;
-			stepsTable.refresh();
-
-//			notifAnchor.setVisible(false);
-		}
-	}
-
 	private void createTrain(Train tr) {
+		StackPane trainPane = new StackPane();
 		Rectangle newTrain = new Rectangle(trackLength/4,trackVertGap / 4);
 		System.out.println("hello train at " + tr.getLocation().getLocation());
-		overlay.getChildren().add(newTrain);
-		newTrain.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
-		newTrain.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - newTrain.getHeight()/2);
+		overlay.getChildren().add(trainPane);
+		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
+		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - newTrain.getHeight()/2);
 		newTrain.setFill(Color.BLUE);
 		newTrain.setOpacity(0.8);
-		newTrain.setOnMouseClicked(new EventHandler<MouseEvent>()
-        {
-            @Override
-            public void handle(MouseEvent t) {
-            	createOccupyStep(null, tr);
-            }
-        });
-		trainBox.put(tr,newTrain);
+		
+		Label trainInfo = new Label(tr.getSource().getLabel() + "->" + tr.getDestination().getLabel());
+		trainInfo.getStyleClass().add("label-train");
+		int fontSize = (int) (newTrain.getHeight() / 2); 
+		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
+		
+		trainPane.getChildren().addAll(newTrain,trainInfo);
+		
+		trainBox.put(tr,trainPane);
 	}
 
 	private void updateTrain(Train tr) {
-		Rectangle trainRect = trainBox.get(tr);
-		trainRect.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
-		trainRect.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - trainRect.getHeight()/2);
+		StackPane trainPane = trainBox.get(tr);
+		Rectangle trainRect = (Rectangle) trainPane.getChildren().get(0);
 		trainRect.setWidth(trackLength/3);
 		trainRect.setHeight(trackVertGap / 6);
+		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
+		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - trainRect.getHeight()/2);
+		int fontSize = (int) (trainRect.getHeight() / 2); 
+		Node trainInfo =trainPane.lookup(".label-train");
+		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 	}
 
 	private void drawSignal(GraphicsContext gc, Signal sig) {
@@ -445,20 +449,7 @@ public class RailwayAnimationController {
 
 		}
 
-		scenarioBtns.get(sig).get(0).setOnAction(new EventHandler<ActionEvent>() {
-
-			@Override
-			public void handle(ActionEvent event) {
-				SolutionCmd newCmd = new SolutionCmd(sig, !sig.isClear());
-				solMgr.addStep(newCmd);
-				sig.setClear(!sig.isClear());
-				GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
-				drawScenario(g);
-				setNotification( "Step : Signal", "Signal Set step added to solution.", true);
-			}
-
-
-		});
+		
 	}
 
 	private void drawTrack(GraphicsContext gc, TrackSection ts) {
@@ -469,7 +460,10 @@ public class RailwayAnimationController {
 		Point loc = ts.getLocation();
 		// Create TS button
 		if (!scenarioBtns.containsKey(ts)) {
-			Button tsLabel = new Button("TC" + ts.getTsID());
+			String tcString = "TC" + ts.getTsID();
+			if(ts.getLabel()!=null)
+				tcString +=  ":" + ts.getLabel();
+			Button tsLabel = new Button(tcString);
 			overlay.getChildren().add(tsLabel);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
 			tsLabel.layoutYProperty().set(loc.y * trackVertGap + vPadding + trackVertGap * 0.05);
@@ -485,15 +479,6 @@ public class RailwayAnimationController {
 			tsLabel.layoutYProperty().set(loc.y * trackVertGap + vPadding + trackVertGap * 0.05);
 
 		}
-		scenarioBtns.get(ts).get(0).setOnAction(new EventHandler<ActionEvent>() {
-
-			@Override
-			public void handle(ActionEvent event) {
-				createOccupyStep(ts, null);
-				GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
-				drawScenario(g);
-			}
-		});
 
 		if (ts.getClass() == Switch.class) {
 			Switch s = (Switch) ts;
@@ -546,18 +531,7 @@ public class RailwayAnimationController {
 				swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
 				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2);
 			}
-			scenarioBtns.get(s).get(1).setOnAction(new EventHandler<ActionEvent>() {
-
-				@Override
-				public void handle(ActionEvent event) {
-					SolutionCmd newCmd = new SolutionCmd(s, !s.isDiverging());
-					solMgr.addStep(newCmd);
-					s.setDiverging(!s.isDiverging());
-					GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
-					drawScenario(g);
-					setNotification( "Step : Switch", "Switch Set step added to solution.", true);
-				}
-			});
+			
 			/*
 			 * Button swLabel = scenarioBtns.get(ts).get(1);
 			 * swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength *

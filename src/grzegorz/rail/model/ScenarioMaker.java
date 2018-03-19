@@ -31,9 +31,9 @@ public final class ScenarioMaker {
 		Switch s1, s2;
 		middle = new TrackSection(1);
 		middle2 = new TrackSection(2);
-		start = new TrackSection(0, "start", false, middle);
-		end = new TrackSection(4, "end", true, middle2);
-		upRightEnd = new TrackSection(5, "upEnd", false, middle2);
+		start = new TrackSection(0, "A", false, middle);
+		end = new TrackSection(4, "B", true, middle2);
+		upRightEnd = new TrackSection(5, "C", false, middle2);
 		newEnd = new TrackSection(7);// , "endLeft2")//, true, s2);
 		newEnd2 = new TrackSection(8);// , "endLeft3")//, true, s2);
 		// id, left, right, isRightDir, isRightTurn, extraTrack
@@ -55,10 +55,12 @@ public final class ScenarioMaker {
 		newEnd.setEndTrack(true);
 		newEnd.setRightEnding(false);
 		newEnd.setRightTrack(s2);
+		newEnd.setLabel("D");
 
 		newEnd2.setEndTrack(true);
 		newEnd2.setRightEnding(false);
 		newEnd2.setRightTrack(s2);
+		newEnd2.setLabel("E");
 
 		Train train = new Train(0, start, end, Direction.right);
 		Train train2 = new Train(1, end, newEnd2, Direction.left);

@@ -17,11 +17,15 @@
 
 .label-bright {
     -fx-font-size: 10pt;
-    -fx-font-family: "Segoe UI Semibold";
-    -fx-text-fill: white;
-    -fx-opacity: 1;
 }
 
+.label-train-small {
+    -fx-font-size: 7pt;
+}
+
+.label-train-large {
+    -fx-font-size: 9pt;
+}
 
 .label-subtitle {
 	-fx-font-family: "Roboto sans-serif";
