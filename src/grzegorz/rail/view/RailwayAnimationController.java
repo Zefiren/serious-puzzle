@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import grzegorz.rail.MainApp;
+import grzegorz.rail.model.Animator;
 import grzegorz.rail.model.Direction;
 import grzegorz.rail.model.Interactable;
 import grzegorz.rail.model.Scenario;
@@ -20,7 +21,7 @@ import grzegorz.rail.model.Switch;
 import grzegorz.rail.model.TrackSection;
 import grzegorz.rail.model.Train;
 import javafx.animation.AnimationTimer;
-import javafx.animation.FadeTransition;
+import javafx.beans.Observable;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -37,7 +38,6 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -45,11 +45,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
-import javafx.util.Duration;
 
 public class RailwayAnimationController {
 
-	//solution
+	// solution
 	@FXML
 	private TableView<SolutionCmd> stepsTable;
 	@FXML
@@ -65,7 +64,7 @@ public class RailwayAnimationController {
 	@FXML
 	private Button stepForwardSingleButton;
 
-	//notification
+	// notification
 	@FXML
 	private AnchorPane notifAnchor;
 	@FXML
@@ -74,8 +73,6 @@ public class RailwayAnimationController {
 	private Label notifMessage;
 	@FXML
 	private Button closeButton;
-
-
 
 	@FXML
 	private AnchorPane scenarioAnchor;
@@ -95,7 +92,7 @@ public class RailwayAnimationController {
 	// private GraphicsContext gc;
 	List<SolutionCmd> selected = new ArrayList<SolutionCmd>();
 
-	private Map<Train,StackPane> trainBox = new HashMap<Train,StackPane>();
+	private Map<Train, StackPane> trainBox = new HashMap<Train, StackPane>();
 
 	private List<Point> shapes = new ArrayList<Point>();
 	private Map<Interactable<?>, ArrayList<Button>> scenarioBtns;
@@ -119,26 +116,11 @@ public class RailwayAnimationController {
 	List<Integer> trackID = new ArrayList<Integer>();
 	Scenario scenario;
 	SolutionManager solMgr;
-//	private int layoutVerticalMax = 0;
-//	private int layoutHorizontalMax = 0;
-//
-//	private int layoutVerticalMin = 0;
-//	private int layoutHorizontalMin = 0;
-//
-//	private int layoutVerticalSize = 0;
-//	private int layoutHorizontalSize = 0;
-
 	protected boolean deletingFlag;
 	private boolean initialFlag = true;
 	private boolean animationFlag = false;
 
-	private boolean midstepFlag = false;
-	private TrackSection tempTarget;
-	
-	private int lastStepIndex = 0;
-	private float timeSinceStepChange = 0;
-	private float lastNanoTime;
-	private boolean movingStep = false;
+	private Animator animator;
 
 	/**
 	 * The constructor. The constructor is called before the initialize() method.
@@ -157,6 +139,7 @@ public class RailwayAnimationController {
 		// Add observable list data to the table
 		scenario = mainApp.getScenarioData();
 		solMgr = mainApp.getSolutionData();
+		animator = new Animator(solMgr.getLength(), solMgr);
 		stepsTable.setItems(solMgr.getSolution());
 	}
 
@@ -172,6 +155,8 @@ public class RailwayAnimationController {
 	@FXML
 	private void initialize() {
 		solMgr = new SolutionManager();
+		animator = new Animator(solMgr.getLength(), solMgr);
+
 		// Initialize the person table with the two columns.
 		stepNumColumn.setCellValueFactory(cellData -> cellData.getValue().getStepNumberString());
 		stepColumn.setCellValueFactory(cellData -> cellData.getValue().getStep());
@@ -205,26 +190,8 @@ public class RailwayAnimationController {
 			System.out.println(sizeCube);
 		});
 
-
 		scenarioBtns = new HashMap<Interactable<?>, ArrayList<Button>>();
-		 new AnimationTimer() {
-		        public void handle(long currentNanoTime) {
-		        	if(lastNanoTime == 0) lastNanoTime = currentNanoTime;
-		        	
-		        	timeSinceStepChange += currentNanoTime - lastNanoTime;
-		        	if(timeSinceStepChange > 1000000000)
-		        	{
-		        		System.out.println("performing step" + lastStepIndex);
-		        		solMgr.getSolution().get(lastStepIndex).performStep();
-		        		lastStepIndex++;
-		        		if(lastStepIndex > (solMgr.getSolution().size()-1))
-		        			super.stop();
-		        		timeSinceStepChange -= 1000000000;
-		        	}
-		        	lastNanoTime = currentNanoTime;
-		            
-		        }
-		    }.start();
+
 		overlay = new AnchorPane();
 		scenarioAnchor.getChildren().add(overlay);
 		AnchorPane.setTopAnchor(overlay, 0.0);
@@ -233,8 +200,7 @@ public class RailwayAnimationController {
 		AnchorPane.setRightAnchor(overlay, 0.0);
 
 		GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
-		if(scenario!=null)
-			drawScenario(g);
+		if (scenario != null) drawScenario(g);
 
 		overlay.getChildren().add(notifAnchor);
 		notifAnchor.setVisible(false);
@@ -252,8 +218,7 @@ public class RailwayAnimationController {
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
 				trackLength = (int) (newSceneWidth.doubleValue() * 0.8) / scenario.getWidth();
 				hPadding = (int) (newSceneWidth.doubleValue() * 0.1);
-				if(scenario!=null)
-					drawScenario(g);
+				if (scenario != null) drawScenario(g);
 			}
 		});
 		scenarioAnchor.heightProperty().addListener(new ChangeListener<Number>() {
@@ -261,8 +226,7 @@ public class RailwayAnimationController {
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
 				trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
 				vPadding = (int) (newSceneHeight.doubleValue() * 0.1);
-				if(scenario!=null)
-					drawScenario(g);
+				if (scenario != null) drawScenario(g);
 			}
 		});
 
@@ -273,25 +237,57 @@ public class RailwayAnimationController {
 			}
 		});
 
+		AnimationTimer solAnimator = new AnimationTimer() {
+
+			public void handle(long currentNanoTime) {
+				if (animator.isPlaying()) {
+					boolean canStop = !animator.animationPlay(currentNanoTime);
+
+					if (scenario != null) {
+						drawScenario(g);
+					}
+					if (canStop) {
+						stepPlayButton.setDisable(false);
+						stepStopButton.setDisable(true);
+						this.stop();
+					}
+				}
+			}
+		};
+
+		stepStopButton.setDisable(true);
 		stepPlayButton.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				if (selected.size() > 0) {
-					deletingFlag = true;
-					stepsTable.getSelectionModel().clearSelection();
-
-					if (selected.size() == 1) solMgr.removeStep(selected.get(0));
-					else solMgr.removeSteps(selected);
-
-					deletingFlag = false;
-					if(scenario!=null)
-						drawScenario(g);
-				}
+				animator.animationEnablePlay();
+				solAnimator.start();
+				stepPlayButton.setDisable(true);
+				stepStopButton.setDisable(false);
+				stepForwardSingleButton.setDisable(true);
+				stepBackSingleButton.setDisable(true);
 			}
 		});
 
+		stepStopButton.setOnAction(new EventHandler<ActionEvent>() {
 
+			@Override
+			public void handle(ActionEvent arg0) {
+				animator.animationPause();
+				solAnimator.stop();
+				stepPlayButton.setDisable(false);
+				stepStopButton.setDisable(true);
+				stepForwardSingleButton.setDisable(false);
+				stepBackSingleButton.setDisable(false);
+			}
+		});
+
+		animator.animationHasBackStepProperty().addListener((Observable o) -> {
+			stepBackSingleButton.setDisable(animator.animationHasBackStepProperty().getValue());
+        });
+		animator.animationHasNextProperty().addListener((Observable o) -> {
+			stepForwardSingleButton.setDisable(animator.animationHasNextProperty().getValue());
+        });
 
 	}
 
@@ -322,67 +318,45 @@ public class RailwayAnimationController {
 			Iterator<Train> iterator2 = trains.iterator();
 			while (iterator2.hasNext()) {
 				Train train = iterator2.next();
-				if(animationFlag)
-					updateTrain(train);
-				else
-					createTrain(train);
+				if (animationFlag) updateTrain(train);
+				else createTrain(train);
 			}
 			animationFlag = true;
 			initialFlag = false;
 		}
 	}
 
-	private void setNotification(String title, String message, boolean fading) {
-		notifAnchor.setVisible(true);
-		if(title!=null)
-			notifTitle.setText(title);
-		if(message!=null)
-			notifMessage.setText(message);
-		if(fading) {
-			FadeTransition ft = new FadeTransition(Duration.millis(3000), notifAnchor);
-			ft.setFromValue(1.0);
-			ft.setToValue(0.0);
-			ft.play();
-			ft.setOnFinished(new EventHandler<ActionEvent>() {
 
-				@Override
-				public void handle(ActionEvent arg0) {
-					notifAnchor.setOpacity(1);
-					notifAnchor.setVisible(false);
-				}
-			});
-		}
-	}
 
 	private void createTrain(Train tr) {
 		StackPane trainPane = new StackPane();
-		Rectangle newTrain = new Rectangle(trackLength/4,trackVertGap / 4);
+		Rectangle newTrain = new Rectangle(trackLength / 4, trackVertGap / 4);
 		System.out.println("hello train at " + tr.getLocation().getLocation());
 		overlay.getChildren().add(trainPane);
-		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
-		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - newTrain.getHeight()/2);
+		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding);
+		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - newTrain.getHeight() / 2);
 		newTrain.setFill(Color.BLUE);
 		newTrain.setOpacity(0.8);
-		
+
 		Label trainInfo = new Label(tr.getSource().getLabel() + "->" + tr.getDestination().getLabel());
 		trainInfo.getStyleClass().add("label-train");
-		int fontSize = (int) (newTrain.getHeight() / 2); 
+		int fontSize = (int) (newTrain.getHeight() / 2);
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
-		
-		trainPane.getChildren().addAll(newTrain,trainInfo);
-		
-		trainBox.put(tr,trainPane);
+
+		trainPane.getChildren().addAll(newTrain, trainInfo);
+
+		trainBox.put(tr, trainPane);
 	}
 
 	private void updateTrain(Train tr) {
 		StackPane trainPane = trainBox.get(tr);
 		Rectangle trainRect = (Rectangle) trainPane.getChildren().get(0);
-		trainRect.setWidth(trackLength/3);
+		trainRect.setWidth(trackLength / 3);
 		trainRect.setHeight(trackVertGap / 6);
-		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding );
-		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - trainRect.getHeight()/2);
-		int fontSize = (int) (trainRect.getHeight() / 2); 
-		Node trainInfo =trainPane.lookup(".label-train");
+		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding);
+		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - trainRect.getHeight() / 2);
+		int fontSize = (int) (trainRect.getHeight() / 2);
+		Node trainInfo = trainPane.lookup(".label-train");
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 	}
 
@@ -449,7 +423,6 @@ public class RailwayAnimationController {
 
 		}
 
-		
 	}
 
 	private void drawTrack(GraphicsContext gc, TrackSection ts) {
@@ -461,8 +434,7 @@ public class RailwayAnimationController {
 		// Create TS button
 		if (!scenarioBtns.containsKey(ts)) {
 			String tcString = "TC" + ts.getTsID();
-			if(ts.getLabel()!=null)
-				tcString +=  ":" + ts.getLabel();
+			if (ts.getLabel() != null) tcString += ":" + ts.getLabel();
 			Button tsLabel = new Button(tcString);
 			overlay.getChildren().add(tsLabel);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
@@ -501,7 +473,7 @@ public class RailwayAnimationController {
 				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap + ystart };
 			} else {
 				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.left ) yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
+				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
 				else yPts = new double[] { -trackVertGap + ystart, ystart - yLevel, ystart - yLevel };
 			}
 
@@ -531,7 +503,7 @@ public class RailwayAnimationController {
 				swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
 				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2);
 			}
-			
+
 			/*
 			 * Button swLabel = scenarioBtns.get(ts).get(1);
 			 * swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength *
@@ -545,8 +517,6 @@ public class RailwayAnimationController {
 		}
 
 	}
-
-
 
 	private static class CanvasPane extends Pane {
 
@@ -575,6 +545,5 @@ public class RailwayAnimationController {
 			canvas.setHeight(h);
 		}
 	}
-
 
 }

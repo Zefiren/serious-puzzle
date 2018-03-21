@@ -74,6 +74,16 @@ public class SolutionManager {
 	}
 
 
+	public int getLength() {
+		return solution.size();
+	}
+
+	public SolutionCmd getStep(int index) {
+		if(index < getLength())
+			return solution.get(index);
+		else
+			return null;
+	}
 
 	public void save(){
 		saved = true;
