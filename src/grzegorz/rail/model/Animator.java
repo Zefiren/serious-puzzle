@@ -73,6 +73,7 @@ public class Animator {
 	}
 
 	private void singleNextStepAvailable() {
+		System.out.println("next not available "+(animationPlaying || movingStep || stepIndex >= solutionSize - 1));
 		if (animationPlaying || movingStep || stepIndex >= solutionSize - 1) {
 			animationHasNext.setValue(false);
 		} else {

@@ -281,12 +281,34 @@ public class RailwayAnimationController {
 				stepBackSingleButton.setDisable(false);
 			}
 		});
+		
+		stepForwardSingleButton.setOnAction(new EventHandler<ActionEvent>() {
 
+			@Override
+			public void handle(ActionEvent arg0) {
+				animator.animationNextStep();
+				if (scenario != null) {
+					drawScenario(g);
+				}
+			}
+		});
+
+		stepBackSingleButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				animator.animationLastStep();
+				if (scenario != null) {
+					drawScenario(g);
+				}
+			}
+		});
+		
 		animator.animationHasBackStepProperty().addListener((Observable o) -> {
-			stepBackSingleButton.setDisable(animator.animationHasBackStepProperty().getValue());
+			stepBackSingleButton.setDisable(!animator.animationHasBackStepProperty().getValue());
         });
 		animator.animationHasNextProperty().addListener((Observable o) -> {
-			stepForwardSingleButton.setDisable(animator.animationHasNextProperty().getValue());
+			stepForwardSingleButton.setDisable(!animator.animationHasNextProperty().getValue());
         });
 
 	}
@@ -364,45 +386,35 @@ public class RailwayAnimationController {
 		// CREA.TE GRAPHICS using GC
 		double diameter = (trackLength / signalScaleFraction);
 		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding, (int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5));
-		Color left, right;
+		Color sigColour;
 		if (sig.getDirection() == Direction.left) {
-			sigLoc.x += trackLength * trackLengthRatio - diameter * 2;
-			if (sig.isClear()) {
-				left = Color.GREEN;
-				right = Color.BLACK;
-			} else {
-				left = Color.BLACK;
-				right = Color.RED;
-			}
-		} else {
-			if (sig.isClear()) {
-				right = Color.GREEN;
-				left = Color.BLACK;
-			} else {
-				right = Color.BLACK;
-				left = Color.RED;
-			}
+			sigLoc.x += trackLength * trackLengthRatio - diameter;
+			
 		}
 
-		// if (signal.isFacingLeft()) sg.setSignalPosition(new Point((int)
-		// tc.getTrackGraphic().getP2().getX() - 50, (int)
-		// tc.getTrackGraphic().getP2().getY() - 30));
-		// else sg.setSignalPosition(new Point((int)
-		// tc.getTrackGraphic().getP1().getX(), (int)
-		// tc.getTrackGraphic().getP1().getY() - 30));
+		if (sig.isClear()) {
+			sigColour = Color.GREEN;
+		} else {
+			sigColour = Color.RED;
+		}
+		
 		double oldWidth = gc.getLineWidth();
 		gc.setStroke(Color.WHITE);
 		gc.setLineWidth(2);
 
-		gc.setFill(left);
-		gc.fillOval(sigLoc.x, sigLoc.y, diameter, diameter);
+		gc.setFill(sigColour);
 		gc.strokeOval(sigLoc.x, sigLoc.y, diameter, diameter);
-
-		gc.setFill(right);
-		gc.fillOval(sigLoc.x + diameter, sigLoc.y, diameter, diameter);
-		gc.strokeOval(sigLoc.x + diameter, sigLoc.y, diameter, diameter);
+		gc.setStroke(sigColour);
+		gc.strokeOval(sigLoc.x+diameter*0.1, sigLoc.y+diameter*0.1, diameter*0.8, diameter*0.8);
+		if(sig.isClear()) {
+			gc.fillRect(sigLoc.x+diameter*0.2, sigLoc.y+diameter*0.4, diameter*0.6, diameter*0.2);
+		}else {
+			gc.fillRect(sigLoc.x+diameter*0.4, sigLoc.y+diameter*0.2, diameter*0.2, diameter*0.6);
+		}
+	
 
 		gc.setLineWidth(oldWidth);
+		gc.setStroke(Color.WHITE);
 
 		// CREATE BUTTON FOR SIGNAL using Node Button
 		if (!scenarioBtns.containsKey(sig)) {
@@ -423,6 +435,7 @@ public class RailwayAnimationController {
 
 		}
 
+		
 	}
 
 	private void drawTrack(GraphicsContext gc, TrackSection ts) {
