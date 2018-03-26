@@ -58,13 +58,30 @@ public class Train {
 	 * @param location the location to set
 	 */
 	public void setLocation(TrackSection location) {
-		this.location = location;
+		if (location != null) {
+			this.location = location;
+		}
 	}
 	/**
 	 * @return the trainID
 	 */
 	public int getTrainID() {
 		return trainID;
+	}
+
+	/**
+	 * @return the trainID
+	 */
+	public Direction getHeadingDirection() {
+		return headingDirection;
+	}
+
+
+	/**
+	 * @return the trainID
+	 */
+	public void setHeadingDirection(Direction headingDirection ) {
+		this.headingDirection = headingDirection;
 	}
 
 

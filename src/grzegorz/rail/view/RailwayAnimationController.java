@@ -43,6 +43,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
 
@@ -89,6 +90,7 @@ public class RailwayAnimationController {
 
 	private AnchorPane overlay;
 	private Pane notifierPane;
+	private Label stepCounter;
 	// private GraphicsContext gc;
 	List<SolutionCmd> selected = new ArrayList<SolutionCmd>();
 
@@ -139,8 +141,20 @@ public class RailwayAnimationController {
 		// Add observable list data to the table
 		scenario = mainApp.getScenarioData();
 		solMgr = mainApp.getSolutionData();
-		animator = new Animator(solMgr.getLength(), solMgr);
+		animator = new Animator(solMgr.getLength(), solMgr, scenario);
+
+
+		animator.animationHasBackStepProperty().addListener((Observable o) -> {
+			stepBackSingleButton.setDisable(!animator.animationHasBackStepProperty().getValue());
+        });
+		animator.animationHasNextProperty().addListener((Observable o) -> {
+			System.out.println("setting NEXT step button to "+!animator.animationHasNextProperty().getValue());
+			stepForwardSingleButton.setDisable(!animator.animationHasNextProperty().getValue());
+        });
+
+		stepCounter.textProperty().bind(animator.stepIndexProperty().add(1).asString());
 		stepsTable.setItems(solMgr.getSolution());
+
 	}
 
 	// while(it.hasNext())
@@ -155,7 +169,7 @@ public class RailwayAnimationController {
 	@FXML
 	private void initialize() {
 		solMgr = new SolutionManager();
-		animator = new Animator(solMgr.getLength(), solMgr);
+		animator = new Animator(solMgr.getLength(), solMgr, scenario);
 
 		// Initialize the person table with the two columns.
 		stepNumColumn.setCellValueFactory(cellData -> cellData.getValue().getStepNumberString());
@@ -191,6 +205,7 @@ public class RailwayAnimationController {
 		});
 
 		scenarioBtns = new HashMap<Interactable<?>, ArrayList<Button>>();
+		stepCounter = new Label(0+"");
 
 		overlay = new AnchorPane();
 		scenarioAnchor.getChildren().add(overlay);
@@ -202,11 +217,15 @@ public class RailwayAnimationController {
 		GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 		if (scenario != null) drawScenario(g);
 
-		overlay.getChildren().add(notifAnchor);
+		overlay.getChildren().addAll(notifAnchor, stepCounter);
 		notifAnchor.setVisible(false);
 
 		AnchorPane.setTopAnchor(notifAnchor, 10.0);
 		AnchorPane.setRightAnchor(notifAnchor, 10.0);
+
+		AnchorPane.setTopAnchor(stepCounter, 10.0);
+		AnchorPane.setRightAnchor(stepCounter, 10.0);
+
 
 		stepsAnchor.maxWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
 		stepsAnchor.minWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
@@ -249,6 +268,8 @@ public class RailwayAnimationController {
 					if (canStop) {
 						stepPlayButton.setDisable(false);
 						stepStopButton.setDisable(true);
+						stepBackSingleButton.setDisable(!animator.animationHasBackStepProperty().getValue());
+						stepForwardSingleButton.setDisable(!animator.animationHasNextProperty().getValue());
 						this.stop();
 					}
 				}
@@ -281,7 +302,7 @@ public class RailwayAnimationController {
 				stepBackSingleButton.setDisable(false);
 			}
 		});
-		
+
 		stepForwardSingleButton.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
@@ -303,13 +324,7 @@ public class RailwayAnimationController {
 				}
 			}
 		});
-		
-		animator.animationHasBackStepProperty().addListener((Observable o) -> {
-			stepBackSingleButton.setDisable(!animator.animationHasBackStepProperty().getValue());
-        });
-		animator.animationHasNextProperty().addListener((Observable o) -> {
-			stepForwardSingleButton.setDisable(!animator.animationHasNextProperty().getValue());
-        });
+
 
 	}
 
@@ -353,30 +368,47 @@ public class RailwayAnimationController {
 	private void createTrain(Train tr) {
 		StackPane trainPane = new StackPane();
 		Rectangle newTrain = new Rectangle(trackLength / 4, trackVertGap / 4);
+		int dir = (tr.getHeadingDirection() == Direction.right) ? 1 : -1;
+		Polygon newTrainArrow = new Polygon(0.0, 0.0, 0.0, newTrain.getHeight(), (newTrain.getWidth() / 3) * dir, newTrain.getHeight()/2);
 		System.out.println("hello train at " + tr.getLocation().getLocation());
 		overlay.getChildren().add(trainPane);
-		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding);
+		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength/2 );
 		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - newTrain.getHeight() / 2);
 		newTrain.setFill(Color.BLUE);
 		newTrain.setOpacity(0.8);
+		newTrain.getStyleClass().add("box-train");
 
-		Label trainInfo = new Label(tr.getSource().getLabel() + "->" + tr.getDestination().getLabel());
+		newTrainArrow.getStyleClass().add("arrow-train");
+		newTrainArrow.setTranslateX(newTrain.getLayoutX() + ( (tr.getHeadingDirection() == Direction.right) ? newTrain.getWidth()/2 : -newTrain.getWidth()/2 ) + newTrainArrow.getBoundsInLocal().getWidth()/2);
+		newTrainArrow.setTranslateY(newTrain.getLayoutY());
+		newTrainArrow.setFill(Color.CYAN);
+		newTrainArrow.setOpacity(0.8);
+
+		Label trainInfo = new Label(tr.getDestination().getLabel());
 		trainInfo.getStyleClass().add("label-train");
 		int fontSize = (int) (newTrain.getHeight() / 2);
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 
-		trainPane.getChildren().addAll(newTrain, trainInfo);
+		trainPane.getChildren().addAll(newTrain, newTrainArrow, trainInfo);
 
 		trainBox.put(tr, trainPane);
 	}
 
 	private void updateTrain(Train tr) {
 		StackPane trainPane = trainBox.get(tr);
-		Rectangle trainRect = (Rectangle) trainPane.getChildren().get(0);
+		Rectangle trainRect = (Rectangle) trainPane.lookup(".box-train");
+		Polygon trainArrow = (Polygon) trainPane.lookup(".arrow-train");
+
+		int dir = (tr.getHeadingDirection() == Direction.right) ? 1 : -1;
+
 		trainRect.setWidth(trackLength / 3);
 		trainRect.setHeight(trackVertGap / 6);
-		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding);
+		trainArrow.getPoints().setAll(0.0, 0.0, 0.0, trainRect.getHeight(), (trainRect.getWidth() / 3) * dir, trainRect.getHeight()/2);
+		trainArrow.setTranslateX(trainRect.getLayoutX() + dir  * (trainRect.getWidth() +  trainArrow.getBoundsInLocal().getWidth())/2  );
+		trainArrow.setTranslateY(trainRect.getLayoutY());
+		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength/3);
 		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - trainRect.getHeight() / 2);
+
 		int fontSize = (int) (trainRect.getHeight() / 2);
 		Node trainInfo = trainPane.lookup(".label-train");
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
@@ -389,7 +421,7 @@ public class RailwayAnimationController {
 		Color sigColour;
 		if (sig.getDirection() == Direction.left) {
 			sigLoc.x += trackLength * trackLengthRatio - diameter;
-			
+
 		}
 
 		if (sig.isClear()) {
@@ -397,7 +429,7 @@ public class RailwayAnimationController {
 		} else {
 			sigColour = Color.RED;
 		}
-		
+
 		double oldWidth = gc.getLineWidth();
 		gc.setStroke(Color.WHITE);
 		gc.setLineWidth(2);
@@ -411,7 +443,7 @@ public class RailwayAnimationController {
 		}else {
 			gc.fillRect(sigLoc.x+diameter*0.4, sigLoc.y+diameter*0.2, diameter*0.2, diameter*0.6);
 		}
-	
+
 
 		gc.setLineWidth(oldWidth);
 		gc.setStroke(Color.WHITE);
@@ -435,7 +467,7 @@ public class RailwayAnimationController {
 
 		}
 
-		
+
 	}
 
 	private void drawTrack(GraphicsContext gc, TrackSection ts) {

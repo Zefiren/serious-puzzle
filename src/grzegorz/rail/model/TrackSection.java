@@ -13,6 +13,9 @@ public class TrackSection  extends Interactable<TrackSection>{
 	private TrackSection leftTrack;
 	private TrackSection rightTrack;
 
+	private Signal leftSignal;
+	private Signal rightSignal;
+
 	private Point location;
 
 
@@ -123,6 +126,31 @@ public class TrackSection  extends Interactable<TrackSection>{
 		this.rightTrack = rightTrack;
 	}
 
+	/**
+	 * @return the track wanted based on direction
+	 */
+	public TrackSection getTrack(Direction direction) {
+		if(direction == Direction.right) {
+			return getRightTrack();
+		}
+		if(direction == Direction.left) {
+			return getLeftTrack();
+		}
+		return null;
+	}
+
+	/**
+	 * @return the rightTrack
+	 */
+	public void setTrack(Direction direction, TrackSection track) {
+		if(direction == Direction.right) {
+			setRightTrack(track);
+		}
+		if(direction == Direction.left) {
+			setLeftTrack(track);
+		};
+	}
+
 	public boolean isRightEnding() {
 		return isRightEnding;
 	}
@@ -140,6 +168,43 @@ public class TrackSection  extends Interactable<TrackSection>{
 
 	public void setLocation(Point location) {
 		this.location = location;
+	}
+
+	public Signal getSignal(Direction direction) {
+		if(direction == Direction.left) {
+			return getLeftSignal();
+		}
+		if(direction == Direction.right) {
+			return getRightSignal();
+		}
+		return null;
+
+	}
+
+	public void setSignal(Direction direction, Signal signal) {
+		if(direction == Direction.left) {
+			setLeftSignal(signal);
+		}
+		if(direction == Direction.right) {
+			setRightSignal(signal);
+		}
+
+	}
+
+	public Signal getLeftSignal() {
+		return leftSignal;
+	}
+
+	public void setLeftSignal(Signal leftSignal) {
+		this.leftSignal = leftSignal;
+	}
+
+	public Signal getRightSignal() {
+		return rightSignal;
+	}
+
+	public void setRightSignal(Signal rightSignal) {
+		this.rightSignal = rightSignal;
 	}
 
 

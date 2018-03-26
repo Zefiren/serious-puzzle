@@ -8,10 +8,6 @@ public class Switch extends TrackSection {
 	private TrackSection extraTrack;
 
 
-//	private Polygon extraTrackGraphic;
-//	private Point switchTextPlace;
-//	private Rectangle switchLabelBox;
-
 
 
 	/**
@@ -35,7 +31,6 @@ public class Switch extends TrackSection {
 		this.extraTrack = extraTrack;
 		isDiverging = false;
 
-//		initTrackGraphic();
 	}
 
 
@@ -88,12 +83,6 @@ public class Switch extends TrackSection {
 		this.extraTrack = extraTrack;
 	}
 
-//
-//	public void setExtraTrackGraphicPoints(int x1, int y1, int x2, int y2,int x3, int y3) {
-//		extraTrackGraphic.addPoint(x1, y1);
-//		extraTrackGraphic.addPoint(x2,y2);
-//		extraTrackGraphic.addPoint(x3, y3);
-//	}
 
 	public Switch getInteractable() {
 		return this;

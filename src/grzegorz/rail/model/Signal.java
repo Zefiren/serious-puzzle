@@ -8,7 +8,6 @@ public class Signal extends Interactable<Signal>{
 	private boolean isClear;
 	private Direction direction;
 
-//	private SignalGraphic signalGraphic;
 
 	public Signal(int id, TrackSection signalTC, TrackSection protectingTC, Direction direction) {
 		super();
@@ -16,7 +15,7 @@ public class Signal extends Interactable<Signal>{
 		this.setSignalTC(signalTC);
 		this.setProtectingTC(protectingTC);
 		this.setDirection(direction);
-//		signalGraphic = new SignalGraphic(50, facingLeft);
+		signalTC.setSignal(direction, this);
 	}
 
 	public int getId() {

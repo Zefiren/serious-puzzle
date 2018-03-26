@@ -9,28 +9,29 @@ import javafx.beans.property.StringProperty;
 
 public class SolutionCmd {
 	enum CommandType {
-			SwitchChange,
-			SignalChange,
-			CheckLocation
+		SwitchChange, SignalChange, CheckLocation
 	};
+
 	CommandType type;
 
 	Interactable<?> target;
 	BooleanProperty oldValue;
 	BooleanProperty newValue;
 	IntegerProperty stepNumber;
+
 	Train targetTrain;
+
+
 
 	public SolutionCmd(Interactable<?> target, Boolean newValue) {
 		super();
 		this.target = target;
 		this.oldValue = new SimpleBooleanProperty(!newValue);
 		this.newValue = new SimpleBooleanProperty(newValue);
-		if(target.getInteractable().getClass() == Signal.class)
-			type = CommandType.SignalChange;
-		if(target.getInteractable().getClass() == Switch.class){
+		if (target.getInteractable().getClass() == Signal.class) type = CommandType.SignalChange;
+		if (target.getInteractable().getClass() == Switch.class) {
 			type = CommandType.SwitchChange;
-			System.out.println("switch id " + ((Switch)target).getTsID());
+			System.out.println("switch id " + ((Switch) target).getTsID());
 		}
 	}
 
@@ -40,11 +41,10 @@ public class SolutionCmd {
 		this.oldValue = new SimpleBooleanProperty(!newValue);
 		this.newValue = new SimpleBooleanProperty(newValue);
 		this.stepNumber = new SimpleIntegerProperty(stepNum);
-		if(target.getInteractable().getClass() == Signal.class)
-			type = CommandType.SignalChange;
-		if(target.getInteractable().getClass() == Switch.class){
+		if (target.getInteractable().getClass() == Signal.class) type = CommandType.SignalChange;
+		if (target.getInteractable().getClass() == Switch.class) {
 			type = CommandType.SwitchChange;
-			System.out.println("switch id " + ((Switch)target).getTsID());
+			System.out.println("switch id " + ((Switch) target).getTsID());
 		}
 	}
 
@@ -55,32 +55,30 @@ public class SolutionCmd {
 		type = CommandType.CheckLocation;
 	}
 
-
 	public StringProperty getStep() {
 		// TODO Auto-generated method stub
 		switch (type) {
 		case SwitchChange:
-			return new SimpleStringProperty("Switch : " + ((Switch) target).getTsID() + " -> " + newValue.getValue() );
+			return new SimpleStringProperty("Switch : " + ((Switch) target).getTsID() + " -> " + newValue.getValue());
 		case SignalChange:
-			return new SimpleStringProperty("Signal : " + ((Signal) target).getId() + " ->" + newValue.getValue() );
+			return new SimpleStringProperty("Signal : " + ((Signal) target).getId() + " ->" + newValue.getValue());
 		case CheckLocation:
 			return new SimpleStringProperty("Occupies : TC" + ((TrackSection) target).getTsID() + " by Train" + targetTrain.getTrainID());
 		default:
 			return new SimpleStringProperty("no known type");
 		}
 
-
 	}
 
-	public void undoStep(){
+	public void undoStep() {
 		switch (type) {
 		case SwitchChange:
-			System.out.println(((Switch)target).getTsID()+ " is the id");
-			((Switch)target).setDiverging(oldValue.getValue());
+			System.out.println(((Switch) target).getTsID() + " is the id");
+			((Switch) target).setDiverging(oldValue.getValue());
 			break;
 		case SignalChange:
-			System.out.println(((Signal)target).getId()+ " is the id");
-			((Signal)target).setClear(oldValue.getValue());
+			System.out.println(((Signal) target).getId() + " is the id");
+			((Signal) target).setClear(oldValue.getValue());
 			break;
 		case CheckLocation:
 			System.out.println("");
@@ -89,22 +87,24 @@ public class SolutionCmd {
 			System.out.println("");
 		}
 	}
-	
-	public void performStep(){
+
+	public boolean performStep() {
 		switch (type) {
 		case SwitchChange:
-			System.out.println(((Switch)target).getTsID()+ " is the id");
-			((Switch)target).setDiverging(newValue.getValue());
-			break;
+			System.out.println(((Switch) target).getTsID() + " is the id");
+			((Switch) target).setDiverging(newValue.getValue());
+			return true;
 		case SignalChange:
-			System.out.println(((Signal)target).getId()+ " is the id set to" + newValue);
-			((Signal)target).setClear(newValue.getValue());
-			break;
+			System.out.println(((Signal) target).getId() + " is the id set to" + newValue);
+			((Signal) target).setClear(newValue.getValue());
+			return true;
 		case CheckLocation:
-			System.out.println("");
-			break;
+			System.out.println(" ");
+			if (targetTrain.getLocation() == target) return true;
+			else return false;
 		default:
 			System.out.println("");
+			return true;
 		}
 	}
 
