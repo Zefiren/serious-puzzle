@@ -22,6 +22,7 @@ public class Animator {
 	private float timeSinceStepChange;
 	private float lastNanoTime;
 	private boolean movingStep;
+	boolean movementMade;
 
 	private Map<Pair<Integer, Train>, TrackSection> movementStepLocations = new HashMap<Pair<Integer, Train>, TrackSection>();
 
@@ -53,15 +54,17 @@ public class Animator {
 	}
 
 	public boolean animationPlay(float currentNanoTime) {
+		movementMade = false;
 		if (stepIndex.get() > (solutionSize - 1) && !movingStep) {
 			updateStepsAvailable();
 			return true;
 		}
-		if (lastNanoTime == 0) lastNanoTime = currentNanoTime;
+		if (lastNanoTime == 0)
+			lastNanoTime = currentNanoTime;
 		timeSinceStepChange += currentNanoTime - lastNanoTime;
 		if (timeSinceStepChange > 1000000000) {
 			animationNextStep();
-			if (stepIndex.get() > (solutionSize - 1)) {
+			if (stepIndex.get() > (solutionSize - 1) || (movingStep && !movementMade)) {
 				animationPlaying = false;
 				updateStepsAvailable();
 				return false;
@@ -78,13 +81,14 @@ public class Animator {
 	}
 
 	public void animationNextStep() {
-		if (!movingStep) animationNextSolutionStep();
+		if (!movingStep)
+			animationNextSolutionStep();
 		else {
 			animationNextMovement();
 			boolean checkStep = solution.getStep(stepIndex.get()).performStep();
 			if (checkStep) {
 				stepIndex.set(stepIndex.get() + 1);
-				;
+
 				movingStep = false;
 				return;
 			}
@@ -92,60 +96,82 @@ public class Animator {
 	}
 
 	private void animationNextSolutionStep() {
-		System.out.println("performed step " + (stepIndex.get() + 1) + ". " + solution.getStep(stepIndex.get()).getStep().getValue());
+		System.out.println("performed step " + (stepIndex.get() + 1) + ". "
+				+ solution.getStep(stepIndex.get()).getStep().getValue());
 		boolean performed = solution.getStep(stepIndex.get()).performStep();
 		stepIndex.set(stepIndex.get() + 1);
 		;
 		if (!performed) {
 			movingStep = true;
 			stepIndex.set(stepIndex.get() - 1);
-			;
+			movementMade = true;
 		}
 		updateStepsAvailable();
 	}
 
-	// when simulating train movement steps, add location at the beginning of current step
+	// when simulating train movement steps, add location at the beginning of
+	// current step
 	// find out which direction train is travelling
 	// check if signal on current track circuit exists
 	// check if signal shows proceed
-	// check if track circuit allows driving - switch is set in correct position to allow
+	// check if track circuit allows driving - switch is set in correct position to
+	// allow
 	public void animationNextMovement() {
 		scenario.getTrains().forEach(tr -> {
 			Direction trainHeading = tr.getHeadingDirection();
 			TrackSection loc = tr.getLocation();
+			if(loc.getTrack(trainHeading) == null)
 			if (!movementStepLocations.containsKey(new Pair<Integer, Train>(stepIndex.get(), tr))) {
 				System.out.println("putting : ( " + stepIndex + ", " + tr.getTrainID() + " )");
 				movementStepLocations.put(new Pair<Integer, Train>(stepIndex.get(), tr), loc);
 			}
+			// if the train is on a switch, follow tracks
+			// otherwise check signal or switch setting
 			if (tr.getLocation().getClass() == Switch.class) {
 				Switch s = (Switch) tr.getLocation();
 				// switches have no signals so only heading matters
 				if (s.getSwitchDirection() == trainHeading) {
 					if (s.isDiverging()) {
 						tr.setLocation(s.getExtraTrack());
+						movementMade = true;
 					} else {
 						tr.setLocation(s.getTrack(trainHeading));
+						movementMade = true;
 					}
 				} else {
 					tr.setLocation(s.getTrack(trainHeading));
+					movementMade = true;
 				}
 			} else {
 				System.out.println(loc.getSignal(trainHeading) + " signal found");
 				Direction signalFacingDirection;
-				if (trainHeading == Direction.left) signalFacingDirection = Direction.right;
-				else signalFacingDirection = Direction.left;
-
+				if (trainHeading == Direction.left)
+					signalFacingDirection = Direction.right;
+				else
+					signalFacingDirection = Direction.left;
+				if (loc.getTrack(trainHeading).getClass() == Switch.class) {
+					Switch sw = (Switch) loc.getTrack(trainHeading);
+					if (sw.getSwitchDirection() != trainHeading)
+						if (sw.getTrack(trainHeading) == loc && sw.isDiverging())
+							return;
+					if (sw.getExtraTrack() == loc && !sw.isDiverging())
+							return;	
+				}
 				if (loc.getSignal(signalFacingDirection) == null) {
 					tr.setLocation(loc.getTrack(trainHeading));
+					movementMade = true;
 				} else {
 					if (loc.getSignal(signalFacingDirection).isClear()) {
 						tr.setLocation(loc.getTrack(trainHeading));
+						movementMade = true;
 					}
 				}
-
 			}
 
 		});
+		if (!movementMade) {
+			System.out.println("no movement made, stop animation");
+		}
 	}
 
 	private void updateStepsAvailable() {
@@ -158,7 +184,8 @@ public class Animator {
 			stepIndex.set(stepIndex.get() - 1);
 			;
 			solution.getStep(stepIndex.get()).undoStep();
-			if (solution.getStep(stepIndex.get()).type == CommandType.CheckLocation) movingStep = true;
+			if (solution.getStep(stepIndex.get()).type == CommandType.CheckLocation)
+				movingStep = true;
 			updateStepsAvailable();
 		} else {
 

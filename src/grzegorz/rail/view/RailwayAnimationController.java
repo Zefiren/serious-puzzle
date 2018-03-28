@@ -57,6 +57,9 @@ public class RailwayAnimationController {
 	@FXML
 	private TableColumn<SolutionCmd, String> stepColumn;
 	@FXML
+	private Button backButton;
+	
+	@FXML
 	private Button stepPlayButton;
 	@FXML
 	private Button stepStopButton;
@@ -65,15 +68,7 @@ public class RailwayAnimationController {
 	@FXML
 	private Button stepForwardSingleButton;
 
-	// notification
-	@FXML
-	private AnchorPane notifAnchor;
-	@FXML
-	private Label notifTitle;
-	@FXML
-	private Label notifMessage;
-	@FXML
-	private Button closeButton;
+
 
 	@FXML
 	private AnchorPane scenarioAnchor;
@@ -217,11 +212,8 @@ public class RailwayAnimationController {
 		GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 		if (scenario != null) drawScenario(g);
 
-		overlay.getChildren().addAll(notifAnchor, stepCounter);
-		notifAnchor.setVisible(false);
+		overlay.getChildren().addAll(stepCounter);
 
-		AnchorPane.setTopAnchor(notifAnchor, 10.0);
-		AnchorPane.setRightAnchor(notifAnchor, 10.0);
 
 		AnchorPane.setTopAnchor(stepCounter, 10.0);
 		AnchorPane.setRightAnchor(stepCounter, 10.0);
@@ -249,12 +241,7 @@ public class RailwayAnimationController {
 			}
 		});
 
-		closeButton.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent arg0) {
-				notifAnchor.setVisible(false);
-			}
-		});
+		
 
 		AnimationTimer solAnimator = new AnimationTimer() {
 

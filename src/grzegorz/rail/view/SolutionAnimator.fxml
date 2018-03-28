@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.String?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ButtonBar?>
@@ -8,7 +7,6 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.effect.ColorAdjust?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -21,9 +19,9 @@
           <AnchorPane fx:id="scenarioAnchor" minHeight="0.0" minWidth="0.0" prefHeight="299.0" prefWidth="232.0" styleClass="background" />
           <AnchorPane fx:id="stepsAnchor" minHeight="0.0" minWidth="0.0" styleClass="background">
                <children>
-                  <Label layoutX="8.0" layoutY="6.0" styleClass="label-header" text="Solution" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0" />
+                  <Label layoutX="8.0" layoutY="6.0" styleClass="label-header" text="Animation" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0" />
                   <ButtonBar layoutX="28.0" layoutY="239.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="46.0" prefWidth="120.0" AnchorPane.bottomAnchor="6.0" AnchorPane.leftAnchor="28.0" AnchorPane.rightAnchor="28.0" />
-                  <TableView fx:id="stepsTable" layoutX="-12.0" layoutY="50.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="60.0">
+                  <TableView fx:id="stepsTable" layoutX="-12.0" layoutY="50.0" prefHeight="480.0" prefWidth="235.0" AnchorPane.bottomAnchor="59.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="60.0">
                     <columns>
                       <TableColumn fx:id="stepNumColumn" prefWidth="75.0" text="#" />
                       <TableColumn fx:id="stepColumn" prefWidth="75.0" text="Step" />
@@ -32,7 +30,7 @@
                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                      </columnResizePolicy>
                   </TableView>
-                  <HBox alignment="CENTER" focusTraversable="true" AnchorPane.bottomAnchor="15.0" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0">
+                  <HBox alignment="CENTER" focusTraversable="true" prefHeight="46.0" prefWidth="205.0" AnchorPane.bottomAnchor="6.0" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0">
                      <children>
                       	<Button fx:id="stepBackSingleButton" contentDisplay="TOP" mnemonicParsing="false" prefWidth="50.0" styleClass="small-button" text="Last" HBox.hgrow="ALWAYS">
                            <graphic>
@@ -81,32 +79,10 @@
                            </HBox.margin></Button>
                      </children>
                   </HBox>
+                  <Button fx:id="backButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="67.0" text="Back" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="5.0" />
                </children>
             </AnchorPane>
         </items>
       </SplitPane>
-      <AnchorPane fx:id="notifAnchor" minHeight="-Infinity" minWidth="-Infinity" prefHeight="100.0" prefWidth="200.0" styleClass="card" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
-         <children>
-            <Label fx:id="notifTitle" text="Step - Occupies" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="5.0">
-               <styleClass>
-                  <String fx:value="label-bright" />
-                  <String fx:value="label-subtitle" />
-               </styleClass>
-            </Label>
-            <Label fx:id="notifMessage" styleClass="label-bright" text="Please press on a train to complete the step" wrapText="true" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="0.0" />
-            <Button fx:id="closeButton" contentDisplay="GRAPHIC_ONLY" layoutX="159.0" layoutY="69.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="30.0" styleClass="close" AnchorPane.bottomAnchor="-20.0" AnchorPane.rightAnchor="2.0">
-               <graphic>
-                  <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@ic_close_black_24dp.png" />
-                     </image>
-                     <effect>
-                        <ColorAdjust brightness="1.0" />
-                     </effect>
-                  </ImageView>
-               </graphic>
-            </Button>
-         </children>
-      </AnchorPane>
    </children>
 </AnchorPane>

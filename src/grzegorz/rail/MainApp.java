@@ -63,6 +63,7 @@ public class MainApp extends Application {
 
 			Scene scene = rootLayout.getScene();
 			primaryStage.setScene(scene);
+			primaryStage.setTitle("Solution Animation");
 			primaryStage.show();
 
 		} catch (IOException e) {
@@ -73,7 +74,6 @@ public class MainApp extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		this.primaryStage = primaryStage;
-		this.primaryStage.setTitle("AddressApp");
 		this.primaryStage.setMinWidth(MINIMUM_WINDOW_WIDTH);
 		this.primaryStage.setMinHeight(MINIMUM_WINDOW_HEIGHT);
 		this.primaryStage.setWidth(MINIMUM_WINDOW_WIDTH);
@@ -118,7 +118,7 @@ public class MainApp extends Application {
 
 			// Set person overview into the center of root layout.
 			rootLayout.setCenter(personOverview);
-
+			primaryStage.setTitle("Solution Planning");
 			// Give the controller access to the main app.
 			RailwayPlannerController controller = loader.getController();
 			controller.setMainApp(this);
