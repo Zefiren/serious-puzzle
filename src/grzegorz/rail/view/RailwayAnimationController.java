@@ -45,7 +45,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.transform.Rotate;
 
 public class RailwayAnimationController {
 
@@ -58,7 +60,7 @@ public class RailwayAnimationController {
 	private TableColumn<SolutionCmd, String> stepColumn;
 	@FXML
 	private Button backButton;
-	
+
 	@FXML
 	private Button stepPlayButton;
 	@FXML
@@ -67,8 +69,6 @@ public class RailwayAnimationController {
 	private Button stepBackSingleButton;
 	@FXML
 	private Button stepForwardSingleButton;
-
-
 
 	@FXML
 	private AnchorPane scenarioAnchor;
@@ -118,6 +118,7 @@ public class RailwayAnimationController {
 	private boolean animationFlag = false;
 
 	private Animator animator;
+	private boolean firstRotate;
 
 	/**
 	 * The constructor. The constructor is called before the initialize() method.
@@ -138,14 +139,16 @@ public class RailwayAnimationController {
 		solMgr = mainApp.getSolutionData();
 		animator = new Animator(solMgr.getLength(), solMgr, scenario);
 
-
 		animator.animationHasBackStepProperty().addListener((Observable o) -> {
 			stepBackSingleButton.setDisable(!animator.animationHasBackStepProperty().getValue());
-        });
+		});
 		animator.animationHasNextProperty().addListener((Observable o) -> {
-			System.out.println("setting NEXT step button to "+!animator.animationHasNextProperty().getValue());
+			System.out.println("setting NEXT step button to " + !animator.animationHasNextProperty().getValue());
 			stepForwardSingleButton.setDisable(!animator.animationHasNextProperty().getValue());
-        });
+		});
+		animator.stepIndexProperty().addListener((Observable o) -> {
+			stepsTable.getSelectionModel().clearAndSelect(animator.stepIndexProperty().get());
+		});
 
 		stepCounter.textProperty().bind(animator.stepIndexProperty().add(1).asString());
 		stepsTable.setItems(solMgr.getSolution());
@@ -200,7 +203,7 @@ public class RailwayAnimationController {
 		});
 
 		scenarioBtns = new HashMap<Interactable<?>, ArrayList<Button>>();
-		stepCounter = new Label(0+"");
+		stepCounter = new Label(0 + "");
 
 		overlay = new AnchorPane();
 		scenarioAnchor.getChildren().add(overlay);
@@ -214,10 +217,8 @@ public class RailwayAnimationController {
 
 		overlay.getChildren().addAll(stepCounter);
 
-
 		AnchorPane.setTopAnchor(stepCounter, 10.0);
 		AnchorPane.setRightAnchor(stepCounter, 10.0);
-
 
 		stepsAnchor.maxWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
 		stepsAnchor.minWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
@@ -240,8 +241,6 @@ public class RailwayAnimationController {
 				if (scenario != null) drawScenario(g);
 			}
 		});
-
-		
 
 		AnimationTimer solAnimator = new AnimationTimer() {
 
@@ -312,7 +311,6 @@ public class RailwayAnimationController {
 			}
 		});
 
-
 	}
 
 	private void drawScenario(GraphicsContext gc) {
@@ -345,58 +343,70 @@ public class RailwayAnimationController {
 				if (animationFlag) updateTrain(train);
 				else createTrain(train);
 			}
+			if (animationFlag) firstRotate = false;
 			animationFlag = true;
 			initialFlag = false;
 		}
 	}
 
-
-
 	private void createTrain(Train tr) {
 		StackPane trainPane = new StackPane();
-		Rectangle newTrain = new Rectangle(trackLength / 4, trackVertGap / 4);
-		int dir = (tr.getHeadingDirection() == Direction.right) ? 1 : -1;
-		Polygon newTrainArrow = new Polygon(0.0, 0.0, 0.0, newTrain.getHeight(), (newTrain.getWidth() / 3) * dir, newTrain.getHeight()/2);
+		double width = trackLength / 3;
+		double height = trackVertGap / 6;
+		Polygon newTrainPol = new Polygon(0.0, 0.0, 0.0, height, width, height, width + width / 3, height / 2, width, 0.0);
+
+		// newTrainArrow.layoutXProperty().bind(newTrain.layoutXProperty().add( (tr.getHeadingDirection() == Direction.right) ? newTrain.widthProperty() : newTrain.widthProperty().multiply(0.0) ) );
 		System.out.println("hello train at " + tr.getLocation().getLocation());
 		overlay.getChildren().add(trainPane);
-		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength/2 );
-		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - newTrain.getHeight() / 2);
-		newTrain.setFill(Color.BLUE);
-		newTrain.setOpacity(0.8);
-		newTrain.getStyleClass().add("box-train");
-
-		newTrainArrow.getStyleClass().add("arrow-train");
-		newTrainArrow.setTranslateX(newTrain.getLayoutX() + ( (tr.getHeadingDirection() == Direction.right) ? newTrain.getWidth()/2 : -newTrain.getWidth()/2 ) + newTrainArrow.getBoundsInLocal().getWidth()/2);
-		newTrainArrow.setTranslateY(newTrain.getLayoutY());
-		newTrainArrow.setFill(Color.CYAN);
-		newTrainArrow.setOpacity(0.8);
+		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 2);
+		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2);
+		newTrainPol.setFill(Color.BLUE);
+		newTrainPol.setOpacity(0.8);
+		newTrainPol.getStyleClass().add("poly-train");
 
 		Label trainInfo = new Label(tr.getDestination().getLabel());
 		trainInfo.getStyleClass().add("label-train");
-		int fontSize = (int) (newTrain.getHeight() / 2);
+		int fontSize = (int) (height / 2);
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 
-		trainPane.getChildren().addAll(newTrain, newTrainArrow, trainInfo);
+		trainPane.getChildren().addAll(newTrainPol, trainInfo);
 
 		trainBox.put(tr, trainPane);
 	}
 
 	private void updateTrain(Train tr) {
 		StackPane trainPane = trainBox.get(tr);
-		Rectangle trainRect = (Rectangle) trainPane.lookup(".box-train");
-		Polygon trainArrow = (Polygon) trainPane.lookup(".arrow-train");
+		Polygon trainPoly = (Polygon) trainPane.lookup(".poly-train");
+		double width = trackLength / 3;
+		double height = trackVertGap / 6;
 
-		int dir = (tr.getHeadingDirection() == Direction.right) ? 1 : -1;
+		trainPoly.getPoints().setAll(0.0, 0.0, 0.0, height, width, height, width * 1.5, height / 2, width, 0.0);
+		if (trainPoly.getTransforms().size() == 0) {
+			if (tr.getHeadingDirection() == Direction.left) {
+				Rotate rotate = new Rotate();
 
-		trainRect.setWidth(trackLength / 3);
-		trainRect.setHeight(trackVertGap / 6);
-		trainArrow.getPoints().setAll(0.0, 0.0, 0.0, trainRect.getHeight(), (trainRect.getWidth() / 3) * dir, trainRect.getHeight()/2);
-		trainArrow.setTranslateX(trainRect.getLayoutX() + dir  * (trainRect.getWidth() +  trainArrow.getBoundsInLocal().getWidth())/2  );
-		trainArrow.setTranslateY(trainRect.getLayoutY());
-		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength/3);
-		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - trainRect.getHeight() / 2);
+				// Angle of rotation for the train
+				rotate.setAngle(180);
 
-		int fontSize = (int) (trainRect.getHeight() / 2);
+				// Pivot point of the train poly
+				rotate.setPivotX((width * 1.5) / 2);
+				rotate.setPivotY(height / 2);
+
+				trainPoly.getTransforms().addAll(rotate);
+				// trainPoly.getTransforms().set(4, rotate);
+			}
+		}
+		Point trainPos;
+		if (tr.getHeadingDirection() == Direction.left)
+			trainPos = getPosAlongTrack(tr.getLocation(), 0.5);
+		else
+			trainPos = getPosAlongTrack(tr.getLocation(), 0.0);
+		// trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 3);
+		// trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2);
+
+		trainPane.setTranslateX(trainPos.getX());
+		trainPane.setTranslateY(trainPos.getY() - height / 2);
+		int fontSize = (int) (height / 2);
 		Node trainInfo = trainPane.lookup(".label-train");
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 	}
@@ -424,13 +434,12 @@ public class RailwayAnimationController {
 		gc.setFill(sigColour);
 		gc.strokeOval(sigLoc.x, sigLoc.y, diameter, diameter);
 		gc.setStroke(sigColour);
-		gc.strokeOval(sigLoc.x+diameter*0.1, sigLoc.y+diameter*0.1, diameter*0.8, diameter*0.8);
-		if(sig.isClear()) {
-			gc.fillRect(sigLoc.x+diameter*0.2, sigLoc.y+diameter*0.4, diameter*0.6, diameter*0.2);
-		}else {
-			gc.fillRect(sigLoc.x+diameter*0.4, sigLoc.y+diameter*0.2, diameter*0.2, diameter*0.6);
+		gc.strokeOval(sigLoc.x + diameter * 0.1, sigLoc.y + diameter * 0.1, diameter * 0.8, diameter * 0.8);
+		if (sig.isClear()) {
+			gc.fillRect(sigLoc.x + diameter * 0.2, sigLoc.y + diameter * 0.4, diameter * 0.6, diameter * 0.2);
+		} else {
+			gc.fillRect(sigLoc.x + diameter * 0.4, sigLoc.y + diameter * 0.2, diameter * 0.2, diameter * 0.6);
 		}
-
 
 		gc.setLineWidth(oldWidth);
 		gc.setStroke(Color.WHITE);
@@ -454,7 +463,38 @@ public class RailwayAnimationController {
 
 		}
 
+	}
 
+	private Point getPosAlongTrack(TrackSection ts, double progress) {
+		Point loc = ts.getLocation();
+
+		if (ts.getClass() == Switch.class) {
+			Switch s = (Switch) ts;
+			double xPts[];
+			double yPts[];
+			int ystart = loc.y * trackVertGap + vPadding;
+			int yLevel = 0;
+			int xstart = loc.x * trackLength + hPadding;
+
+			if (!s.isDiverging()) return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding);
+
+			if (s.getSwitchDirection() == Direction.right) {
+				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
+				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap + ystart };
+				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap + ystart };
+
+				return new Point((int) xstart, (int) yPts[2]);
+			} else {
+				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
+				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
+				else yPts = new double[] { -trackVertGap + ystart, ystart - yLevel, ystart - yLevel };
+
+				return new Point((int) xstart, (int) yPts[0]);
+			}
+
+		} else {
+			return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding);
+		}
 	}
 
 	private void drawTrack(GraphicsContext gc, TrackSection ts) {
@@ -466,7 +506,6 @@ public class RailwayAnimationController {
 		// Create TS button
 		if (!scenarioBtns.containsKey(ts)) {
 			String tcString = "TC" + ts.getTsID();
-			if (ts.getLabel() != null) tcString += ":" + ts.getLabel();
 			Button tsLabel = new Button(tcString);
 			overlay.getChildren().add(tsLabel);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
@@ -543,6 +582,17 @@ public class RailwayAnimationController {
 			 * swLabel.layoutYProperty().set(tsLabel.getBoundsInParent().getMaxY()+20);
 			 */
 		} else {
+			if (ts.getLabel() != null) {
+				Point labelPos = new Point();
+				if (ts.isRightEnding()) {
+					labelPos.setLocation(loc.x * trackLength + hPadding + trackLength * 1.3, loc.y * trackVertGap + vPadding);
+				} else {
+					labelPos.setLocation(loc.x * trackLength + hPadding - trackLength * 0.3, loc.y * trackVertGap + vPadding);
+				}
+				System.out.println(labelPos + " is label position for " + ts.getLabel());
+				gc.setFont(new Font(trackVertGap/2));
+				gc.fillText(ts.getLabel(), labelPos.getX(), labelPos.getY());
+			}
 			gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding);
 			gc.setTextBaseline(VPos.CENTER);
 			gc.setTextAlign(TextAlignment.CENTER);

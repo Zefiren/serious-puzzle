@@ -59,8 +59,7 @@ public class Animator {
 			updateStepsAvailable();
 			return true;
 		}
-		if (lastNanoTime == 0)
-			lastNanoTime = currentNanoTime;
+		if (lastNanoTime == 0) lastNanoTime = currentNanoTime;
 		timeSinceStepChange += currentNanoTime - lastNanoTime;
 		if (timeSinceStepChange > 1000000000) {
 			animationNextStep();
@@ -81,8 +80,7 @@ public class Animator {
 	}
 
 	public void animationNextStep() {
-		if (!movingStep)
-			animationNextSolutionStep();
+		if (!movingStep) animationNextSolutionStep();
 		else {
 			animationNextMovement();
 			boolean checkStep = solution.getStep(stepIndex.get()).performStep();
@@ -96,8 +94,7 @@ public class Animator {
 	}
 
 	private void animationNextSolutionStep() {
-		System.out.println("performed step " + (stepIndex.get() + 1) + ". "
-				+ solution.getStep(stepIndex.get()).getStep().getValue());
+		System.out.println("performed step " + (stepIndex.get() + 1) + ". " + solution.getStep(stepIndex.get()).getStep().getValue());
 		boolean performed = solution.getStep(stepIndex.get()).performStep();
 		stepIndex.set(stepIndex.get() + 1);
 		;
@@ -107,6 +104,19 @@ public class Animator {
 			movementMade = true;
 		}
 		updateStepsAvailable();
+		boolean success = checkForGoal();
+		System.out.println("Succes is: " + success);
+	}
+
+	private boolean checkForGoal() {
+		if (stepIndex.get() == solutionSize) {
+			for (Train tr : scenario.getTrains()) {
+				if (tr.getLocation() != tr.getDestination()) return false;
+			}
+			;
+			return true;
+		}
+		return false;
 	}
 
 	// when simulating train movement steps, add location at the beginning of
@@ -120,7 +130,9 @@ public class Animator {
 		scenario.getTrains().forEach(tr -> {
 			Direction trainHeading = tr.getHeadingDirection();
 			TrackSection loc = tr.getLocation();
-			if(loc.getTrack(trainHeading) == null)
+			if (loc.getTrack(trainHeading) == null)
+
+				return;
 			if (!movementStepLocations.containsKey(new Pair<Integer, Train>(stepIndex.get(), tr))) {
 				System.out.println("putting : ( " + stepIndex + ", " + tr.getTrainID() + " )");
 				movementStepLocations.put(new Pair<Integer, Train>(stepIndex.get(), tr), loc);
@@ -145,17 +157,15 @@ public class Animator {
 			} else {
 				System.out.println(loc.getSignal(trainHeading) + " signal found");
 				Direction signalFacingDirection;
-				if (trainHeading == Direction.left)
-					signalFacingDirection = Direction.right;
-				else
-					signalFacingDirection = Direction.left;
+				if (trainHeading == Direction.left) signalFacingDirection = Direction.right;
+				else signalFacingDirection = Direction.left;
 				if (loc.getTrack(trainHeading).getClass() == Switch.class) {
+					System.out.println("next track is switch");
 					Switch sw = (Switch) loc.getTrack(trainHeading);
-					if (sw.getSwitchDirection() != trainHeading)
-						if (sw.getTrack(trainHeading) == loc && sw.isDiverging())
-							return;
-					if (sw.getExtraTrack() == loc && !sw.isDiverging())
-							return;	
+					if (sw.getSwitchDirection() != trainHeading) {
+						if (sw.getTrack(signalFacingDirection) == loc && sw.isDiverging()) return;
+						if (sw.getExtraTrack() == loc && !sw.isDiverging()) return;
+					}
 				}
 				if (loc.getSignal(signalFacingDirection) == null) {
 					tr.setLocation(loc.getTrack(trainHeading));
@@ -184,8 +194,7 @@ public class Animator {
 			stepIndex.set(stepIndex.get() - 1);
 			;
 			solution.getStep(stepIndex.get()).undoStep();
-			if (solution.getStep(stepIndex.get()).type == CommandType.CheckLocation)
-				movingStep = true;
+			if (solution.getStep(stepIndex.get()).type == CommandType.CheckLocation) movingStep = true;
 			updateStepsAvailable();
 		} else {
 
@@ -201,7 +210,7 @@ public class Animator {
 
 	private void singleNextStepAvailable() {
 		System.out.println("next not available " + (animationPlaying || stepIndex.get() >= solutionSize - 1));
-		if (animationPlaying || stepIndex.get() >= solutionSize - 1) {
+		if (animationPlaying || (stepIndex.get() > solutionSize - 1 && movingStep == false) || stepIndex.get() > solutionSize - 1) {
 			animationHasNext.setValue(false);
 		} else {
 			animationHasNext.setValue(true);

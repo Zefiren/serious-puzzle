@@ -43,6 +43,7 @@ public final class ScenarioMaker {
 		upRightEnd.setRightTrack(s1);
 		upRightEnd.setLeftTrack(s2);
 		upRightEnd.setEndTrack(false);
+		upRightEnd.setLabel(null);
 
 		end.setLeftTrack(s1);
 

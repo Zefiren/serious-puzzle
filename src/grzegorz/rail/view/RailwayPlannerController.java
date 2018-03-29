@@ -42,9 +42,11 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
 
 public class RailwayPlannerController {
@@ -349,30 +351,26 @@ public class RailwayPlannerController {
 
 	private void createTrain(Train tr) {
 		StackPane trainPane = new StackPane();
-		Rectangle newTrain = new Rectangle(trackLength / 4, trackVertGap / 4);
-		int dir = (tr.getHeadingDirection() == Direction.right) ? 1 : -1;
-		Polygon newTrainArrow = new Polygon(0.0, 0.0, 0.0, newTrain.getHeight(), (newTrain.getWidth() / 3) * dir, newTrain.getHeight()/2);
-//		newTrainArrow.layoutXProperty().bind(newTrain.layoutXProperty().add( (tr.getHeadingDirection() == Direction.right) ? newTrain.widthProperty() : newTrain.widthProperty().multiply(0.0) ) );
+		double width = trackLength / 3;
+		double height = trackVertGap / 6;
+		Polygon newTrainPol = new Polygon(0.0, 0.0, 0.0, height, width, height, width + width / 3, height / 2, width, 0.0);
+
+		// newTrainArrow.layoutXProperty().bind(newTrain.layoutXProperty().add( (tr.getHeadingDirection() == Direction.right) ? newTrain.widthProperty() : newTrain.widthProperty().multiply(0.0) ) );
 		System.out.println("hello train at " + tr.getLocation().getLocation());
 		overlay.getChildren().add(trainPane);
-		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength/2);
-		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - newTrain.getHeight() / 2);
-		newTrain.setFill(Color.BLUE);
-		newTrain.setOpacity(0.8);
-		newTrain.getStyleClass().add("box-train");
-		newTrainArrow.getStyleClass().add("arrow-train");
-		newTrainArrow.setTranslateX(newTrain.getLayoutX() + ( (tr.getHeadingDirection() == Direction.right) ? newTrain.getWidth()/2 : -newTrain.getWidth()/2 ) + newTrainArrow.getBoundsInLocal().getWidth()/2);
-		newTrainArrow.setTranslateY(newTrain.getLayoutY());
-		newTrainArrow.setFill(Color.CYAN);
-		newTrainArrow.setOpacity(0.8);
+		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 2);
+		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2);
+		newTrainPol.setFill(Color.BLUE);
+		newTrainPol.setOpacity(0.8);
+		newTrainPol.getStyleClass().add("poly-train");
 
 
 		Label trainInfo = new Label(tr.getDestination().getLabel());
 		trainInfo.getStyleClass().add("label-train");
-		int fontSize = (int) (newTrain.getHeight() / 2);
+		int fontSize = (int) (height / 2);
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 
-		trainPane.getChildren().addAll(newTrain, newTrainArrow, trainInfo);
+		trainPane.getChildren().addAll(newTrainPol, trainInfo);
 		trainPane.setOnMouseClicked(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent t) {
@@ -384,19 +382,32 @@ public class RailwayPlannerController {
 
 	private void updateTrain(Train tr) {
 		StackPane trainPane = trainBox.get(tr);
-		Rectangle trainRect = (Rectangle) trainPane.lookup(".box-train");
-		Polygon trainArrow = (Polygon) trainPane.lookup(".arrow-train");
-		int dir = (tr.getHeadingDirection() == Direction.right) ? 1 : -1;
+		Polygon trainPoly = (Polygon) trainPane.lookup(".poly-train");
+		double width = trackLength / 3;
+		double height = trackVertGap / 6;
 
-		trainRect.setWidth(trackLength / 3);
-		trainRect.setHeight(trackVertGap / 6);
-		trainArrow.getPoints().setAll(0.0, 0.0, 0.0, trainRect.getHeight(), (trainRect.getWidth() / 3) * dir, trainRect.getHeight()/2);
-		trainArrow.setTranslateX(trainRect.getLayoutX() + dir  * (trainRect.getWidth() +  trainArrow.getBoundsInLocal().getWidth())/2  );
-		trainArrow.setTranslateY(trainRect.getLayoutY());
-		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength/3);
-		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - trainRect.getHeight() / 2);
+		trainPoly.getPoints().setAll(0.0, 0.0, 0.0, height, width, height, width * 1.5, height / 2, width, 0.0);
 
-		int fontSize = (int) (trainRect.getHeight() / 2);
+		if (trainPoly.getTransforms().size() == 0) {
+			if (tr.getHeadingDirection() == Direction.left) {
+				Rotate rotate = new Rotate();
+
+				// Angle of rotation for the train
+				rotate.setAngle(180);
+
+				// Pivot point of the train poly
+				rotate.setPivotX((width * 1.5) / 2);
+				rotate.setPivotY(height / 2);
+
+				trainPoly.getTransforms().addAll(rotate);
+				// trainPoly.getTransforms().set(4, rotate);
+			}
+		}
+
+		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 3);
+		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2);
+
+		int fontSize = (int) (height / 2);
 		Node trainInfo = trainPane.lookup(".label-train");
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 	}
@@ -406,10 +417,6 @@ public class RailwayPlannerController {
 		double diameter = (trackLength / signalScaleFraction);
 		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding, (int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5));
 		Color sigColour;
-		if (sig.getDirection() == Direction.left) {
-			sigLoc.x += trackLength * trackLengthRatio - diameter;
-
-		}
 
 		if (sig.isClear()) {
 			sigColour = Color.GREEN;
@@ -420,7 +427,17 @@ public class RailwayPlannerController {
 		double oldWidth = gc.getLineWidth();
 		gc.setStroke(Color.WHITE);
 		gc.setLineWidth(2);
-
+		gc.setFill(Color.WHITE);
+		if (sig.getDirection() == Direction.left) {
+			sigLoc.x += trackLength * trackLengthRatio - diameter;
+			gc.strokeLine(sigLoc.x, sigLoc.y + diameter * 0.5, sigLoc.x - diameter * 0.3, sigLoc.y + diameter * 0.5);
+			gc.strokeLine(sigLoc.x - diameter * 0.3, sigLoc.y + diameter * 0.5, sigLoc.x - diameter * 0.3, sigLoc.y + diameter);
+			gc.fillPolygon(new double[] { sigLoc.x - diameter * 0.2, sigLoc.x - diameter * 0.4, sigLoc.x - diameter * 0.3 }, new double[] { sigLoc.y + diameter, sigLoc.y + diameter, sigLoc.y + diameter * 1.5 }, 3);
+		} else {
+			gc.strokeLine(sigLoc.x + diameter, sigLoc.y + diameter * 0.5, sigLoc.x + diameter * 1.3, sigLoc.y + diameter * 0.5);
+			gc.strokeLine(sigLoc.x + diameter * 1.3, sigLoc.y + diameter * 0.5, sigLoc.x + diameter * 1.3, sigLoc.y + diameter);
+			gc.fillPolygon(new double[] { sigLoc.x + diameter * 1.2, sigLoc.x + diameter * 1.4, sigLoc.x + diameter * 1.3 }, new double[] { sigLoc.y + diameter, sigLoc.y + diameter, sigLoc.y + diameter * 1.5 }, 3);
+		}
 		gc.setFill(sigColour);
 		gc.strokeOval(sigLoc.x, sigLoc.y, diameter, diameter);
 		gc.setStroke(sigColour);
@@ -468,6 +485,8 @@ public class RailwayPlannerController {
 		});
 	}
 
+
+
 	private void drawTrack(GraphicsContext gc, TrackSection ts) {
 		gc.setFill(Color.WHITE);
 		gc.setStroke(Color.WHITE);
@@ -477,7 +496,7 @@ public class RailwayPlannerController {
 		// Create TS button
 		if (!scenarioBtns.containsKey(ts)) {
 			String tcString = "TC" + ts.getTsID();
-			if (ts.getLabel() != null) tcString += ":" + ts.getLabel();
+
 			Button tsLabel = new Button(tcString);
 			overlay.getChildren().add(tsLabel);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
@@ -574,6 +593,17 @@ public class RailwayPlannerController {
 			 * swLabel.layoutYProperty().set(tsLabel.getBoundsInParent().getMaxY()+20);
 			 */
 		} else {
+			if (ts.getLabel() != null) {
+				Point labelPos = new Point();
+				if (ts.isRightEnding()) {
+					labelPos.setLocation(loc.x * trackLength + hPadding + trackLength * 1.3, loc.y * trackVertGap + vPadding);
+				} else {
+					labelPos.setLocation(loc.x * trackLength + hPadding - trackLength * 0.3, loc.y * trackVertGap + vPadding);
+				}
+				System.out.println(labelPos + " is label position for " + ts.getLabel());
+				gc.setFont(new Font(trackVertGap/2));
+				gc.fillText(ts.getLabel(), labelPos.getX(), labelPos.getY());
+			}
 			gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding);
 			gc.setTextBaseline(VPos.CENTER);
 			gc.setTextAlign(TextAlignment.CENTER);
