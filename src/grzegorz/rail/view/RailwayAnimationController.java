@@ -22,6 +22,8 @@ import grzegorz.rail.model.TrackSection;
 import grzegorz.rail.model.Train;
 import javafx.animation.AnimationTimer;
 import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -40,11 +42,12 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
@@ -58,8 +61,15 @@ public class RailwayAnimationController {
 	private TableColumn<SolutionCmd, String> stepNumColumn;
 	@FXML
 	private TableColumn<SolutionCmd, String> stepColumn;
+	
+	
 	@FXML
 	private Button backButton;
+	@FXML
+	private Button endScreenButton;
+	@FXML
+	private Label messageLabel;
+
 
 	@FXML
 	private Button stepPlayButton;
@@ -84,7 +94,6 @@ public class RailwayAnimationController {
 	private CanvasPane canvasPane;
 
 	private AnchorPane overlay;
-	private Pane notifierPane;
 	private Label stepCounter;
 	// private GraphicsContext gc;
 	List<SolutionCmd> selected = new ArrayList<SolutionCmd>();
@@ -119,6 +128,14 @@ public class RailwayAnimationController {
 
 	private Animator animator;
 	private boolean firstRotate;
+	
+	private enum AnimState {
+		readyForAnimation, playingAnimation,success, safeFailure, crashFailure
+	};
+	
+	private AnimState animationState = AnimState.readyForAnimation;
+	private BooleanProperty animationStateChangeProperty = new SimpleBooleanProperty(false);
+
 
 	/**
 	 * The constructor. The constructor is called before the initialize() method.
@@ -247,6 +264,7 @@ public class RailwayAnimationController {
 			public void handle(long currentNanoTime) {
 				if (animator.isPlaying()) {
 					boolean canStop = !animator.animationPlay(currentNanoTime);
+					setCurrentState();
 
 					if (scenario != null) {
 						drawScenario(g);
@@ -294,6 +312,7 @@ public class RailwayAnimationController {
 			@Override
 			public void handle(ActionEvent arg0) {
 				animator.animationNextStep();
+				setCurrentState();
 				if (scenario != null) {
 					drawScenario(g);
 				}
@@ -310,7 +329,70 @@ public class RailwayAnimationController {
 				}
 			}
 		});
+		
+		animationStateChangeProperty.addListener(new ChangeListener<Boolean>() {
 
+			@Override
+			public void changed(ObservableValue arg0, Boolean oldBoolValue, Boolean newBoolValue) {
+				if (oldBoolValue == false && newBoolValue == true) {
+					setAnimatorMessage();
+				}
+			}
+			
+		});
+	}
+	
+	
+	private void setAnimatorMessage() {
+		switch (animationState) {
+		case readyForAnimation:
+			messageLabel.setText("Animation Ready");
+			break;
+			
+		case playingAnimation:
+			messageLabel.setText("Playing Animation");
+			break;
+			
+		case success:
+			messageLabel.setText("Solution Success");
+			break;
+			
+		case safeFailure:
+			messageLabel.setText("Solution Fail");
+			break;
+			
+		case crashFailure:
+			messageLabel.setText("Solution Crash");
+			break;
+			
+		default:
+			break;
+		}
+	}
+	
+	private void setCurrentState() {
+		//animationState
+		if(animator.hasCrashed() && animationState != AnimState.crashFailure ) {
+			animationState = AnimState.crashFailure;
+			animationStateChangeProperty.set(true);
+			return;
+		}
+		if (animator.isEndReached()) {
+			if (animator.hasSucceeded() && (animationState != AnimState.success || animationState != AnimState.safeFailure )) {
+				animationState = AnimState.success;
+				animationStateChangeProperty.set(true);
+			}else {
+				animationState = AnimState.safeFailure;
+				animationStateChangeProperty.set(true);
+			}
+		}
+		if (animator.isPlaying() && ( animationState != AnimState.playingAnimation || animationState != AnimState.readyForAnimation ) ) {
+			animationState = AnimState.playingAnimation;
+			animationStateChangeProperty.set(true);
+		}else {
+			animationState = AnimState.readyForAnimation;
+			animationStateChangeProperty.set(true);
+		}
 	}
 
 	private void drawScenario(GraphicsContext gc) {

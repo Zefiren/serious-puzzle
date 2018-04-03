@@ -16,6 +16,9 @@ public class Animator {
 	private final Scenario scenario;
 
 	private boolean animationPlaying;
+	private boolean animationCrashed = false;
+	private boolean endReached;
+	private boolean succeeded;
 	private BooleanProperty animationHasNext;
 	private BooleanProperty animationHasBackStep;
 	private SimpleIntegerProperty stepIndex;
@@ -48,6 +51,19 @@ public class Animator {
 		return animationPlaying;
 	}
 
+	public boolean hasCrashed() {
+		return animationCrashed;
+	}
+	
+	public boolean hasSucceeded() {
+		return succeeded;
+	}
+	
+	public boolean isEndReached() {
+		return endReached;
+	}
+	
+	
 	public void animationEnablePlay() {
 		lastNanoTime = 0;
 		animationPlaying = true;
@@ -105,6 +121,8 @@ public class Animator {
 		}
 		updateStepsAvailable();
 		boolean success = checkForGoal();
+		if(success)
+			succeeded = true;
 		System.out.println("Succes is: " + success);
 	}
 
@@ -169,11 +187,13 @@ public class Animator {
 							if (loc.getSignal(signalFacingDirection) == null) {
 								tr.setLocation(sw);
 								tr.setCrashed(true);
+								animationCrashed = true;
 								movementMade = true;
 							} else {
 								if (loc.getSignal(signalFacingDirection).isClear()) {
 									tr.setLocation(sw);
 									tr.setCrashed(true);
+									animationCrashed = true;
 									movementMade = true;
 								}
 							}
@@ -198,11 +218,14 @@ public class Animator {
 				{
 					tr.setCrashed(true);
 					otherTrain.setCrashed(true);
+					animationCrashed = true;
+
 				}
 			});
 		});
 		if (!movementMade) {
 			System.out.println("no movement made, stop animation");
+			endReached = true;
 		}
 	}
 
