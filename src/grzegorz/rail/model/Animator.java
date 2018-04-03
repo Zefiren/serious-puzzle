@@ -128,6 +128,8 @@ public class Animator {
 	// allow
 	public void animationNextMovement() {
 		scenario.getTrains().forEach(tr -> {
+			if(tr.isCrashed())
+				return;
 			Direction trainHeading = tr.getHeadingDirection();
 			TrackSection loc = tr.getLocation();
 			if (loc.getTrack(trainHeading) == null)
@@ -163,8 +165,19 @@ public class Animator {
 					System.out.println("next track is switch");
 					Switch sw = (Switch) loc.getTrack(trainHeading);
 					if (sw.getSwitchDirection() != trainHeading) {
-						if (sw.getTrack(signalFacingDirection) == loc && sw.isDiverging()) return;
-						if (sw.getExtraTrack() == loc && !sw.isDiverging()) return;
+						if ((sw.getTrack(signalFacingDirection) == loc && sw.isDiverging()) || (sw.getExtraTrack() == loc && !sw.isDiverging()) ) {
+							if (loc.getSignal(signalFacingDirection) == null) {
+								tr.setLocation(sw);
+								tr.setCrashed(true);
+								movementMade = true;
+							} else {
+								if (loc.getSignal(signalFacingDirection).isClear()) {
+									tr.setLocation(sw);
+									tr.setCrashed(true);
+									movementMade = true;
+								}
+							}
+						}
 					}
 				}
 				if (loc.getSignal(signalFacingDirection) == null) {
@@ -177,7 +190,16 @@ public class Animator {
 					}
 				}
 			}
+			scenario.getTrains().forEach(otherTrain -> {
+				if(otherTrain == tr)
+					return;
 
+				if(tr.getLocation() == otherTrain.getLocation())
+				{
+					tr.setCrashed(true);
+					otherTrain.setCrashed(true);
+				}
+			});
 		});
 		if (!movementMade) {
 			System.out.println("no movement made, stop animation");
@@ -194,11 +216,12 @@ public class Animator {
 			stepIndex.set(stepIndex.get() - 1);
 			;
 			solution.getStep(stepIndex.get()).undoStep();
-			if (solution.getStep(stepIndex.get()).type == CommandType.CheckLocation) movingStep = true;
+			if (solution.getStep(stepIndex.get()).getType() == CommandType.CheckLocation) movingStep = true;
 			updateStepsAvailable();
 		} else {
 
 			scenario.getTrains().forEach(tr -> {
+				tr.setCrashed(false);
 				System.out.println("getting : ( " + stepIndex + ", " + tr.getTrainID() + " )");
 				System.out.println(movementStepLocations.get(new Pair<Integer, Train>(stepIndex.get(), tr)));
 				tr.setLocation(movementStepLocations.get(new Pair<Integer, Train>(stepIndex.get(), tr)));

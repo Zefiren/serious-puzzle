@@ -6,7 +6,9 @@ public class Train {
 	private TrackSection source;
 	private TrackSection destination;
 	private TrackSection location;
+	private TrackSection prevLocation;
 	private Direction headingDirection;
+	private boolean crashed;
 	/**
 	 * @param trainID
 	 * @param source
@@ -20,7 +22,7 @@ public class Train {
 		this.destination = destination;
 		this.location = source;
 		this.headingDirection = headingDirection;
-
+		crashed = false;
 	}
 
 
@@ -59,9 +61,20 @@ public class Train {
 	 */
 	public void setLocation(TrackSection location) {
 		if (location != null) {
+			setPrevLocation(this.location);
 			this.location = location;
 		}
 	}
+	public TrackSection getPrevLocation() {
+		return prevLocation;
+	}
+
+
+	private void setPrevLocation(TrackSection prevLocation) {
+		this.prevLocation = prevLocation;
+	}
+
+
 	/**
 	 * @return the trainID
 	 */
@@ -82,6 +95,16 @@ public class Train {
 	 */
 	public void setHeadingDirection(Direction headingDirection ) {
 		this.headingDirection = headingDirection;
+	}
+
+
+	public boolean isCrashed() {
+		return crashed;
+	}
+
+
+	public void setCrashed(boolean crashed) {
+		this.crashed = crashed;
 	}
 
 

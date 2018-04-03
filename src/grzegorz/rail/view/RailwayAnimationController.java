@@ -170,7 +170,7 @@ public class RailwayAnimationController {
 		animator = new Animator(solMgr.getLength(), solMgr, scenario);
 
 		// Initialize the person table with the two columns.
-		stepNumColumn.setCellValueFactory(cellData -> cellData.getValue().getStepNumberString());
+		stepNumColumn.setCellValueFactory(cellData -> cellData.getValue().getStepNumberString().concat( cellData.getValue().getStepType()));
 		stepColumn.setCellValueFactory(cellData -> cellData.getValue().getStep());
 		stepsTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		stepsTable.getColumns().forEach(col -> {
@@ -220,8 +220,8 @@ public class RailwayAnimationController {
 		AnchorPane.setTopAnchor(stepCounter, 10.0);
 		AnchorPane.setRightAnchor(stepCounter, 10.0);
 
-		stepsAnchor.maxWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
-		stepsAnchor.minWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
+		stepsAnchor.maxWidthProperty().bind(splitPane.widthProperty().multiply(0.29));
+		stepsAnchor.minWidthProperty().bind(splitPane.widthProperty().multiply(0.29));
 		stepNumColumn.minWidthProperty().bind(stepsTable.widthProperty().multiply(0.25));
 		stepNumColumn.maxWidthProperty().bind(stepsTable.widthProperty().multiply(0.25));
 
@@ -360,13 +360,18 @@ public class RailwayAnimationController {
 		overlay.getChildren().add(trainPane);
 		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 2);
 		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2);
-		newTrainPol.setFill(Color.BLUE);
+		newTrainPol.setFill(Color.CYAN);
 		newTrainPol.setOpacity(0.8);
 		newTrainPol.getStyleClass().add("poly-train");
 
+		Rotate rotate = new Rotate(0, (width * 1.5) / 2, height / 2);
+		if(tr.getHeadingDirection()== Direction.left)
+			rotate.setAngle(180);
+		newTrainPol.getTransforms().add(rotate);
+
 		Label trainInfo = new Label(tr.getDestination().getLabel());
 		trainInfo.getStyleClass().add("label-train");
-		int fontSize = (int) (height / 2);
+		int fontSize = (int) (height *0.8);
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 
 		trainPane.getChildren().addAll(newTrainPol, trainInfo);
@@ -380,33 +385,41 @@ public class RailwayAnimationController {
 		double width = trackLength / 3;
 		double height = trackVertGap / 6;
 
-		trainPoly.getPoints().setAll(0.0, 0.0, 0.0, height, width, height, width * 1.5, height / 2, width, 0.0);
-		if (trainPoly.getTransforms().size() == 0) {
-			if (tr.getHeadingDirection() == Direction.left) {
-				Rotate rotate = new Rotate();
+		if (tr.isCrashed()) {
+			trainPoly.getPoints().setAll(
+					0.0, 0.0,
+					0.0, height*0.8,
+					width*0.4, height,
+					width*0.7, height*0.8,
+					width, height,
+					width * 1.2, height*0.8,
+					width * 1.2, 0.0,
+					width, height*0.2,
+					width * 0.7, 0.0,
+					width * 0.4, height*0.2
+					);
+		}else {
+			trainPoly.getPoints().setAll(0.0, 0.0, 0.0, height, width, height, width * 1.5, height / 2, width, 0.0);
+		}
+		Rotate rotate = (Rotate) trainPoly.getTransforms().get(0);
+		if (tr.getHeadingDirection() == Direction.left) {
 
-				// Angle of rotation for the train
-				rotate.setAngle(180);
+			// Angle of rotation for the train
+			rotate.setAngle(180);
 
-				// Pivot point of the train poly
-				rotate.setPivotX((width * 1.5) / 2);
-				rotate.setPivotY(height / 2);
-
-				trainPoly.getTransforms().addAll(rotate);
-				// trainPoly.getTransforms().set(4, rotate);
-			}
+			// Pivot point of the train poly
+			rotate.setPivotX((width * 1.5) / 2);
+			rotate.setPivotY(height / 2);
 		}
 		Point trainPos;
-		if (tr.getHeadingDirection() == Direction.left)
-			trainPos = getPosAlongTrack(tr.getLocation(), 0.5);
-		else
-			trainPos = getPosAlongTrack(tr.getLocation(), 0.0);
+		if (tr.getHeadingDirection() == Direction.left) trainPos = getPosAlongTrack(tr.getLocation(),tr, 0.5);
+		else trainPos = getPosAlongTrack(tr.getLocation(),tr, 0.0);
 		// trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 3);
 		// trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2);
 
 		trainPane.setTranslateX(trainPos.getX());
 		trainPane.setTranslateY(trainPos.getY() - height / 2);
-		int fontSize = (int) (height / 2);
+		int fontSize = (int) (height *0.8);
 		Node trainInfo = trainPane.lookup(".label-train");
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 	}
@@ -465,11 +478,14 @@ public class RailwayAnimationController {
 
 	}
 
-	private Point getPosAlongTrack(TrackSection ts, double progress) {
+	private Point getPosAlongTrack(TrackSection ts,Train tr, double progress) {
 		Point loc = ts.getLocation();
 
 		if (ts.getClass() == Switch.class) {
 			Switch s = (Switch) ts;
+			if(tr.getPrevLocation() != s.getExtraTrack() && tr.getHeadingDirection() != s.getSwitchDirection() )
+				return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding);
+
 			double xPts[];
 			double yPts[];
 			int ystart = loc.y * trackVertGap + vPadding;
@@ -590,7 +606,7 @@ public class RailwayAnimationController {
 					labelPos.setLocation(loc.x * trackLength + hPadding - trackLength * 0.3, loc.y * trackVertGap + vPadding);
 				}
 				System.out.println(labelPos + " is label position for " + ts.getLabel());
-				gc.setFont(new Font(trackVertGap/2));
+				gc.setFont(new Font(trackVertGap / 2));
 				gc.fillText(ts.getLabel(), labelPos.getX(), labelPos.getY());
 			}
 			gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding);

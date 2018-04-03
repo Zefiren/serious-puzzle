@@ -1,8 +1,11 @@
 package grzegorz.rail.model;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import grzegorz.rail.model.SolutionCmd.CommandType;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -16,76 +19,77 @@ public class SolutionManager {
 		saved = false;
 	}
 
-	public void addStep(SolutionCmd newStep){
-		newStep.setStepNumber(solution.size()+1);
+	public void addStep(SolutionCmd newStep) {
+		newStep.setStepNumber(solution.size() + 1);
 		solution.add(newStep);
 		saved = false;
 		editedSinceLastRender = false;
 	}
 
-	public void removeStep(SolutionCmd cmd){
+	public void removeStep(SolutionCmd cmd) {
 		int index = cmd.getStepNumber().getValue() - 1;
+		Interactable<?> target = cmd.target;
 		cmd.undoStep();
 
 		solution.remove(cmd);
 
-		for(int row = index; row< solution.size(); row++){
-			solution.get(row).setStepNumber(row+1);
+		for (int row = index; row < solution.size(); row++) {
+			solution.get(row).setStepNumber(row + 1);
+			if(solution.get(row).target == target){
+				solution.get(row).oldValue.set(!solution.get(row).oldValue.get());
+				solution.get(row).newValue.set(!solution.get(row).newValue.get());
+			}
 		}
 		editedSinceLastRender = true;
 		saved = false;
 	}
 
-	public void removeSteps(List<SolutionCmd> steps){
-		int min = steps.get(0).getStepNumber().getValue()-1;
+	public void removeSteps(List<SolutionCmd> steps) {
+		int min = steps.get(0).getStepNumber().getValue() - 1;
 		Iterator<SolutionCmd> it = solution.iterator();
 		System.out.println(solution.size());
 		System.out.println(solution.get(0).getStep().getValue());
-//		solution.remove(0);
-//		it.next();
-//		it.remove();
-		while(it.hasNext()) {
-			SolutionCmd step = it.next();
-			System.out.println("checking "+step.getStep().getValue());
-			if(steps.contains(step)) {
-				System.out.println("REMOVING "+step.getStep().getValue());
-				steps.remove(step);
-				it.remove();
+
+		Map<Interactable<?>, Integer> modified = new HashMap<Interactable<?>, Integer>();
+		for (int i = steps.size() - 1; i >= 0; i--) {
+			SolutionCmd step = steps.get(i);
+			step.undoStep();
+			solution.remove(step);
+
+			if (steps.get(i).getType() != CommandType.CheckLocation) {
+				Interactable<?> stepTarget = step.target;
+				if (modified.get(stepTarget) == null) {
+					modified.put(stepTarget, 1);
+				}else {
+					modified.put(steps.get(i).target, modified.get(stepTarget) + 1);
+				}
 			}
 			System.out.println("next");
 		}
-//		steps.forEach(step ->
-//		{
-//			step.undoStep();
-//			System.out.println("REMOVING "+step.getStep().getValue());
-//			solution.remove(step);
-//		});
-//		for(int i = indices.length-1; i>= 0; i--){
-//			solution.get(indices[i]).un doStep();
-//			solution.remove(indices[i]);
-//
-//		}
+
 		System.out.println("hey " + solution.size());
-		for(int row = min; row< solution.size(); row++){
-			solution.get(row).setStepNumber(row+1);
+		for (int row = min; row < solution.size(); row++) {
+			solution.get(row).setStepNumber(row + 1);
+			if(modified.containsKey(solution.get(row).target))
+				if((modified.get(solution.get(row).target) % 2) != 0) {
+					solution.get(row).oldValue.set(!solution.get(row).oldValue.get());
+					solution.get(row).newValue.set(!solution.get(row).newValue.get());
+				}
 		}
 		editedSinceLastRender = true;
 		saved = false;
 	}
-
 
 	public int getLength() {
 		return solution.size();
 	}
 
 	public SolutionCmd getStep(int index) {
-		if(index < getLength())
-			return solution.get(index);
-		else
-			return null;
+		if (index < getLength()) return solution.get(index);
+		else return null;
 	}
 
-	public void save(){
+	public void save() {
 		saved = true;
 	}
 

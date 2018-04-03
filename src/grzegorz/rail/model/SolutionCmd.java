@@ -1,5 +1,6 @@
 package grzegorz.rail.model;
 
+import grzegorz.rail.model.SolutionCmd.CommandType;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -8,11 +9,11 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class SolutionCmd {
-	enum CommandType {
+	public enum CommandType {
 		SwitchChange, SignalChange, CheckLocation
 	};
 
-	CommandType type;
+	private CommandType type;
 
 	Interactable<?> target;
 	BooleanProperty oldValue;
@@ -28,9 +29,9 @@ public class SolutionCmd {
 		this.target = target;
 		this.oldValue = new SimpleBooleanProperty(!newValue);
 		this.newValue = new SimpleBooleanProperty(newValue);
-		if (target.getInteractable().getClass() == Signal.class) type = CommandType.SignalChange;
+		if (target.getInteractable().getClass() == Signal.class) setType(CommandType.SignalChange);
 		if (target.getInteractable().getClass() == Switch.class) {
-			type = CommandType.SwitchChange;
+			setType(CommandType.SwitchChange);
 			System.out.println("switch id " + ((Switch) target).getTsID());
 		}
 	}
@@ -41,10 +42,10 @@ public class SolutionCmd {
 		this.oldValue = new SimpleBooleanProperty(!newValue);
 		this.newValue = new SimpleBooleanProperty(newValue);
 		this.stepNumber = new SimpleIntegerProperty(stepNum);
-		if (target.getInteractable().getClass() == Signal.class) type = CommandType.SignalChange;
+		if (target.getInteractable().getClass() == Signal.class) setType(CommandType.SignalChange);
 		if (target.getInteractable().getClass() == Switch.class) {
-			type = CommandType.SwitchChange;
-			System.out.println("switch id " + ((Switch) target).getTsID());
+			setType(CommandType.SwitchChange);
+			System.out.println("switch id " + ((Switch) target).getSwitchID());
 		}
 	}
 
@@ -52,18 +53,26 @@ public class SolutionCmd {
 		super();
 		this.target = target;
 		this.targetTrain = targetTrain;
-		type = CommandType.CheckLocation;
+		setType(CommandType.CheckLocation);
 	}
 
 	public StringProperty getStep() {
 		// TODO Auto-generated method stub
-		switch (type) {
+		switch (getType()) {
 		case SwitchChange:
-			return new SimpleStringProperty("Switch : " + ((Switch) target).getTsID() + " -> " + newValue.getValue());
+			if (newValue.getValue()) {
+				return new SimpleStringProperty("Switch : " + ((Switch) target).getSwitchID() + " -> Open" );
+			}else {
+				return new SimpleStringProperty("Switch : " + ((Switch) target).getSwitchID() + " -> Closed");
+			}
 		case SignalChange:
-			return new SimpleStringProperty("Signal : " + ((Signal) target).getId() + " ->" + newValue.getValue());
+			if (newValue.getValue()) {
+				return new SimpleStringProperty("Signal : " + ((Signal) target).getId() + " -> Proceed" );
+			}else {
+				return new SimpleStringProperty("Signal : " + ((Signal) target).getId() + " -> Stop" );
+			}
 		case CheckLocation:
-			return new SimpleStringProperty("Occupies : TC" + ((TrackSection) target).getTsID() + " by Train" + targetTrain.getTrainID());
+			return new SimpleStringProperty("Occupies : TC" + ((TrackSection) target).getTsID() + " by Train " + targetTrain.getDestination().getLabel());
 		default:
 			return new SimpleStringProperty("no known type");
 		}
@@ -71,9 +80,9 @@ public class SolutionCmd {
 	}
 
 	public void undoStep() {
-		switch (type) {
+		switch (getType()) {
 		case SwitchChange:
-			System.out.println(((Switch) target).getTsID() + " is the id");
+			System.out.println(((Switch) target).getSwitchID() + " is the id");
 			((Switch) target).setDiverging(oldValue.getValue());
 			break;
 		case SignalChange:
@@ -89,9 +98,9 @@ public class SolutionCmd {
 	}
 
 	public boolean performStep() {
-		switch (type) {
+		switch (getType()) {
 		case SwitchChange:
-			System.out.println(((Switch) target).getTsID() + " is the id");
+			System.out.println(((Switch) target).getSwitchID() + " is the id");
 			((Switch) target).setDiverging(newValue.getValue());
 			return true;
 		case SignalChange:
@@ -118,5 +127,17 @@ public class SolutionCmd {
 
 	public void setStepNumber(Integer stepNumber) {
 		this.stepNumber = new SimpleIntegerProperty(stepNumber);
+	}
+
+	public StringProperty getStepType() {
+		return new SimpleStringProperty( (getType() == CommandType.CheckLocation) ? " WHEN" : " SET" ) ;
+	}
+
+	public CommandType getType() {
+		return type;
+	}
+
+	public void setType(CommandType type) {
+		this.type = type;
 	}
 }
