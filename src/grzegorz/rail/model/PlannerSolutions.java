@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-public final class ScenarioMaker {
+public final class PlannerSolutions {
 
 	private static Scenario scenario;
 
@@ -85,36 +85,6 @@ public final class ScenarioMaker {
 			scenario.addSignal(sig2);
 
 			return start;
-		}
-		case 1: {
-			TrackSection A, tc1, tc2, B;
-			tc1 = new TrackSection(1);
-			tc2 = new TrackSection(2);
-			A = new TrackSection(0, "A", false, tc1);
-			B = new TrackSection(4, "B", true, tc2);
-
-			tc1.setLeftTrack(A);
-			tc1.setRightTrack(tc2);
-
-			tc2.setLeftTrack(tc1);
-			tc2.setRightTrack(B);
-
-			Train train = new Train(0, A, B, Direction.right);
-			scenario.addTrain(train);
-
-			Signal sig1 = new Signal(0, A, tc1, Direction.left);
-
-			List<TrackSection> tracks = new ArrayList<TrackSection>();
-			List<Signal> signals = new ArrayList<Signal>();
-			tracks.add(A);
-			tracks.add(tc1);
-			tracks.add(tc2);
-			tracks.add(B);
-
-			signals.add(sig1);
-			scenario.addSignal(sig1);
-
-			return A;
 		}
 		default: {
 			TrackSection start, middle, upRightEnd, middle2, end, newEnd, newEnd2;

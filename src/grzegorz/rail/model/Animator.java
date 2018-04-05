@@ -54,16 +54,16 @@ public class Animator {
 	public boolean hasCrashed() {
 		return animationCrashed;
 	}
-	
+
 	public boolean hasSucceeded() {
 		return succeeded;
 	}
-	
+
 	public boolean isEndReached() {
 		return endReached;
 	}
-	
-	
+
+
 	public void animationEnablePlay() {
 		lastNanoTime = 0;
 		animationPlaying = true;
@@ -73,6 +73,7 @@ public class Animator {
 		movementMade = false;
 		if (stepIndex.get() > (solutionSize - 1) && !movingStep) {
 			updateStepsAvailable();
+			endReached = true;
 			return true;
 		}
 		if (lastNanoTime == 0) lastNanoTime = currentNanoTime;
@@ -82,6 +83,7 @@ public class Animator {
 			if (stepIndex.get() > (solutionSize - 1) || (movingStep && !movementMade)) {
 				animationPlaying = false;
 				updateStepsAvailable();
+				endReached = true;
 				return false;
 			}
 			timeSinceStepChange -= 1000000000;

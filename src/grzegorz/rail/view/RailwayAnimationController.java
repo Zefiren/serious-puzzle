@@ -61,8 +61,8 @@ public class RailwayAnimationController {
 	private TableColumn<SolutionCmd, String> stepNumColumn;
 	@FXML
 	private TableColumn<SolutionCmd, String> stepColumn;
-	
-	
+
+
 	@FXML
 	private Button backButton;
 	@FXML
@@ -128,11 +128,12 @@ public class RailwayAnimationController {
 
 	private Animator animator;
 	private boolean firstRotate;
-	
+	AnimationTimer solAnimator;
+
 	private enum AnimState {
 		readyForAnimation, playingAnimation,success, safeFailure, crashFailure
 	};
-	
+
 	private AnimState animationState = AnimState.readyForAnimation;
 	private BooleanProperty animationStateChangeProperty = new SimpleBooleanProperty(false);
 
@@ -153,7 +154,8 @@ public class RailwayAnimationController {
 
 		// Add observable list data to the table
 		scenario = mainApp.getScenarioData();
-		solMgr = mainApp.getSolutionData();
+		solMgr = mainApp.getSolutionData(mainApp.isUserAnimation());
+
 		animator = new Animator(solMgr.getLength(), solMgr, scenario);
 
 		animator.animationHasBackStepProperty().addListener((Observable o) -> {
@@ -172,11 +174,7 @@ public class RailwayAnimationController {
 
 	}
 
-	// while(it.hasNext())
-	// {
-	// ((SolutionCmd) it).undoStep();
-	// System.out.println("REMOVING "+step.getStep().getValue());
-	// });
+
 
 	/**
 	 * Initializes the controller class. This method is automatically called after the fxml file has been loaded.
@@ -259,7 +257,7 @@ public class RailwayAnimationController {
 			}
 		});
 
-		AnimationTimer solAnimator = new AnimationTimer() {
+		solAnimator = new AnimationTimer() {
 
 			public void handle(long currentNanoTime) {
 				if (animator.isPlaying()) {
@@ -329,49 +327,84 @@ public class RailwayAnimationController {
 				}
 			}
 		});
-		
+
 		animationStateChangeProperty.addListener(new ChangeListener<Boolean>() {
 
 			@Override
 			public void changed(ObservableValue arg0, Boolean oldBoolValue, Boolean newBoolValue) {
 				if (oldBoolValue == false && newBoolValue == true) {
+					animationStateChangeProperty.set(false);
 					setAnimatorMessage();
 				}
 			}
-			
+
 		});
+
+
+		backButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				exitAnimatorCleanup();
+				solAnimator.stop();
+				mainApp.SwitchToPlanner();
+			}
+		});
+
+		endScreenButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				exitAnimatorCleanup();
+				solAnimator.stop();
+				mainApp.SwitchToEndScreen();
+			}
+		});
+
 	}
-	
-	
+
+	private void exitAnimatorCleanup() {
+		for (int i = animator.stepIndexProperty().get(); i < solMgr.getLength(); i++) {
+			solMgr.getSolution().get(i).performStep();
+		}
+		scenario.getTrains().forEach(train ->{
+			train.setLocation(train.getSource());
+			train.setCrashed(false);
+			});
+	}
+
 	private void setAnimatorMessage() {
 		switch (animationState) {
 		case readyForAnimation:
 			messageLabel.setText("Animation Ready");
 			break;
-			
+
 		case playingAnimation:
 			messageLabel.setText("Playing Animation");
 			break;
-			
+
 		case success:
 			messageLabel.setText("Solution Success");
 			break;
-			
+
 		case safeFailure:
 			messageLabel.setText("Solution Fail");
 			break;
-			
+
 		case crashFailure:
 			messageLabel.setText("Solution Crash");
 			break;
-			
+
 		default:
 			break;
 		}
 	}
-	
+
 	private void setCurrentState() {
 		//animationState
+		System.out.println("current state:" + animationState);
+		if(animationState == AnimState.crashFailure || animationState == AnimState.safeFailure || animationState == AnimState.success  )
+			return;
 		if(animator.hasCrashed() && animationState != AnimState.crashFailure ) {
 			animationState = AnimState.crashFailure;
 			animationStateChangeProperty.set(true);
@@ -381,9 +414,12 @@ public class RailwayAnimationController {
 			if (animator.hasSucceeded() && (animationState != AnimState.success || animationState != AnimState.safeFailure )) {
 				animationState = AnimState.success;
 				animationStateChangeProperty.set(true);
+				endScreenButton.setDisable(false);
+				return;
 			}else {
 				animationState = AnimState.safeFailure;
 				animationStateChangeProperty.set(true);
+				return;
 			}
 		}
 		if (animator.isPlaying() && ( animationState != AnimState.playingAnimation || animationState != AnimState.readyForAnimation ) ) {

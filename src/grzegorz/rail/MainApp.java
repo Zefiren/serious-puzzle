@@ -5,6 +5,8 @@ import java.io.IOException;
 import grzegorz.rail.model.Scenario;
 import grzegorz.rail.model.ScenarioMaker;
 import grzegorz.rail.model.SolutionManager;
+import grzegorz.rail.view.EndScreenController;
+import grzegorz.rail.view.MenuController;
 import grzegorz.rail.view.RailwayAnimationController;
 import grzegorz.rail.view.RailwayPlannerController;
 import javafx.application.Application;
@@ -21,6 +23,8 @@ public class MainApp extends Application {
 	private BorderPane rootLayout;
 	private Scenario scenario;
 	private SolutionManager solution;
+	private SolutionManager plannerSolution;
+	private boolean userAnimation;
 
 	public final static int MINIMUM_WINDOW_WIDTH = 800;
 	public final static int MINIMUM_WINDOW_HEIGHT = 600;
@@ -33,7 +37,12 @@ public class MainApp extends Application {
 	 * Constructor
 	 */
 	public MainApp() {
-		scenario = ScenarioMaker.createScenario();
+		scenario = ScenarioMaker.createScenario(0);
+	}
+
+	public void setScenarioData(Scenario scenarioChosen) {
+		scenario = scenarioChosen;
+
 	}
 
 	public Scenario getScenarioData() {
@@ -41,9 +50,20 @@ public class MainApp extends Application {
 
 	}
 
-	public SolutionManager getSolutionData() {
-		return solution;
+	public SolutionManager getSolutionData(boolean userSolution) {
+		if (userSolution) {
+			return solution;
+		} else {
+			return plannerSolution;
+		}
+	}
 
+	public boolean isUserAnimation() {
+		return userAnimation;
+	}
+
+	public void setUserAnimation(boolean userAnimation) {
+		this.userAnimation = userAnimation;
 	}
 
 	public void SwitchToAnimation(SolutionManager sol) {
@@ -52,10 +72,10 @@ public class MainApp extends Application {
 			// Load person overview.
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(MainApp.class.getResource("view/SolutionAnimator.fxml"));
-			AnchorPane solutionAnimator = (AnchorPane) loader.load();
+			AnchorPane solutionPlanner = (AnchorPane) loader.load();
 
 			// Set person overview into the center of root layout.
-			rootLayout.setCenter(solutionAnimator);
+			rootLayout.setCenter(solutionPlanner);
 
 			// Give the controller access to the main app.
 			RailwayAnimationController controller = loader.getController();
@@ -64,6 +84,84 @@ public class MainApp extends Application {
 			Scene scene = rootLayout.getScene();
 			primaryStage.setScene(scene);
 			primaryStage.setTitle("Solution Animation");
+			primaryStage.show();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void SwitchToMenu() {
+		try {
+			// Load person overview.
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(MainApp.class.getResource("view/Menu.fxml"));
+			AnchorPane solutionAnimator = (AnchorPane) loader.load();
+
+			// Set person overview into the center of root layout.
+			rootLayout.setCenter(solutionAnimator);
+
+			// Give the controller access to the main app.
+			MenuController controller = loader.getController();
+
+			FXMLLoader loader2 = new FXMLLoader();
+			loader2.setLocation(MainApp.class.getResource("view/MenuPane.fxml"));
+			controller.menuPane = (AnchorPane) loader2.load();
+			loader2.setController(controller);
+
+			controller.setMainApp(this);
+
+			Scene scene = rootLayout.getScene();
+			primaryStage.setScene(scene);
+			primaryStage.setTitle("Solution Planning");
+			primaryStage.show();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void SwitchToPlanner() {
+		try {
+			// Load person overview.
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(MainApp.class.getResource("view/SolutionPlanner.fxml"));
+			AnchorPane solutionAnimator = (AnchorPane) loader.load();
+
+			// Set person overview into the center of root layout.
+			rootLayout.setCenter(solutionAnimator);
+
+			// Give the controller access to the main app.
+			RailwayPlannerController controller = loader.getController();
+			controller.setMainApp(this);
+
+			Scene scene = rootLayout.getScene();
+			primaryStage.setScene(scene);
+			primaryStage.setTitle("Solution Planning");
+			primaryStage.show();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void SwitchToEndScreen() {
+		try {
+			// Load person overview.
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(MainApp.class.getResource("view/EndScreen.fxml"));
+			AnchorPane solutionAnimator = (AnchorPane) loader.load();
+
+			// Set person overview into the center of root layout.
+			rootLayout.setCenter(solutionAnimator);
+
+			// Give the controller access to the main app.
+			EndScreenController controller = loader.getController();
+			controller.setMainApp(this);
+
+			Scene scene = rootLayout.getScene();
+			primaryStage.setScene(scene);
+			primaryStage.setTitle("Solution Planning");
 			primaryStage.show();
 
 		} catch (IOException e) {
@@ -84,7 +182,8 @@ public class MainApp extends Application {
 
 		initRootLayout();
 
-		showPersonOverview();
+		userAnimation = true;
+		SwitchToMenu();
 	}
 
 	/**
@@ -113,7 +212,7 @@ public class MainApp extends Application {
 		try {
 			// Load person overview.
 			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation(MainApp.class.getResource("view/PersonOverview.fxml"));
+			loader.setLocation(MainApp.class.getResource("view/SolutionPlanner.fxml"));
 			AnchorPane personOverview = (AnchorPane) loader.load();
 
 			// Set person overview into the center of root layout.
@@ -140,4 +239,5 @@ public class MainApp extends Application {
 	public static void main(String[] args) {
 		launch(args);
 	}
+
 }

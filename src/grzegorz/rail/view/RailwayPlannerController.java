@@ -141,14 +141,9 @@ public class RailwayPlannerController {
 
 		// Add observable list data to the table
 		scenario = mainApp.getScenarioData();
+		if (mainApp.getSolutionData(true) != null) solMgr = mainApp.getSolutionData(true);
 		stepsTable.setItems(solMgr.getSolution());
 	}
-
-	// while(it.hasNext())
-	// {
-	// ((SolutionCmd) it).undoStep();
-	// System.out.println("REMOVING "+step.getStep().getValue());
-	// });
 
 	/**
 	 * Initializes the controller class. This method is automatically called after the fxml file has been loaded.
@@ -157,7 +152,7 @@ public class RailwayPlannerController {
 	private void initialize() {
 		solMgr = new SolutionManager();
 		// Initialize the person table with the two columns.
-		stepNumColumn.setCellValueFactory(cellData -> cellData.getValue().getStepNumberString().concat( cellData.getValue().getStepType()));
+		stepNumColumn.setCellValueFactory(cellData -> cellData.getValue().getStepNumberString().concat(cellData.getValue().getStepType()));
 		stepColumn.setCellValueFactory(cellData -> cellData.getValue().getStep());
 		stepsTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		stepsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -268,14 +263,6 @@ public class RailwayPlannerController {
 			}
 		});
 
-		/*scenarioAnchor.setOnMouseClicked(event -> {
-			double x = event.getX(), y = event.getY();
-			shapes.add(new Point((int) x, (int) y));
-			System.out.println(scenario.getTrack(new Point(1, 1)).getClass());
-			((Switch) scenario.getTrack(new Point(1, 1))).setDiverging(true);
-			drawScenario(g);
-		});*/
-
 	}
 
 	private void drawScenario(GraphicsContext gc) {
@@ -368,10 +355,8 @@ public class RailwayPlannerController {
 		newTrainPol.getStyleClass().add("poly-train");
 
 		Rotate rotate = new Rotate(0, (width * 1.5) / 2, height / 2);
-		if(tr.getHeadingDirection()== Direction.left)
-			rotate.setAngle(180);
+		if (tr.getHeadingDirection() == Direction.left) rotate.setAngle(180);
 		newTrainPol.getTransforms().add(rotate);
-
 
 		Label trainInfo = new Label(tr.getDestination().getLabel());
 		trainInfo.getStyleClass().add("label-train");
@@ -399,7 +384,7 @@ public class RailwayPlannerController {
 		if (tr.getHeadingDirection() == Direction.left) {
 
 			// Angle of rotation for the train
-			rotate.setAngle( 180);
+			rotate.setAngle(180);
 
 			// Pivot point of the train poly
 			rotate.setPivotX((width * 1.5) / 2);
@@ -409,7 +394,7 @@ public class RailwayPlannerController {
 		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 3);
 		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2);
 
-		int fontSize = (int) (height *0.8);
+		int fontSize = (int) (height * 0.8);
 		Node trainInfo = trainPane.lookup(".label-train");
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 	}
