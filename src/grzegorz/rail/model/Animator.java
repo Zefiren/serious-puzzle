@@ -104,11 +104,18 @@ public class Animator {
 			boolean checkStep = solution.getStep(stepIndex.get()).performStep();
 			if (checkStep) {
 				stepIndex.set(stepIndex.get() + 1);
-
 				movingStep = false;
-				return;
+				updateStepsAvailable();
 			}
 		}
+		checkSuccess();
+	}
+	
+	private void checkSuccess() {
+		boolean success = checkForGoal();
+		if(success)
+			succeeded = true;
+		System.out.println("Succes is: " + success);
 	}
 
 	private void animationNextSolutionStep() {
@@ -122,10 +129,6 @@ public class Animator {
 			movementMade = true;
 		}
 		updateStepsAvailable();
-		boolean success = checkForGoal();
-		if(success)
-			succeeded = true;
-		System.out.println("Succes is: " + success);
 	}
 
 	private boolean checkForGoal() {

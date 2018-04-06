@@ -37,7 +37,7 @@ public class MainApp extends Application {
 	 * Constructor
 	 */
 	public MainApp() {
-		scenario = ScenarioMaker.createScenario(0);
+		scenario = ScenarioMaker.createScenario(1);
 	}
 
 	public void setScenarioData(Scenario scenarioChosen) {
@@ -55,6 +55,14 @@ public class MainApp extends Application {
 			return solution;
 		} else {
 			return plannerSolution;
+		}
+	}
+
+	public void setSolutionData(boolean userSolution, SolutionManager solution) {
+		if (userSolution) {
+			this.solution = solution;
+		} else {
+			this.plannerSolution = solution;
 		}
 	}
 
@@ -205,27 +213,7 @@ public class MainApp extends Application {
 		}
 	}
 
-	/**
-	 * Shows the person overview inside the root layout.
-	 */
-	public void showPersonOverview() {
-		try {
-			// Load person overview.
-			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation(MainApp.class.getResource("view/SolutionPlanner.fxml"));
-			AnchorPane personOverview = (AnchorPane) loader.load();
-
-			// Set person overview into the center of root layout.
-			rootLayout.setCenter(personOverview);
-			primaryStage.setTitle("Solution Planning");
-			// Give the controller access to the main app.
-			RailwayPlannerController controller = loader.getController();
-			controller.setMainApp(this);
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+	
 
 	/**
 	 * Returns the main stage.

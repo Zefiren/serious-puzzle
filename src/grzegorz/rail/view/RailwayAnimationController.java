@@ -113,6 +113,7 @@ public class RailwayAnimationController {
 
 	private int hPadding = 200;
 	private int vPadding = 100;
+	private int vStartPos = 0;
 
 	// the scale for the size of signal graphical objects in relation to track
 	// length
@@ -251,8 +252,17 @@ public class RailwayAnimationController {
 		scenarioAnchor.heightProperty().addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
-				trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
-				vPadding = (int) (newSceneHeight.doubleValue() * 0.1);
+				System.out.println(scenario.getHeight() + " is height");
+				if(scenario.getHeight()>1) {
+					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
+					vPadding = (int) (newSceneHeight.doubleValue() * 0.1);
+					vStartPos = 0;
+				}else {
+					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.5) / scenario.getHeight();
+					vPadding = (int) (newSceneHeight.doubleValue() * 0.25);
+					vStartPos = trackVertGap/2;
+					System.out.println("half size" + trackVertGap +"/"+ newSceneHeight);
+				}
 				if (scenario != null) drawScenario(g);
 			}
 		});
@@ -477,7 +487,7 @@ public class RailwayAnimationController {
 		System.out.println("hello train at " + tr.getLocation().getLocation());
 		overlay.getChildren().add(trainPane);
 		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 2);
-		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2);
+		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2 + vStartPos);
 		newTrainPol.setFill(Color.CYAN);
 		newTrainPol.setOpacity(0.8);
 		newTrainPol.getStyleClass().add("poly-train");
@@ -545,7 +555,7 @@ public class RailwayAnimationController {
 	private void drawSignal(GraphicsContext gc, Signal sig) {
 		// CREA.TE GRAPHICS using GC
 		double diameter = (trackLength / signalScaleFraction);
-		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding, (int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5));
+		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding, (int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5 + vStartPos));
 		Color sigColour;
 		if (sig.getDirection() == Direction.left) {
 			sigLoc.x += trackLength * trackLengthRatio - diameter;
@@ -602,15 +612,15 @@ public class RailwayAnimationController {
 		if (ts.getClass() == Switch.class) {
 			Switch s = (Switch) ts;
 			if(tr.getPrevLocation() != s.getExtraTrack() && tr.getHeadingDirection() != s.getSwitchDirection() )
-				return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding);
+				return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding + vStartPos);
 
 			double xPts[];
 			double yPts[];
-			int ystart = loc.y * trackVertGap + vPadding;
+			int ystart = loc.y * trackVertGap + vPadding  + vStartPos;
 			int yLevel = 0;
 			int xstart = loc.x * trackLength + hPadding;
 
-			if (!s.isDiverging()) return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding);
+			if (!s.isDiverging()) return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding + vStartPos);
 
 			if (s.getSwitchDirection() == Direction.right) {
 				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
@@ -627,7 +637,7 @@ public class RailwayAnimationController {
 			}
 
 		} else {
-			return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding);
+			return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding + vStartPos);
 		}
 	}
 
@@ -643,7 +653,7 @@ public class RailwayAnimationController {
 			Button tsLabel = new Button(tcString);
 			overlay.getChildren().add(tsLabel);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-			tsLabel.layoutYProperty().set(loc.y * trackVertGap + vPadding + trackVertGap * 0.05);
+			tsLabel.layoutYProperty().set(loc.y * trackVertGap + vPadding + trackVertGap * 0.05 + vStartPos);
 			tsLabel.getStyleClass().add("scen");
 			tsLabel.setMaxSize(50, 30);
 
@@ -653,7 +663,7 @@ public class RailwayAnimationController {
 		} else {
 			Button tsLabel = scenarioBtns.get(ts).get(0);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-			tsLabel.layoutYProperty().set(loc.y * trackVertGap + vPadding + trackVertGap * 0.05);
+			tsLabel.layoutYProperty().set(loc.y * trackVertGap + vPadding + trackVertGap * 0.05 + vStartPos);
 
 		}
 
@@ -661,14 +671,14 @@ public class RailwayAnimationController {
 			Switch s = (Switch) ts;
 			double xPts[];
 			double yPts[];
-			int ystart = loc.y * trackVertGap + vPadding;
+			int ystart = loc.y * trackVertGap + vPadding + vStartPos;
 			int yLevel = 0;
 			int xstart = loc.x * trackLength + hPadding;
 
 			if (s.isDiverging()) {
-				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding);
+				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos);
 			} else {
-				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding);
+				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
 				yLevel = (int) (trackVertGap * 0.1);
 			}
 
@@ -684,19 +694,19 @@ public class RailwayAnimationController {
 
 			gc.strokePolyline(xPts, yPts, 3);
 			double yBtn;
-			if ((loc.y * trackVertGap + vPadding) > yPts[2]) yBtn = loc.y * trackVertGap + vPadding;
+			if ((loc.y * trackVertGap + vPadding + vStartPos) > yPts[2]) yBtn = loc.y * trackVertGap + vPadding + vStartPos;
 			else yBtn = yPts[2];
 
 			Button tsLabel = scenarioBtns.get(ts).get(0);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-			tsLabel.layoutYProperty().set(yBtn + trackVertGap * 0.05);
+			tsLabel.layoutYProperty().set(yBtn + trackVertGap * 0.05 + vStartPos);
 
 			if (scenarioBtns.get(ts).size() < 2) {
 				Button swLabel = new Button("SW" + s.getSwitchID());
 				overlay.getChildren().add(swLabel);
 
 				swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2);
+				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2 + vStartPos);
 				swLabel.getStyleClass().add("scen");
 				swLabel.setMaxSize(50, 30);
 
@@ -706,7 +716,7 @@ public class RailwayAnimationController {
 
 				Button swLabel = scenarioBtns.get(ts).get(1);
 				swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2);
+				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2 + vStartPos);
 			}
 
 			/*
@@ -719,15 +729,14 @@ public class RailwayAnimationController {
 			if (ts.getLabel() != null) {
 				Point labelPos = new Point();
 				if (ts.isRightEnding()) {
-					labelPos.setLocation(loc.x * trackLength + hPadding + trackLength * 1.3, loc.y * trackVertGap + vPadding);
+					labelPos.setLocation(loc.x * trackLength + hPadding + trackLength * 1.3, loc.y * trackVertGap + vPadding + vStartPos);
 				} else {
-					labelPos.setLocation(loc.x * trackLength + hPadding - trackLength * 0.3, loc.y * trackVertGap + vPadding);
+					labelPos.setLocation(loc.x * trackLength + hPadding - trackLength * 0.3, loc.y * trackVertGap + vPadding + vStartPos);
 				}
-				System.out.println(labelPos + " is label position for " + ts.getLabel());
-				gc.setFont(new Font(trackVertGap / 2));
+				gc.setFont(new Font(trackVertGap / 4));
 				gc.fillText(ts.getLabel(), labelPos.getX(), labelPos.getY());
 			}
-			gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding);
+			gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
 			gc.setTextBaseline(VPos.CENTER);
 			gc.setTextAlign(TextAlignment.CENTER);
 		}

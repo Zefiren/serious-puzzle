@@ -91,7 +91,7 @@ public final class ScenarioMaker {
 			tc1 = new TrackSection(1);
 			tc2 = new TrackSection(2);
 			A = new TrackSection(0, "A", false, tc1);
-			B = new TrackSection(4, "B", true, tc2);
+			B = new TrackSection(3, "B", true, tc2);
 
 			tc1.setLeftTrack(A);
 			tc1.setRightTrack(tc2);
@@ -110,6 +110,40 @@ public final class ScenarioMaker {
 			tracks.add(tc1);
 			tracks.add(tc2);
 			tracks.add(B);
+
+			signals.add(sig1);
+			scenario.addSignal(sig1);
+
+			return A;
+		}
+		case 2: {
+			TrackSection A, tc1, B, C;
+			Switch s1;
+			tc1 = new TrackSection(1);
+			A = new TrackSection(0, "A", false, tc1);
+			B = new TrackSection(3, "B", true, null);
+			C = new TrackSection(4, "B", true, null);
+			
+			s1 = new Switch(2, 0, tc1, B, Direction.right, Direction.left, C);
+
+			tc1.setLeftTrack(A);
+			tc1.setRightTrack(s1);
+
+			B.setLeftTrack(s1);
+			C.setLeftTrack(s1);
+
+			Train train = new Train(0, A, B, Direction.right);
+			scenario.addTrain(train);
+
+			Signal sig1 = new Signal(0, A, tc1, Direction.left);
+
+			List<TrackSection> tracks = new ArrayList<TrackSection>();
+			List<Signal> signals = new ArrayList<Signal>();
+			tracks.add(A);
+			tracks.add(tc1);
+			tracks.add(s1);
+			tracks.add(B);
+			tracks.add(C);
 
 			signals.add(sig1);
 			scenario.addSignal(sig1);
@@ -185,6 +219,16 @@ public final class ScenarioMaker {
 	public static Scenario createScenario(int scenarioChosen) {
 		scenario = new Scenario(layoutHorizontalSize, layoutVerticalSize);
 		trackID = new ArrayList<Integer>();
+		
+		layoutHorizontalSize = 0;
+		layoutVerticalSize = 0;
+		
+		layoutHorizontalMin = 0;
+		layoutHorizontalMax = 0;
+		
+		layoutVerticalMin = 0;
+		layoutVerticalMax = 0;
+		
 		TrackSection startTs = createScene(scenarioChosen);
 		// need to create grid of track circuits
 		// first calculate sizes

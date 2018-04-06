@@ -11,6 +11,7 @@ import java.util.Set;
 
 import grzegorz.rail.MainApp;
 import grzegorz.rail.model.Direction;
+import grzegorz.rail.model.PlannerSolutions;
 import grzegorz.rail.model.Scenario;
 import grzegorz.rail.model.ScenarioMaker;
 import grzegorz.rail.model.Signal;
@@ -74,6 +75,7 @@ public class MenuController {
 
 	private int hPadding = 200;
 	private int vPadding = 100;
+	private int vStartPos = 0;
 
 	// the scale for the size of signal graphical objects in relation to track
 	// length
@@ -122,6 +124,9 @@ public class MenuController {
 				@Override
 				public void handle(ActionEvent arg0) {
 					mainApp.setScenarioData(ScenarioMaker.createScenario(x));
+//					PlannerSolutions.setScenario(mainApp.getScenarioData());
+//					mainApp.setSolutionData(false,PlannerSolutions.createSolution(x));
+					
 					mainApp.SwitchToPlanner();
 				}
 			});
@@ -180,8 +185,17 @@ public class MenuController {
 		scenarioAnchor.heightProperty().addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
-				trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
-				vPadding = (int) (newSceneHeight.doubleValue() * 0.1);
+				System.out.println(scenario.getHeight() + " is height");
+				if(scenario.getHeight()>1) {
+					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
+					vPadding = (int) (newSceneHeight.doubleValue() * 0.1);
+					vStartPos = 0;
+				}else {
+					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.5) / scenario.getHeight();
+					vPadding = (int) (newSceneHeight.doubleValue() * 0.25);
+					vStartPos = trackVertGap/2;
+					System.out.println("half size" + trackVertGap +"/"+ newSceneHeight);
+				}
 				if (scenario != null) drawScenario(g);
 			}
 		});
