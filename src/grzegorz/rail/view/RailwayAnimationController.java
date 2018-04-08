@@ -40,12 +40,12 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.scene.text.Font;
@@ -62,14 +62,14 @@ public class RailwayAnimationController {
 	@FXML
 	private TableColumn<SolutionCmd, String> stepColumn;
 
-
 	@FXML
 	private Button backButton;
 	@FXML
 	private Button endScreenButton;
 	@FXML
 	private Label messageLabel;
-
+	@FXML
+	private ImageView messageIcon;
 
 	@FXML
 	private Button stepPlayButton;
@@ -132,12 +132,11 @@ public class RailwayAnimationController {
 	AnimationTimer solAnimator;
 
 	private enum AnimState {
-		readyForAnimation, playingAnimation,success, safeFailure, crashFailure
+		readyForAnimation, playingAnimation, success, safeFailure, crashFailure
 	};
 
 	private AnimState animationState = AnimState.readyForAnimation;
 	private BooleanProperty animationStateChangeProperty = new SimpleBooleanProperty(false);
-
 
 	/**
 	 * The constructor. The constructor is called before the initialize() method.
@@ -165,6 +164,7 @@ public class RailwayAnimationController {
 		animator.animationHasNextProperty().addListener((Observable o) -> {
 			System.out.println("setting NEXT step button to " + !animator.animationHasNextProperty().getValue());
 			stepForwardSingleButton.setDisable(!animator.animationHasNextProperty().getValue());
+			stepPlayButton.setDisable(!animator.animationHasNextProperty().getValue());
 		});
 		animator.stepIndexProperty().addListener((Observable o) -> {
 			stepsTable.getSelectionModel().clearAndSelect(animator.stepIndexProperty().get());
@@ -172,10 +172,9 @@ public class RailwayAnimationController {
 
 		stepCounter.textProperty().bind(animator.stepIndexProperty().add(1).asString());
 		stepsTable.setItems(solMgr.getSolution());
+		setButtons(false);
 
 	}
-
-
 
 	/**
 	 * Initializes the controller class. This method is automatically called after the fxml file has been loaded.
@@ -186,7 +185,7 @@ public class RailwayAnimationController {
 		animator = new Animator(solMgr.getLength(), solMgr, scenario);
 
 		// Initialize the person table with the two columns.
-		stepNumColumn.setCellValueFactory(cellData -> cellData.getValue().getStepNumberString().concat( cellData.getValue().getStepType()));
+		stepNumColumn.setCellValueFactory(cellData -> cellData.getValue().getStepNumberString().concat(cellData.getValue().getStepType()));
 		stepColumn.setCellValueFactory(cellData -> cellData.getValue().getStep());
 		stepsTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		stepsTable.getColumns().forEach(col -> {
@@ -253,15 +252,14 @@ public class RailwayAnimationController {
 			@Override
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
 				System.out.println(scenario.getHeight() + " is height");
-				if(scenario.getHeight()>1) {
+				if (scenario.getHeight() > 1) {
 					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
 					vPadding = (int) (newSceneHeight.doubleValue() * 0.1);
-					vStartPos = 0;
-				}else {
+					vStartPos = trackVertGap / 4;
+				} else {
 					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.5) / scenario.getHeight();
 					vPadding = (int) (newSceneHeight.doubleValue() * 0.25);
-					vStartPos = trackVertGap/2;
-					System.out.println("half size" + trackVertGap +"/"+ newSceneHeight);
+					vStartPos = trackVertGap / 2;
 				}
 				if (scenario != null) drawScenario(g);
 			}
@@ -278,10 +276,7 @@ public class RailwayAnimationController {
 						drawScenario(g);
 					}
 					if (canStop) {
-						stepPlayButton.setDisable(false);
-						stepStopButton.setDisable(true);
-						stepBackSingleButton.setDisable(!animator.animationHasBackStepProperty().getValue());
-						stepForwardSingleButton.setDisable(!animator.animationHasNextProperty().getValue());
+						setButtons(false);
 						this.stop();
 					}
 				}
@@ -295,10 +290,7 @@ public class RailwayAnimationController {
 			public void handle(ActionEvent arg0) {
 				animator.animationEnablePlay();
 				solAnimator.start();
-				stepPlayButton.setDisable(true);
-				stepStopButton.setDisable(false);
-				stepForwardSingleButton.setDisable(true);
-				stepBackSingleButton.setDisable(true);
+				setButtons(true);
 			}
 		});
 
@@ -308,10 +300,7 @@ public class RailwayAnimationController {
 			public void handle(ActionEvent arg0) {
 				animator.animationPause();
 				solAnimator.stop();
-				stepPlayButton.setDisable(false);
-				stepStopButton.setDisable(true);
-				stepForwardSingleButton.setDisable(false);
-				stepBackSingleButton.setDisable(false);
+				setButtons(false);
 			}
 		});
 
@@ -350,14 +339,17 @@ public class RailwayAnimationController {
 
 		});
 
-
 		backButton.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent arg0) {
 				exitAnimatorCleanup();
 				solAnimator.stop();
-				mainApp.SwitchToPlanner();
+				if(mainApp.isUserAnimation())
+					mainApp.SwitchToPlanner();
+				else {
+					mainApp.SwitchToEndScreen();
+				}
 			}
 		});
 
@@ -373,14 +365,28 @@ public class RailwayAnimationController {
 
 	}
 
+	private void setButtons(boolean playingAnimation) {
+		if (playingAnimation) {
+			stepStopButton.setDisable(false);
+			stepPlayButton.setDisable(true);
+			stepBackSingleButton.setDisable(true);
+			stepForwardSingleButton.setDisable(true);
+		} else {
+			stepStopButton.setDisable(true);
+			stepPlayButton.setDisable(!animator.animationHasNextProperty().getValue());
+			stepBackSingleButton.setDisable(!animator.animationHasBackStepProperty().getValue());
+			stepForwardSingleButton.setDisable(!animator.animationHasNextProperty().getValue());
+		}
+	}
+
 	private void exitAnimatorCleanup() {
 		for (int i = animator.stepIndexProperty().get(); i < solMgr.getLength(); i++) {
 			solMgr.getSolution().get(i).performStep();
 		}
-		scenario.getTrains().forEach(train ->{
+		scenario.getTrains().forEach(train -> {
 			train.setLocation(train.getSource());
 			train.setCrashed(false);
-			});
+		});
 	}
 
 	private void setAnimatorMessage() {
@@ -395,47 +401,51 @@ public class RailwayAnimationController {
 
 		case success:
 			messageLabel.setText("Solution Success");
+			messageLabel.setStyle("-fx-text-fill: green;");
 			break;
 
-		case safeFailure:
+		case safeFailure: {
 			messageLabel.setText("Solution Fail");
-			break;
-
-		case crashFailure:
+			messageLabel.setStyle("-fx-text-fill: cyan;");
+			Image image = new Image(getClass().getResource("PlayerIcons/png/dislike-thumb.png").toExternalForm());
+			messageIcon.setImage(image);
+			return;
+		}
+		case crashFailure: {
 			messageLabel.setText("Solution Crash");
-			break;
-
+			messageLabel.setStyle("-fx-text-fill: red;");
+			Image image = new Image(getClass().getResource("PlayerIcons/png/dislike-thumb.png").toExternalForm());
+			messageIcon.setImage(image);
+			return;
+		}
 		default:
 			break;
 		}
 	}
 
 	private void setCurrentState() {
-		//animationState
-		System.out.println("current state:" + animationState);
-		if(animationState == AnimState.crashFailure || animationState == AnimState.safeFailure || animationState == AnimState.success  )
-			return;
-		if(animator.hasCrashed() && animationState != AnimState.crashFailure ) {
+		if (animationState == AnimState.crashFailure || animationState == AnimState.safeFailure || animationState == AnimState.success) return;
+		if (animator.hasCrashed() && animationState != AnimState.crashFailure) {
 			animationState = AnimState.crashFailure;
 			animationStateChangeProperty.set(true);
 			return;
 		}
 		if (animator.isEndReached()) {
-			if (animator.hasSucceeded() && (animationState != AnimState.success || animationState != AnimState.safeFailure )) {
+			if (animator.hasSucceeded() && (animationState != AnimState.success || animationState != AnimState.safeFailure)) {
 				animationState = AnimState.success;
 				animationStateChangeProperty.set(true);
 				endScreenButton.setDisable(false);
 				return;
-			}else {
+			} else {
 				animationState = AnimState.safeFailure;
 				animationStateChangeProperty.set(true);
 				return;
 			}
 		}
-		if (animator.isPlaying() && ( animationState != AnimState.playingAnimation || animationState != AnimState.readyForAnimation ) ) {
+		if (animator.isPlaying() && (animationState != AnimState.playingAnimation || animationState != AnimState.readyForAnimation)) {
 			animationState = AnimState.playingAnimation;
 			animationStateChangeProperty.set(true);
-		}else {
+		} else {
 			animationState = AnimState.readyForAnimation;
 			animationStateChangeProperty.set(true);
 		}
@@ -493,13 +503,12 @@ public class RailwayAnimationController {
 		newTrainPol.getStyleClass().add("poly-train");
 
 		Rotate rotate = new Rotate(0, (width * 1.5) / 2, height / 2);
-		if(tr.getHeadingDirection()== Direction.left)
-			rotate.setAngle(180);
+		if (tr.getHeadingDirection() == Direction.left) rotate.setAngle(180);
 		newTrainPol.getTransforms().add(rotate);
 
 		Label trainInfo = new Label(tr.getDestination().getLabel());
 		trainInfo.getStyleClass().add("label-train");
-		int fontSize = (int) (height *0.8);
+		int fontSize = (int) (height * 0.8);
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 
 		trainPane.getChildren().addAll(newTrainPol, trainInfo);
@@ -514,19 +523,8 @@ public class RailwayAnimationController {
 		double height = trackVertGap / 6;
 
 		if (tr.isCrashed()) {
-			trainPoly.getPoints().setAll(
-					0.0, 0.0,
-					0.0, height*0.8,
-					width*0.4, height,
-					width*0.7, height*0.8,
-					width, height,
-					width * 1.2, height*0.8,
-					width * 1.2, 0.0,
-					width, height*0.2,
-					width * 0.7, 0.0,
-					width * 0.4, height*0.2
-					);
-		}else {
+			trainPoly.getPoints().setAll(0.0, 0.0, 0.0, height * 0.8, width * 0.4, height, width * 0.7, height * 0.8, width, height, width * 1.2, height * 0.8, width * 1.2, 0.0, width, height * 0.2, width * 0.7, 0.0, width * 0.4, height * 0.2);
+		} else {
 			trainPoly.getPoints().setAll(0.0, 0.0, 0.0, height, width, height, width * 1.5, height / 2, width, 0.0);
 		}
 		Rotate rotate = (Rotate) trainPoly.getTransforms().get(0);
@@ -540,14 +538,14 @@ public class RailwayAnimationController {
 			rotate.setPivotY(height / 2);
 		}
 		Point trainPos;
-		if (tr.getHeadingDirection() == Direction.left) trainPos = getPosAlongTrack(tr.getLocation(),tr, 0.5);
-		else trainPos = getPosAlongTrack(tr.getLocation(),tr, 0.0);
+		if (tr.getHeadingDirection() == Direction.left) trainPos = getPosAlongTrack(tr.getLocation(), tr, 0.5);
+		else trainPos = getPosAlongTrack(tr.getLocation(), tr, 0.0);
 		// trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 3);
 		// trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2);
 
 		trainPane.setTranslateX(trainPos.getX());
 		trainPane.setTranslateY(trainPos.getY() - height / 2);
-		int fontSize = (int) (height *0.8);
+		int fontSize = (int) (height * 0.8);
 		Node trainInfo = trainPane.lookup(".label-train");
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 	}
@@ -606,17 +604,16 @@ public class RailwayAnimationController {
 
 	}
 
-	private Point getPosAlongTrack(TrackSection ts,Train tr, double progress) {
+	private Point getPosAlongTrack(TrackSection ts, Train tr, double progress) {
 		Point loc = ts.getLocation();
 
 		if (ts.getClass() == Switch.class) {
 			Switch s = (Switch) ts;
-			if(tr.getPrevLocation() != s.getExtraTrack() && tr.getHeadingDirection() != s.getSwitchDirection() )
-				return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding + vStartPos);
+			if (tr.getPrevLocation() != s.getExtraTrack() && tr.getHeadingDirection() != s.getSwitchDirection()) return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding + vStartPos);
 
 			double xPts[];
 			double yPts[];
-			int ystart = loc.y * trackVertGap + vPadding  + vStartPos;
+			int ystart = loc.y * trackVertGap + vPadding + vStartPos;
 			int yLevel = 0;
 			int xstart = loc.x * trackLength + hPadding;
 
@@ -676,7 +673,11 @@ public class RailwayAnimationController {
 			int xstart = loc.x * trackLength + hPadding;
 
 			if (s.isDiverging()) {
-				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos);
+				if (s.getSwitchDirection() == Direction.left)
+					gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos);
+				else
+					gc.strokeLine(loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (1.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) , loc.y * trackVertGap + vPadding + vStartPos);
+
 			} else {
 				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
 				yLevel = (int) (trackVertGap * 0.1);
@@ -684,12 +685,12 @@ public class RailwayAnimationController {
 
 			if (s.getSwitchDirection() == Direction.right) {
 				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap + ystart };
-				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap + ystart };
+				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap*0.95 + ystart };
+				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap*0.95 + ystart };
 			} else {
 				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
-				else yPts = new double[] { -trackVertGap + ystart, ystart - yLevel, ystart - yLevel };
+				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap*0.95 + ystart, ystart + yLevel, ystart + yLevel };
+				else yPts = new double[] { -trackVertGap*0.95 + ystart, ystart - yLevel, ystart - yLevel };
 			}
 
 			gc.strokePolyline(xPts, yPts, 3);
@@ -697,16 +698,21 @@ public class RailwayAnimationController {
 			if ((loc.y * trackVertGap + vPadding + vStartPos) > yPts[2]) yBtn = loc.y * trackVertGap + vPadding + vStartPos;
 			else yBtn = yPts[2];
 
+			if (s.getSwitchDirection() == Direction.left) {
+				if ((loc.y * trackVertGap + vPadding + vStartPos) > yPts[0]) yBtn = loc.y * trackVertGap + vPadding + vStartPos;
+				else yBtn = yPts[0];
+			}
+
 			Button tsLabel = scenarioBtns.get(ts).get(0);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-			tsLabel.layoutYProperty().set(yBtn + trackVertGap * 0.05 + vStartPos);
+			tsLabel.layoutYProperty().set(yBtn + trackVertGap * 0.05 );
 
 			if (scenarioBtns.get(ts).size() < 2) {
 				Button swLabel = new Button("SW" + s.getSwitchID());
 				overlay.getChildren().add(swLabel);
 
 				swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2 + vStartPos);
+				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2 );
 				swLabel.getStyleClass().add("scen");
 				swLabel.setMaxSize(50, 30);
 
@@ -716,15 +722,11 @@ public class RailwayAnimationController {
 
 				Button swLabel = scenarioBtns.get(ts).get(1);
 				swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2 + vStartPos);
+				swLabel.layoutYProperty().set(tsLabel.getLayoutY() + 20);
+
 			}
 
-			/*
-			 * Button swLabel = scenarioBtns.get(ts).get(1);
-			 * swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength *
-			 * 0.3);
-			 * swLabel.layoutYProperty().set(tsLabel.getBoundsInParent().getMaxY()+20);
-			 */
+
 		} else {
 			if (ts.getLabel() != null) {
 				Point labelPos = new Point();

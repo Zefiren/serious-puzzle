@@ -64,7 +64,8 @@ public class RailwayPlannerController {
 	private Button stepDelButton;
 	@FXML
 	private Button solutionFinishButton;
-
+	@FXML
+	private Button backButton;
 	// notification
 	@FXML
 	private AnchorPane notifAnchor;
@@ -223,15 +224,15 @@ public class RailwayPlannerController {
 			@Override
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
 				System.out.println(scenario.getHeight() + " is height");
-				if(scenario.getHeight()>1) {
+				if (scenario.getHeight() > 1) {
 					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
 					vPadding = (int) (newSceneHeight.doubleValue() * 0.1);
-					vStartPos = trackVertGap/3;
-				}else {
+					vStartPos = trackVertGap / 4;
+				} else {
 					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.5) / scenario.getHeight();
 					vPadding = (int) (newSceneHeight.doubleValue() * 0.25);
-					vStartPos = trackVertGap/2;
-					System.out.println("half size" + trackVertGap +"/"+ newSceneHeight);
+					vStartPos = trackVertGap / 2;
+					System.out.println("half size" + trackVertGap + "/" + newSceneHeight);
 				}
 				if (scenario != null) drawScenario(g);
 			}
@@ -270,6 +271,14 @@ public class RailwayPlannerController {
 				}
 				// solMgr.getSolution().forEach(step -> step.undoStep());
 				mainApp.SwitchToAnimation(solMgr);
+			}
+		});
+
+		backButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				mainApp.SwitchToMenu();
 			}
 		});
 
@@ -336,6 +345,10 @@ public class RailwayPlannerController {
 			midstepFlag = true;
 			setNotification("Step : Occupies", "Selected TC" + ts.getTsID() + ".\nSelect a train to complete step.", false);
 		}
+		if (tr != null && !midstepFlag) {
+			setNotification("Step : Occupies", "Please click on the Track Circuit first.", false);
+		}
+
 		if (tr != null && midstepFlag) {
 			midstepFlag = false;
 			SolutionCmd newCmd = new SolutionCmd(tempTarget, tr, 0);
@@ -453,7 +466,7 @@ public class RailwayPlannerController {
 			Button sigLabel = new Button("SIG" + sig.getId());
 			overlay.getChildren().add(sigLabel);
 			sigLabel.layoutXProperty().set(sigLoc.x + trackLength * 0.3);
-			sigLabel.layoutYProperty().set(sigLoc.y + trackVertGap * 0.05 );
+			sigLabel.layoutYProperty().set(sigLoc.y + trackVertGap * 0.05);
 			sigLabel.getStyleClass().add("scen");
 			sigLabel.setMaxSize(50, 30);
 
@@ -463,7 +476,7 @@ public class RailwayPlannerController {
 		} else {
 			Button sigLabel = scenarioBtns.get(sig).get(0);
 			sigLabel.layoutXProperty().set(sigLoc.x);
-			sigLabel.layoutYProperty().set(sigLoc.y - diameter * 1.5 );
+			sigLabel.layoutYProperty().set(sigLoc.y - 30);
 
 		}
 
@@ -522,12 +535,16 @@ public class RailwayPlannerController {
 			Switch s = (Switch) ts;
 			double xPts[];
 			double yPts[];
-			int ystart = loc.y * trackVertGap + vPadding  + vStartPos;
+			int ystart = loc.y * trackVertGap + vPadding + vStartPos;
 			int yLevel = 0;
 			int xstart = loc.x * trackLength + hPadding;
 
 			if (s.isDiverging()) {
-				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding  + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding  + vStartPos);
+				if (s.getSwitchDirection() == Direction.left)
+					gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos);
+				else
+					gc.strokeLine(loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (1.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) , loc.y * trackVertGap + vPadding + vStartPos);
+
 			} else {
 				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
 				yLevel = (int) (trackVertGap * 0.1);
@@ -535,22 +552,27 @@ public class RailwayPlannerController {
 
 			if (s.getSwitchDirection() == Direction.right) {
 				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap + ystart };
-				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap + ystart };
+				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap*0.95 + ystart };
+				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap*0.95 + ystart };
 			} else {
 				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
-				else yPts = new double[] { -trackVertGap + ystart, ystart - yLevel, ystart - yLevel };
+				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap*0.95 + ystart, ystart + yLevel, ystart + yLevel };
+				else yPts = new double[] { -trackVertGap*0.95 + ystart, ystart - yLevel, ystart - yLevel };
 			}
 
 			gc.strokePolyline(xPts, yPts, 3);
 			double yBtn;
-			if ((loc.y * trackVertGap + vPadding  + vStartPos) > yPts[2]) yBtn = loc.y * trackVertGap + vPadding  + vStartPos;
+			if ((loc.y * trackVertGap + vPadding + vStartPos) > yPts[2]) yBtn = loc.y * trackVertGap + vPadding + vStartPos;
 			else yBtn = yPts[2];
+
+			if (s.getSwitchDirection() == Direction.left) {
+				if ((loc.y * trackVertGap + vPadding + vStartPos) > yPts[0]) yBtn = loc.y * trackVertGap + vPadding + vStartPos;
+				else yBtn = yPts[0];
+			}
 
 			Button tsLabel = scenarioBtns.get(ts).get(0);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-			tsLabel.layoutYProperty().set(yBtn + trackVertGap * 0.05 );
+			tsLabel.layoutYProperty().set(yBtn + trackVertGap * 0.05);
 
 			if (scenarioBtns.get(ts).size() < 2) {
 				Button swLabel = new Button("SW" + s.getSwitchID());
@@ -558,7 +580,7 @@ public class RailwayPlannerController {
 				overlay.getChildren().add(swLabel);
 
 				swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2 );
+				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2);
 				swLabel.getStyleClass().add("scen");
 				swLabel.setMaxSize(50, 30);
 
@@ -568,7 +590,8 @@ public class RailwayPlannerController {
 
 				Button swLabel = scenarioBtns.get(ts).get(1);
 				swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2 );
+				swLabel.layoutYProperty().set(tsLabel.getLayoutY() + 20);
+
 			}
 			scenarioBtns.get(s).get(1).setOnAction(new EventHandler<ActionEvent>() {
 

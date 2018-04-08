@@ -1,5 +1,6 @@
 package grzegorz.rail;
 
+import java.awt.Point;
 import java.io.IOException;
 
 import grzegorz.rail.model.Scenario;
@@ -9,18 +10,30 @@ import grzegorz.rail.view.EndScreenController;
 import grzegorz.rail.view.MenuController;
 import grzegorz.rail.view.RailwayAnimationController;
 import grzegorz.rail.view.RailwayPlannerController;
+import grzegorz.rail.view.RootController;
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class MainApp extends Application {
 
 	private Stage primaryStage;
 	private BorderPane rootLayout;
+	private Rectangle2D oldWindow;
+
+	private RootController rootController;
 	private Scenario scenario;
 	private SolutionManager solution;
 	private SolutionManager plannerSolution;
@@ -177,6 +190,28 @@ public class MainApp extends Application {
 		}
 	}
 
+	public void ShowAboutScreen() {
+		try {
+			Stage popup = new Stage();
+			popup.initModality(Modality.APPLICATION_MODAL);
+			popup.initOwner(primaryStage);
+			popup.setResizable(false);
+			// Load person overview.
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(MainApp.class.getResource("view/About.fxml"));
+			AnchorPane aboutScreen = (AnchorPane) loader.load();
+
+			Scene aboutScene = new Scene(aboutScreen);
+			popup.setScene(aboutScene);
+			popup.setTitle("About");
+			popup.show();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+
 	@Override
 	public void start(Stage primaryStage) {
 		this.primaryStage = primaryStage;
@@ -204,6 +239,12 @@ public class MainApp extends Application {
 			loader.setLocation(MainApp.class.getResource("view/RootLayout.fxml"));
 			rootLayout = (BorderPane) loader.load();
 
+
+			RootController controller = loader.getController();
+			controller.setMainApp(this);
+
+
+
 			// Show the scene containing the root layout.
 			Scene scene = new Scene(rootLayout);
 			primaryStage.setScene(scene);
@@ -213,7 +254,7 @@ public class MainApp extends Application {
 		}
 	}
 
-	
+
 
 	/**
 	 * Returns the main stage.

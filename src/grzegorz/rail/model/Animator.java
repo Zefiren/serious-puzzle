@@ -63,7 +63,6 @@ public class Animator {
 		return endReached;
 	}
 
-
 	public void animationEnablePlay() {
 		lastNanoTime = 0;
 		animationPlaying = true;
@@ -108,13 +107,14 @@ public class Animator {
 				updateStepsAvailable();
 			}
 		}
-		checkSuccess();
+		if (endReached) {
+			checkSuccess();
+		}
 	}
-	
+
 	private void checkSuccess() {
 		boolean success = checkForGoal();
-		if(success)
-			succeeded = true;
+		if (success) succeeded = true;
 		System.out.println("Succes is: " + success);
 	}
 
@@ -126,7 +126,8 @@ public class Animator {
 		if (!performed) {
 			movingStep = true;
 			stepIndex.set(stepIndex.get() - 1);
-			movementMade = true;
+			animationNextStep();
+//			movementMade = true;
 		}
 		updateStepsAvailable();
 	}
@@ -151,8 +152,7 @@ public class Animator {
 	// allow
 	public void animationNextMovement() {
 		scenario.getTrains().forEach(tr -> {
-			if(tr.isCrashed())
-				return;
+			if (tr.isCrashed()) return;
 			Direction trainHeading = tr.getHeadingDirection();
 			TrackSection loc = tr.getLocation();
 			if (loc.getTrack(trainHeading) == null)
@@ -188,7 +188,7 @@ public class Animator {
 					System.out.println("next track is switch");
 					Switch sw = (Switch) loc.getTrack(trainHeading);
 					if (sw.getSwitchDirection() != trainHeading) {
-						if ((sw.getTrack(signalFacingDirection) == loc && sw.isDiverging()) || (sw.getExtraTrack() == loc && !sw.isDiverging()) ) {
+						if ((sw.getTrack(signalFacingDirection) == loc && sw.isDiverging()) || (sw.getExtraTrack() == loc && !sw.isDiverging())) {
 							if (loc.getSignal(signalFacingDirection) == null) {
 								tr.setLocation(sw);
 								tr.setCrashed(true);
@@ -216,11 +216,9 @@ public class Animator {
 				}
 			}
 			scenario.getTrains().forEach(otherTrain -> {
-				if(otherTrain == tr)
-					return;
+				if (otherTrain == tr) return;
 
-				if(tr.getLocation() == otherTrain.getLocation())
-				{
+				if (tr.getLocation() == otherTrain.getLocation()) {
 					tr.setCrashed(true);
 					otherTrain.setCrashed(true);
 					animationCrashed = true;
@@ -263,6 +261,7 @@ public class Animator {
 		System.out.println("next not available " + (animationPlaying || stepIndex.get() >= solutionSize - 1));
 		if (animationPlaying || (stepIndex.get() > solutionSize - 1 && movingStep == false) || stepIndex.get() > solutionSize - 1) {
 			animationHasNext.setValue(false);
+			if (stepIndex.get() > solutionSize - 1 && movingStep == false) endReached = true;
 		} else {
 			animationHasNext.setValue(true);
 		}

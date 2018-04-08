@@ -8,6 +8,26 @@
 	-fx-effect: dropshadow(three-pass-box, rgba(255.0,255.0,255.0,0.8), 10.0, 0.3, 0.0, 0.0);
 }
 
+.text-flow {
+	-fx-background-color: rgb(64.0,64.0,64.0);
+	-fx-border-color: white;
+	-fx-border-width: 1;
+	-fx-padding: 5px;
+}
+
+.text-normal {
+    -fx-font-size: 13.0pt;
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-fill: white;
+}
+
+
+.text-small {
+    -fx-font-size: 11.0pt;
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-fill: white;
+}
+
 .label {
     -fx-font-size: 11.0pt;
     -fx-font-family: "Segoe UI Semibold";
@@ -181,6 +201,23 @@
     -fx-background-radius: 100.0;
     -fx-border-radius: 100.0;
 
+}
+
+.close-menu{
+	-fx-padding: 0.0;
+	-fx-border-width: 0.0;
+    -fx-background-color: derive(#1d1d1d,20.0%);
+    -fx-background-insets: 0.0 0.0 0.0 0.0, 0.0, 0.0, 0.0;
+}
+
+
+
+#closeBtn:hover{
+	-fx-background-color: darkred ;
+}
+
+#closeBtn:pressed{
+	-fx-background-color: red;
 }
 
 .scen{

@@ -98,7 +98,7 @@ public class EndScreenController {
 		// Add observable list data to the table
 		scenario = mainApp.getScenarioData();
 		userSolution = mainApp.getSolutionData(true);
-//		plannerSolMgr = mainApp.getSolutionData(false);
+		plannerSolMgr = mainApp.getSolutionData(false);
 		setLabels();
 	}
 
@@ -110,23 +110,23 @@ public class EndScreenController {
 	}
 
 	private void setLabels() {
-//		if (plannerSolMgr.getLength() < userSolution.getLength()) {
-//			winnerMessage.setText("Winner: Planner Solution Shorter");
-//		} else if (plannerSolMgr.getLength() > userSolution.getLength()) {
-//			winnerMessage.setText("Winner: User Solution Shorter");
-//		} else {
-//			winnerMessage.setText("Draw: Equal Length Solutions");
-//		}
+		if (plannerSolMgr.getLength() < userSolution.getLength()) {
+			winnerMessage.setText("Winner: Planner Solution Shorter");
+		} else if (plannerSolMgr.getLength() > userSolution.getLength()) {
+			winnerMessage.setText("Winner: User Solution Shorter");
+		} else {
+			winnerMessage.setText("Draw: Equal Length Solutions");
+		}
 
 		trainCountLabel.setText( scenario.getTrains().size() + " Trains in Scenario");
 
 		userStepsNumber.setText(userSolution.getLength()+"");
-//		plannerStepsNumber.setText(plannerSolMgr.getLength()+"");
+		plannerStepsNumber.setText(plannerSolMgr.getLength()+"");
 
 		//if planner sol LONGER THAN user sol, add points
 		//if planner sol SHORTER THAN user sol, subtract points
-//		scoreLabel.setText(500 * scenario.getTrains().size() +  100 * (plannerSolMgr.getLength() - userSolution.getLength()) +" pts");
-		scoreLabel.setText(500 * scenario.getTrains().size() +  100 * userSolution.getLength() +" pts");
+		scoreLabel.setText(500 * scenario.getTrains().size() +  100 * (plannerSolMgr.getLength() - userSolution.getLength()) +" pts");
+//		scoreLabel.setText(500 * scenario.getTrains().size() +  100 * userSolution.getLength() +" pts");
 	}
 
 	@FXML

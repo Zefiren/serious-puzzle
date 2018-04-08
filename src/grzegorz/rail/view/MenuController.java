@@ -36,6 +36,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.effect.GaussianBlur;
 import javafx.scene.effect.MotionBlur;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
@@ -124,9 +125,10 @@ public class MenuController {
 				@Override
 				public void handle(ActionEvent arg0) {
 					mainApp.setScenarioData(ScenarioMaker.createScenario(x));
-//					PlannerSolutions.setScenario(mainApp.getScenarioData());
-//					mainApp.setSolutionData(false,PlannerSolutions.createSolution(x));
-					
+					PlannerSolutions.setScenario(mainApp.getScenarioData());
+					mainApp.setSolutionData(false,PlannerSolutions.createSolution(x));
+					mainApp.setSolutionData(true,new SolutionManager());
+
 					mainApp.SwitchToPlanner();
 				}
 			});
@@ -140,9 +142,6 @@ public class MenuController {
 	 */
 	@FXML
 	private void initialize() {
-		solMgr = new SolutionManager();
-		// Initialize the person table with the two columns.
-
 		CanvasPane canvasPane = new CanvasPane(MainApp.MINIMUM_WINDOW_WIDTH, MainApp.MINIMUM_WINDOW_HEIGHT);
 		scenarioAnchor.getChildren().add(canvasPane);
 		canvasPane.setPadding(new Insets(0));
@@ -152,9 +151,7 @@ public class MenuController {
 		AnchorPane.setRightAnchor(canvasPane, 0.0);
 		scenarioCanvas = canvasPane.getCanvas();
 
-		// AnimationTimer loop = new AnimationTimer() {
-		// @Override
-		// public void handle(long now) {
+
 		overlay = new AnchorPane();
 		scenarioAnchor.getChildren().add(overlay);
 		AnchorPane.setTopAnchor(overlay, 0.0);
@@ -167,12 +164,12 @@ public class MenuController {
 		GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 		if (scenario != null) drawScenario(g);
 
-		MotionBlur mb = new MotionBlur();
-		mb.setRadius(15.0f);
-		mb.setAngle(45.0f);
+		GaussianBlur gb = new GaussianBlur();
+//		mb.setRadius(15.0f);
+//		mb.setAngle(45.0f);
 
-		overlay.setEffect(mb);
-		scenarioCanvas.setEffect(mb);
+		overlay.setEffect(gb);
+		scenarioCanvas.setEffect(gb);
 
 		scenarioAnchor.widthProperty().addListener(new ChangeListener<Number>() {
 			@Override
@@ -189,7 +186,7 @@ public class MenuController {
 				if(scenario.getHeight()>1) {
 					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
 					vPadding = (int) (newSceneHeight.doubleValue() * 0.1);
-					vStartPos = 0;
+					vStartPos = trackVertGap / 4;
 				}else {
 					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.5) / scenario.getHeight();
 					vPadding = (int) (newSceneHeight.doubleValue() * 0.25);
@@ -247,7 +244,7 @@ public class MenuController {
 		System.out.println("hello train at " + tr.getLocation().getLocation());
 		overlay.getChildren().add(trainPane);
 		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 2);
-		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2);
+		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2  + vStartPos);
 		newTrainPol.setFill(Color.CYAN);
 		newTrainPol.setOpacity(0.8);
 		newTrainPol.getStyleClass().add("poly-train");
@@ -284,7 +281,7 @@ public class MenuController {
 		}
 
 		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 3);
-		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2);
+		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2  + vStartPos);
 
 		int fontSize = (int) (height * 0.8);
 		Node trainInfo = trainPane.lookup(".label-train");
@@ -294,7 +291,7 @@ public class MenuController {
 	private void drawSignal(GraphicsContext gc, Signal sig) {
 		// CREA.TE GRAPHICS using GC
 		double diameter = (trackLength / signalScaleFraction);
-		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding, (int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5));
+		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding, (int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5 + vStartPos));
 		Color sigColour;
 
 		if (sig.isClear()) {
@@ -343,28 +340,33 @@ public class MenuController {
 			Switch s = (Switch) ts;
 			double xPts[];
 			double yPts[];
-			int ystart = loc.y * trackVertGap + vPadding;
+			int ystart = loc.y * trackVertGap + vPadding  + vStartPos;
 			int yLevel = 0;
 			int xstart = loc.x * trackLength + hPadding;
 
 			if (s.isDiverging()) {
-				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding);
+				if (s.getSwitchDirection() == Direction.left)
+					gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos);
+				else
+					gc.strokeLine(loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (1.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) , loc.y * trackVertGap + vPadding + vStartPos);
+
 			} else {
-				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding);
+				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
 				yLevel = (int) (trackVertGap * 0.1);
 			}
 
 			if (s.getSwitchDirection() == Direction.right) {
 				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap + ystart };
-				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap + ystart };
+				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap*0.95 + ystart };
+				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap*0.95 + ystart };
 			} else {
 				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
-				else yPts = new double[] { -trackVertGap + ystart, ystart - yLevel, ystart - yLevel };
+				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap*0.95 + ystart, ystart + yLevel, ystart + yLevel };
+				else yPts = new double[] { -trackVertGap*0.95 + ystart, ystart - yLevel, ystart - yLevel };
 			}
 
 			gc.strokePolyline(xPts, yPts, 3);
+
 
 		} else {
 
@@ -377,15 +379,15 @@ public class MenuController {
 			if (ts.getLabel() != null) {
 				Point labelPos = new Point();
 				if (ts.isRightEnding()) {
-					labelPos.setLocation(loc.x * trackLength + hPadding + trackLength * 1.3, loc.y * trackVertGap + vPadding);
+					labelPos.setLocation(loc.x * trackLength + hPadding + trackLength * 1.3, loc.y * trackVertGap + vPadding  + vStartPos);
 				} else {
-					labelPos.setLocation(loc.x * trackLength + hPadding - trackLength * 0.3, loc.y * trackVertGap + vPadding);
+					labelPos.setLocation(loc.x * trackLength + hPadding - trackLength * 0.3, loc.y * trackVertGap + vPadding  + vStartPos);
 				}
 				System.out.println(labelPos + " is label position for " + ts.getLabel());
-				gc.setFont(new Font(trackVertGap / 2));
+				gc.setFont(new Font(trackVertGap / 4));
 				gc.fillText(ts.getLabel(), labelPos.getX(), labelPos.getY());
 			}
-			gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding);
+			gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding  + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
 			gc.setTextBaseline(VPos.CENTER);
 			gc.setTextAlign(TextAlignment.CENTER);
 		}

@@ -30,7 +30,7 @@
                         <Label alignment="CENTER" contentDisplay="CENTER" styleClass="label-title2" text="Planner Solution" textAlignment="CENTER" />
                         <Label styleClass="label-subtitle" text="Steps" />
                         <Label fx:id="plannerStepsNumber" text="Label" />
-                        <Button fx:id="viewPlannerSolutionButton" mnemonicParsing="false" text="View" />
+                        <Button fx:id="viewPlannerSolutionButton" mnemonicParsing="false" onAction="#showPlannerSolution" text="View" />
                      </children>
                   </VBox>
                </children>
