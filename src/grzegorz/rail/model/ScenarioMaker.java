@@ -122,7 +122,7 @@ public final class ScenarioMaker {
 
 			tc2 = new TrackSection(2);
 			tc1 = new TrackSection(1, "A", false, tc2);
-			tc2.setLeftTrack(tc2);
+			tc2.setLeftTrack(tc1);
 
 			tc3s1 = new Switch(3, 1, tc2, null, Direction.left, Direction.right, null);
 			tc2.setRightTrack(tc3s1);
@@ -162,7 +162,7 @@ public final class ScenarioMaker {
 			tc12s5.setRightTrack(tc13s6);
 
 
-			Train train = new Train(1, tc1, tc14, Direction.right);
+			Train train = new Train(1, tc1, tc6, Direction.right);
 			scenario.addTrain(train);
 
 			Signal sig1 = new Signal(0, tc2, tc3s1, Direction.left);

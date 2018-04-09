@@ -1,7 +1,14 @@
 package grzegorz.rail;
 
-import java.awt.Point;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 import grzegorz.rail.model.Scenario;
 import grzegorz.rail.model.ScenarioMaker;
@@ -12,20 +19,15 @@ import grzegorz.rail.view.RailwayAnimationController;
 import grzegorz.rail.view.RailwayPlannerController;
 import grzegorz.rail.view.RootController;
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
+
 
 public class MainApp extends Application {
 
@@ -49,6 +51,60 @@ public class MainApp extends Application {
 	/**
 	 * Constructor
 	 */
+
+	private static final String USER_AGENT = "Mozilla/5.0";
+
+	private static final String GET_URL = "http://localhost:9090/SpringMVCExample";
+
+	private static final String POST_URL = "http://localhost:9090/SpringMVCExample/home";
+
+	private static final String POST_PARAMS = "userName=Pankaj";
+
+//	url: "http://solver.planning.domains/solve",
+//    type: "POST",
+//    contentType: 'application/json',
+//    data: JSON.stringify({
+//        "domain": domText,
+//        "problem": probText
+//    })
+
+
+	private static void sendPOST() throws IOException {
+
+		URL obj = new URL(POST_URL);
+		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+		con.setRequestMethod("POST");
+		con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+
+		// For POST only - START
+		con.setDoOutput(true);
+		OutputStream os = con.getOutputStream();
+		os.write(POST_PARAMS.getBytes());
+		os.flush();
+		os.close();
+		// For POST only - END
+
+		int responseCode = con.getResponseCode();
+		System.out.println("POST Response Code :: " + responseCode);
+
+		if (responseCode == HttpURLConnection.HTTP_OK) { //success
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+					con.getInputStream()));
+			String inputLine;
+			StringBuffer response = new StringBuffer();
+
+			while ((inputLine = in.readLine()) != null) {
+				response.append(inputLine);
+			}
+			in.close();
+
+			// print result
+			System.out.println(response.toString());
+		} else {
+			System.out.println("POST request not worked");
+		}
+	}
+
 	public MainApp() {
 		scenario = ScenarioMaker.createScenario(1);
 	}

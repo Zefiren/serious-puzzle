@@ -1,0 +1,4 @@
+(set-signal tc0 tc1 b1 s0 danger)
+(drive train0 tc0 tc1 tc0 b0 b1 s0 clear)
+(drive train0 tc1 tc2 tc0 b1 b1 s0 clear)
+(drive train0 tc2 tc3 tc1 b1 b1 s0 clear)
