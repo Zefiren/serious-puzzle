@@ -12,7 +12,7 @@ req.add_header('Content-Type', 'application/json')
 resp = json.loads(urllib2.urlopen(req, json.dumps(data)).read())
 
 with open(sys.argv[3], 'w') as f:
-	#pprint(resp)
+	pprint(resp)
 	if resp['status']=="ok":
 		f.write('\n'.join([act['name'] for act in resp['result']['plan']])) 
 		with open(sys.argv[3] + "dump", 'w') as d:

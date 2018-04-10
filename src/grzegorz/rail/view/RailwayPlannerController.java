@@ -619,7 +619,7 @@ public class RailwayPlannerController {
 				} else {
 					labelPos.setLocation(loc.x * trackLength + hPadding - trackLength * 0.3, loc.y * trackVertGap + vPadding + vStartPos);
 				}
-				System.out.println(labelPos + " is label position for " + ts.getLabel());
+//				System.out.println(labelPos + " is label position for " + ts.getLabel());
 				gc.setFont(new Font(trackVertGap / 4));
 				gc.fillText(ts.getLabel(), labelPos.getX(), labelPos.getY());
 			}

@@ -176,7 +176,8 @@ public class RailwayAnimationController {
 	}
 
 	/**
-	 * Initializes the controller class. This method is automatically called after the fxml file has been loaded.
+	 * Initializes the controller class. This method is automatically called after
+	 * the fxml file has been loaded.
 	 */
 	@FXML
 	private void initialize() {
@@ -184,7 +185,8 @@ public class RailwayAnimationController {
 		animator = new Animator(solMgr.getLength(), solMgr, scenario);
 
 		// Initialize the person table with the two columns.
-		stepNumColumn.setCellValueFactory(cellData -> cellData.getValue().getStepNumberString().concat(cellData.getValue().getStepType()));
+		stepNumColumn.setCellValueFactory(
+				cellData -> cellData.getValue().getStepNumberString().concat(cellData.getValue().getStepType()));
 		stepColumn.setCellValueFactory(cellData -> cellData.getValue().getStep());
 		stepsTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		stepsTable.getColumns().forEach(col -> {
@@ -227,7 +229,8 @@ public class RailwayAnimationController {
 		AnchorPane.setRightAnchor(overlay, 0.0);
 
 		GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
-		if (scenario != null) drawScenario(g);
+		if (scenario != null)
+			drawScenario(g);
 
 		overlay.getChildren().addAll(stepCounter);
 
@@ -241,15 +244,18 @@ public class RailwayAnimationController {
 
 		scenarioAnchor.widthProperty().addListener(new ChangeListener<Number>() {
 			@Override
-			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
+			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth,
+					Number newSceneWidth) {
 				trackLength = (int) (newSceneWidth.doubleValue() * 0.8) / scenario.getWidth();
 				hPadding = (int) (newSceneWidth.doubleValue() * 0.1);
-				if (scenario != null) drawScenario(g);
+				if (scenario != null)
+					drawScenario(g);
 			}
 		});
 		scenarioAnchor.heightProperty().addListener(new ChangeListener<Number>() {
 			@Override
-			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
+			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight,
+					Number newSceneHeight) {
 				System.out.println(scenario.getHeight() + " is height");
 				if (scenario.getHeight() > 1) {
 					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
@@ -260,7 +266,8 @@ public class RailwayAnimationController {
 					vPadding = (int) (newSceneHeight.doubleValue() * 0.25);
 					vStartPos = trackVertGap / 2;
 				}
-				if (scenario != null) drawScenario(g);
+				if (scenario != null)
+					drawScenario(g);
 			}
 		});
 
@@ -381,9 +388,12 @@ public class RailwayAnimationController {
 	}
 
 	private void exitAnimatorCleanup() {
-
-		for (int i = animator.stepIndexProperty().get(); i < solMgr.getLength(); i++) {
-			solMgr.getSolution().get(i).performStep();
+		int start = animator.stepIndexProperty().get();
+		if (start == solMgr.getLength()) {
+			start--;
+		}
+		for (int i = start; i > -1; i--) {
+			solMgr.getSolution().get(i).undoStep();
 		}
 		scenario.getTrains().forEach(train -> {
 			train.setLocation(train.getSource());
@@ -426,14 +436,17 @@ public class RailwayAnimationController {
 	}
 
 	private void setCurrentState() {
-		if (animationState == AnimState.crashFailure || animationState == AnimState.safeFailure || animationState == AnimState.success) return;
+		if (animationState == AnimState.crashFailure || animationState == AnimState.safeFailure
+				|| animationState == AnimState.success)
+			return;
 		if (animator.hasCrashed() && animationState != AnimState.crashFailure) {
 			animationState = AnimState.crashFailure;
 			animationStateChangeProperty.set(true);
 			return;
 		}
 		if (animator.isEndReached()) {
-			if (animator.hasSucceeded() && (animationState != AnimState.success || animationState != AnimState.safeFailure)) {
+			if (animator.hasSucceeded()
+					&& (animationState != AnimState.success || animationState != AnimState.safeFailure)) {
 				animationState = AnimState.success;
 				animationStateChangeProperty.set(true);
 				endScreenButton.setDisable(false);
@@ -444,7 +457,8 @@ public class RailwayAnimationController {
 				return;
 			}
 		}
-		if (animator.isPlaying() && (animationState != AnimState.playingAnimation || animationState != AnimState.readyForAnimation)) {
+		if (animator.isPlaying()
+				&& (animationState != AnimState.playingAnimation || animationState != AnimState.readyForAnimation)) {
 			animationState = AnimState.playingAnimation;
 			animationStateChangeProperty.set(true);
 		} else {
@@ -480,10 +494,13 @@ public class RailwayAnimationController {
 			Iterator<Train> iterator2 = trains.iterator();
 			while (iterator2.hasNext()) {
 				Train train = iterator2.next();
-				if (animationFlag) updateTrain(train);
-				else createTrain(train);
+				if (animationFlag)
+					updateTrain(train);
+				else
+					createTrain(train);
 			}
-			if (animationFlag) firstRotate = false;
+			if (animationFlag)
+				firstRotate = false;
 			animationFlag = true;
 			initialFlag = false;
 		}
@@ -493,19 +510,24 @@ public class RailwayAnimationController {
 		StackPane trainPane = new StackPane();
 		double width = trackLength / 3;
 		double height = trackVertGap / 6;
-		Polygon newTrainPol = new Polygon(0.0, 0.0, 0.0, height, width, height, width + width / 3, height / 2, width, 0.0);
+		Polygon newTrainPol = new Polygon(0.0, 0.0, 0.0, height, width, height, width + width / 3, height / 2, width,
+				0.0);
 
-		// newTrainArrow.layoutXProperty().bind(newTrain.layoutXProperty().add( (tr.getHeadingDirection() == Direction.right) ? newTrain.widthProperty() : newTrain.widthProperty().multiply(0.0) ) );
+		// newTrainArrow.layoutXProperty().bind(newTrain.layoutXProperty().add(
+		// (tr.getHeadingDirection() == Direction.right) ? newTrain.widthProperty() :
+		// newTrain.widthProperty().multiply(0.0) ) );
 		System.out.println("hello train at " + tr.getLocation().getLocation());
 		overlay.getChildren().add(trainPane);
 		trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 2);
-		trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2 + vStartPos);
+		trainPane.setTranslateY(
+				tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2 + vStartPos);
 		newTrainPol.setFill(Color.CYAN);
 		newTrainPol.setOpacity(0.8);
 		newTrainPol.getStyleClass().add("poly-train");
 
 		Rotate rotate = new Rotate(0, (width * 1.5) / 2, height / 2);
-		if (tr.getHeadingDirection() == Direction.left) rotate.setAngle(180);
+		if (tr.getHeadingDirection() == Direction.left)
+			rotate.setAngle(180);
 		newTrainPol.getTransforms().add(rotate);
 
 		Label trainInfo = new Label(tr.getDestination().getLabel());
@@ -525,7 +547,9 @@ public class RailwayAnimationController {
 		double height = trackVertGap / 6;
 
 		if (tr.isCrashed()) {
-			trainPoly.getPoints().setAll(0.0, 0.0, 0.0, height * 0.8, width * 0.4, height, width * 0.7, height * 0.8, width, height, width * 1.2, height * 0.8, width * 1.2, 0.0, width, height * 0.2, width * 0.7, 0.0, width * 0.4, height * 0.2);
+			trainPoly.getPoints().setAll(0.0, 0.0, 0.0, height * 0.8, width * 0.4, height, width * 0.7, height * 0.8,
+					width, height, width * 1.2, height * 0.8, width * 1.2, 0.0, width, height * 0.2, width * 0.7, 0.0,
+					width * 0.4, height * 0.2);
 		} else {
 			trainPoly.getPoints().setAll(0.0, 0.0, 0.0, height, width, height, width * 1.5, height / 2, width, 0.0);
 		}
@@ -540,10 +564,14 @@ public class RailwayAnimationController {
 			rotate.setPivotY(height / 2);
 		}
 		Point trainPos;
-		if (tr.getHeadingDirection() == Direction.left) trainPos = getPosAlongTrack(tr.getLocation(), tr, 0.5);
-		else trainPos = getPosAlongTrack(tr.getLocation(), tr, 0.0);
-		// trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength + hPadding + trackLength / 3);
-		// trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap + vPadding - height / 2);
+		if (tr.getHeadingDirection() == Direction.left)
+			trainPos = getPosAlongTrack(tr.getLocation(), tr, 0.5);
+		else
+			trainPos = getPosAlongTrack(tr.getLocation(), tr, 0.0);
+		// trainPane.setTranslateX(tr.getLocation().getLocation().getX() * trackLength +
+		// hPadding + trackLength / 3);
+		// trainPane.setTranslateY(tr.getLocation().getLocation().getY() * trackVertGap
+		// + vPadding - height / 2);
 
 		trainPane.setTranslateX(trainPos.getX());
 		trainPane.setTranslateY(trainPos.getY() - height / 2);
@@ -555,7 +583,8 @@ public class RailwayAnimationController {
 	private void drawSignal(GraphicsContext gc, Signal sig) {
 		// CREA.TE GRAPHICS using GC
 		double diameter = (trackLength / signalScaleFraction);
-		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding, (int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5 + vStartPos));
+		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding,
+				(int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5 + vStartPos));
 		Color sigColour;
 		if (sig.getDirection() == Direction.left) {
 			sigLoc.x += trackLength * trackLengthRatio - diameter;
@@ -611,7 +640,9 @@ public class RailwayAnimationController {
 
 		if (ts.getClass() == Switch.class) {
 			Switch s = (Switch) ts;
-			if (tr.getPrevLocation() != s.getExtraTrack() && tr.getHeadingDirection() != s.getSwitchDirection()) return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding + vStartPos);
+			if (tr.getPrevLocation() != s.getExtraTrack() && tr.getHeadingDirection() != s.getSwitchDirection())
+				return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress),
+						loc.y * trackVertGap + vPadding + vStartPos);
 
 			double xPts[];
 			double yPts[];
@@ -619,24 +650,33 @@ public class RailwayAnimationController {
 			int yLevel = 0;
 			int xstart = loc.x * trackLength + hPadding;
 
-			if (!s.isDiverging()) return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding + vStartPos);
+			if (!s.isDiverging())
+				return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress),
+						loc.y * trackVertGap + vPadding + vStartPos);
 
 			if (s.getSwitchDirection() == Direction.right) {
-				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap + ystart };
-				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap + ystart };
+				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart,
+						(int) (trackLength * trackLengthRatio) + xstart };
+				if (s.getTurnDirection() == Direction.right)
+					yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap + ystart };
+				else
+					yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap + ystart };
 
 				return new Point((int) xstart, (int) yPts[2]);
 			} else {
-				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
-				else yPts = new double[] { -trackVertGap + ystart, ystart - yLevel, ystart - yLevel };
+				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart,
+						(int) (trackLength * trackLengthRatio) + xstart };
+				if (s.getTurnDirection() == Direction.left)
+					yPts = new double[] { trackVertGap + ystart, ystart + yLevel, ystart + yLevel };
+				else
+					yPts = new double[] { -trackVertGap + ystart, ystart - yLevel, ystart - yLevel };
 
 				return new Point((int) xstart, (int) yPts[0]);
 			}
 
 		} else {
-			return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress), loc.y * trackVertGap + vPadding + vStartPos);
+			return new Point((int) (loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) * progress),
+					loc.y * trackVertGap + vPadding + vStartPos);
 		}
 	}
 
@@ -676,33 +716,50 @@ public class RailwayAnimationController {
 
 			if (s.isDiverging()) {
 				if (s.getSwitchDirection() == Direction.left)
-					gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos);
+					gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos,
+							loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)),
+							loc.y * trackVertGap + vPadding + vStartPos);
 				else
-					gc.strokeLine(loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (1.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
+					gc.strokeLine(loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (1.0 / 3.0)),
+							loc.y * trackVertGap + vPadding + vStartPos,
+							loc.x * trackLength + hPadding + (trackLength * trackLengthRatio),
+							loc.y * trackVertGap + vPadding + vStartPos);
 
 			} else {
-				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
+				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos,
+						loc.x * trackLength + hPadding + (trackLength * trackLengthRatio),
+						loc.y * trackVertGap + vPadding + vStartPos);
 				yLevel = (int) (trackVertGap * 0.1);
 			}
 
 			if (s.getSwitchDirection() == Direction.right) {
-				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap * 0.95 + ystart };
-				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap * 0.95 + ystart };
+				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart,
+						(int) (trackLength * trackLengthRatio) + xstart };
+				if (s.getTurnDirection() == Direction.right)
+					yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap * 0.95 + ystart };
+				else
+					yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap * 0.95 + ystart };
 			} else {
-				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap * 0.95 + ystart, ystart + yLevel, ystart + yLevel };
-				else yPts = new double[] { -trackVertGap * 0.95 + ystart, ystart - yLevel, ystart - yLevel };
+				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart,
+						(int) (trackLength * trackLengthRatio) + xstart };
+				if (s.getTurnDirection() == Direction.left)
+					yPts = new double[] { trackVertGap * 0.95 + ystart, ystart + yLevel, ystart + yLevel };
+				else
+					yPts = new double[] { -trackVertGap * 0.95 + ystart, ystart - yLevel, ystart - yLevel };
 			}
 
 			gc.strokePolyline(xPts, yPts, 3);
 			double yBtn;
-			if ((loc.y * trackVertGap + vPadding + vStartPos) > yPts[2]) yBtn = loc.y * trackVertGap + vPadding + vStartPos;
-			else yBtn = yPts[2];
+			if ((loc.y * trackVertGap + vPadding + vStartPos) > yPts[2])
+				yBtn = loc.y * trackVertGap + vPadding + vStartPos;
+			else
+				yBtn = yPts[2];
 
 			if (s.getSwitchDirection() == Direction.left) {
-				if ((loc.y * trackVertGap + vPadding + vStartPos) > yPts[0]) yBtn = loc.y * trackVertGap + vPadding + vStartPos;
-				else yBtn = yPts[0];
+				if ((loc.y * trackVertGap + vPadding + vStartPos) > yPts[0])
+					yBtn = loc.y * trackVertGap + vPadding + vStartPos;
+				else
+					yBtn = yPts[0];
 			}
 
 			Button tsLabel = scenarioBtns.get(ts).get(0);
@@ -732,14 +789,18 @@ public class RailwayAnimationController {
 			if (ts.getLabel() != null) {
 				Point labelPos = new Point();
 				if (ts.isRightEnding()) {
-					labelPos.setLocation(loc.x * trackLength + hPadding + trackLength * 1.3, loc.y * trackVertGap + vPadding + vStartPos);
+					labelPos.setLocation(loc.x * trackLength + hPadding + trackLength * 1.3,
+							loc.y * trackVertGap + vPadding + vStartPos);
 				} else {
-					labelPos.setLocation(loc.x * trackLength + hPadding - trackLength * 0.3, loc.y * trackVertGap + vPadding + vStartPos);
+					labelPos.setLocation(loc.x * trackLength + hPadding - trackLength * 0.3,
+							loc.y * trackVertGap + vPadding + vStartPos);
 				}
 				gc.setFont(new Font(trackVertGap / 4));
 				gc.fillText(ts.getLabel(), labelPos.getX(), labelPos.getY());
 			}
-			gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
+			gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos,
+					loc.x * trackLength + hPadding + (trackLength * trackLengthRatio),
+					loc.y * trackVertGap + vPadding + vStartPos);
 			gc.setTextBaseline(VPos.CENTER);
 			gc.setTextAlign(TextAlignment.CENTER);
 		}
