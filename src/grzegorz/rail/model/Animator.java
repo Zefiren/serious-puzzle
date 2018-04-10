@@ -127,7 +127,7 @@ public class Animator {
 			movingStep = true;
 			stepIndex.set(stepIndex.get() - 1);
 			animationNextStep();
-//			movementMade = true;
+			// movementMade = true;
 		}
 		updateStepsAvailable();
 	}
@@ -242,7 +242,16 @@ public class Animator {
 			stepIndex.set(stepIndex.get() - 1);
 			;
 			solution.getStep(stepIndex.get()).undoStep();
-			if (solution.getStep(stepIndex.get()).getType() == CommandType.CheckLocation) movingStep = true;
+			if (solution.getStep(stepIndex.get()).getType() == CommandType.CheckLocation) {
+				movingStep = true;
+				scenario.getTrains().forEach(tr -> {
+					tr.setCrashed(false);
+					System.out.println("getting : ( " + stepIndex + ", " + tr.getTrainID() + " )");
+					System.out.println(movementStepLocations.get(new Pair<Integer, Train>(stepIndex.get(), tr)));
+					tr.setLocation(movementStepLocations.get(new Pair<Integer, Train>(stepIndex.get(), tr)));
+				});
+				movingStep = false;
+			}
 			updateStepsAvailable();
 		} else {
 

@@ -157,7 +157,6 @@ public class RailwayAnimationController {
 		solMgr = mainApp.getSolutionData(mainApp.isUserAnimation());
 
 		animator = new Animator(solMgr.getLength(), solMgr, scenario);
-
 		animator.animationHasBackStepProperty().addListener((Observable o) -> {
 			stepBackSingleButton.setDisable(!animator.animationHasBackStepProperty().getValue());
 		});
@@ -345,9 +344,11 @@ public class RailwayAnimationController {
 			public void handle(ActionEvent arg0) {
 				exitAnimatorCleanup();
 				solAnimator.stop();
-				if(mainApp.isUserAnimation())
+				if (mainApp.isUserAnimation())
 					mainApp.SwitchToPlanner();
 				else {
+					mainApp.setUserAnimation(true);
+
 					mainApp.SwitchToEndScreen();
 				}
 			}
@@ -380,6 +381,7 @@ public class RailwayAnimationController {
 	}
 
 	private void exitAnimatorCleanup() {
+
 		for (int i = animator.stepIndexProperty().get(); i < solMgr.getLength(); i++) {
 			solMgr.getSolution().get(i).performStep();
 		}
@@ -598,7 +600,7 @@ public class RailwayAnimationController {
 		} else {
 			Button sigLabel = scenarioBtns.get(sig).get(0);
 			sigLabel.layoutXProperty().set(sigLoc.x);
-			sigLabel.layoutYProperty().set(sigLoc.y - diameter * 1.5);
+			sigLabel.layoutYProperty().set(sigLoc.y - 30);
 
 		}
 
@@ -676,7 +678,7 @@ public class RailwayAnimationController {
 				if (s.getSwitchDirection() == Direction.left)
 					gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos);
 				else
-					gc.strokeLine(loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (1.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) , loc.y * trackVertGap + vPadding + vStartPos);
+					gc.strokeLine(loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (1.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
 
 			} else {
 				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
@@ -685,12 +687,12 @@ public class RailwayAnimationController {
 
 			if (s.getSwitchDirection() == Direction.right) {
 				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap*0.95 + ystart };
-				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap*0.95 + ystart };
+				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap * 0.95 + ystart };
+				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap * 0.95 + ystart };
 			} else {
 				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap*0.95 + ystart, ystart + yLevel, ystart + yLevel };
-				else yPts = new double[] { -trackVertGap*0.95 + ystart, ystart - yLevel, ystart - yLevel };
+				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap * 0.95 + ystart, ystart + yLevel, ystart + yLevel };
+				else yPts = new double[] { -trackVertGap * 0.95 + ystart, ystart - yLevel, ystart - yLevel };
 			}
 
 			gc.strokePolyline(xPts, yPts, 3);
@@ -705,14 +707,14 @@ public class RailwayAnimationController {
 
 			Button tsLabel = scenarioBtns.get(ts).get(0);
 			tsLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-			tsLabel.layoutYProperty().set(yBtn + trackVertGap * 0.05 );
+			tsLabel.layoutYProperty().set(yBtn + trackVertGap * 0.05);
 
 			if (scenarioBtns.get(ts).size() < 2) {
 				Button swLabel = new Button("SW" + s.getSwitchID());
 				overlay.getChildren().add(swLabel);
 
 				swLabel.layoutXProperty().set(loc.x * trackLength + hPadding + trackLength * 0.3);
-				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2 );
+				swLabel.layoutYProperty().set(yBtn + trackVertGap * 0.2);
 				swLabel.getStyleClass().add("scen");
 				swLabel.setMaxSize(50, 30);
 
@@ -725,7 +727,6 @@ public class RailwayAnimationController {
 				swLabel.layoutYProperty().set(tsLabel.getLayoutY() + 20);
 
 			}
-
 
 		} else {
 			if (ts.getLabel() != null) {

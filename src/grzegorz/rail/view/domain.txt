@@ -42,7 +42,7 @@
                 ?bl_cur - block
                 ?bl_into - block
                 ?si - sigItem
-                ?sigShow - sig
+                ?sgShow - sig
             )
         :precondition 
             (and
@@ -56,7 +56,15 @@
                 (trackBlock ?c2 ?bl_into)
                 (inBlock ?t ?bl_cur)
                 (fullBlock ?bl_cur)
-                ; (signal ?si ?c1 ?c2 ?bl_into ?sigShow)
+                (or
+                    (and
+                        (not(= ?bl_cur ?bl_into))
+                        (not(fullBlock ?bl_into))
+                    )
+                    (= ?bl_cur ?bl_into)
+                    
+                )
+                ; (signal ?si ?c1 ?c2 ?bl_into ?sgShow)
                 (forall (?x - sigItem)
                     (and 
                         (not (signal ?x ?c1 ?c2 ?bl_into DANGER))
@@ -99,23 +107,33 @@
                 ?tc_into - loc 
                 ?bl - block 
                 ?si - sigItem
-                ?sigShow - sig
+                ?sgShow - sig
             )
         :precondition 
             (and
-                (signal ?si ?tc ?tc_into ?bl ?sigShow)
+                (signal ?si ?tc ?tc_into ?bl ?sgShow)
                 (not (fullBlock ?bl))
+                (or
+                    (and 
+                        (= ?sgShow DANGER)
+                        (safeBlock ?bl)
+                    )
+                    (and 
+                        (= ?sgShow CLEAR)
+                        (not(safeBlock ?bl))
+                    )
+                )
             )
         :effect 
             (and
-                (when (and (= ?sigShow DANGER) (safeBlock ?bl)  )
+                (when (and (= ?sgShow DANGER) (safeBlock ?bl)  )
                     (and 
                         (not (signal ?si ?tc ?tc_into ?bl DANGER))
                         (signal ?si ?tc ?tc_into ?bl CLEAR)
                         (not (safeBlock ?bl))
                     )
                 )
-                (when (= ?sigShow CLEAR)
+                (when (= ?sgShow CLEAR)
                     (and 
                         (not (signal ?si ?tc ?tc_into ?bl CLEAR))
                         (signal ?si ?tc ?tc_into ?bl DANGER)
@@ -145,6 +163,11 @@
                     (track ?tc ?tc_set)
                     (track ?tc_set ?tc)
                 )
+                (forall (?tr - veh)
+                    (and 
+                        (not (at ?tr ?tc))
+                    )
+                )
             )
         :effect 
             (and
@@ -169,7 +192,4 @@
                 )
             )
     )
-    
-    
-    
 )

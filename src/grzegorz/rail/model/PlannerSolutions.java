@@ -8,11 +8,13 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import grzegorz.rail.view.MenuController;
@@ -23,15 +25,13 @@ public final class PlannerSolutions {
 	private static SolutionManager solutionMgr;
 
 	private static void createSteps(int scenarioChosen) {
-		if (!checkExistsProblemFile(scenarioChosen)) {
-		String problem = generateProblem();
-		makeProblemFile(scenarioChosen, problem);
-		}
-		if(!checkExistsPlanFile(scenarioChosen))
-			makeSolutionFile(scenarioChosen);
+		// if (!checkExistsProblemFile(scenarioChosen)) {
+		String problem = generateProblem(scenarioChosen);
+		// }
+		// if(!checkExistsPlanFile(scenarioChosen))
 	}
 
-	private static String generateProblem() {
+	private static String generateProblem(int scenarioChosen) {
 		List<TrackSection> tsList = new ArrayList<TrackSection>();
 		for (int x = 0; x < scenario.getWidth(); x++) {
 			for (int y = 0; y < scenario.getHeight(); y++) {
@@ -189,11 +189,103 @@ public final class PlannerSolutions {
 		problemString.append(goal.toString());
 		problemString.append(")");
 
+		boolean oldProblemIdentical = makeProblemFile(scenarioChosen, problemString.toString());
+		Thread thread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				if (oldProblemIdentical) makeSolutionFile(scenarioChosen);
+				makePlannerSolution(sortedTsList, sortedUniqueSignals, scenarioChosen);
+
+			}
+
+		});
+		thread.start();
+
 		return problemString.toString();
+
+	}
+
+	private static int getPredicateID(String[] predicates, int predicateNumber, int substringIndex) {
+		String sig = predicates[predicateNumber];
+
+		return Integer.parseInt(sig.substring(substringIndex));
+	}
+
+	private static void makePlannerSolution(List<TrackSection> sortedTsList, List<Signal> sortedUniqueSignals, int scenarioChosen) {
+		HashMap<Integer, TrackSection> tracksByID = new HashMap<Integer, TrackSection>();
+		HashMap<Integer, Signal> signalsByID = new HashMap<Integer, Signal>();
+		HashMap<Integer, Train> trainsByID = new HashMap<Integer, Train>();
+
+		sortedTsList.forEach(ts -> tracksByID.put(ts.getTsID(), ts));
+		sortedUniqueSignals.forEach(sig -> signalsByID.put(sig.getId(), sig));
+		scenario.getTrains().forEach(tr -> trainsByID.put(tr.getTrainID(), tr));
+		System.out.println("MAKING PLANNER SOLUTION\nREADING FILE NOW");
+		File f = new File(MenuController.class.getResource(".").getPath().replace("bin", "src") + "plan" + scenarioChosen + ".json");
+		try {
+			List<String> actions = Files.readAllLines(Paths.get(f.getAbsolutePath()));
+			Integer lastTrainID = null;
+			Integer lastTargetID = null;
+
+			int actionIndex = 0;
+			for (String act : actions) {
+				String action = act.replaceAll("[()]", "");
+				String[] predicates = action.split(" ");
+				String type = predicates[0];
+				System.out.println(type);
+				if (type.equals("drive")) {
+					System.out.println("drive step");
+					System.out.println(action);
+
+					if (lastTrainID == null) {
+						lastTrainID = getPredicateID(predicates, 1, 5);
+						lastTargetID = getPredicateID(predicates, 3, 2);
+					} else {
+						if (lastTrainID != getPredicateID(predicates, 1, 5) || actionIndex == (actions.size() - 1)) {
+							if(lastTrainID == getPredicateID(predicates, 1, 5)) {
+								lastTargetID = getPredicateID(predicates, 3, 2);
+							}
+							Train tr = trainsByID.get(lastTrainID);
+							TrackSection target = tracksByID.get(lastTargetID);
+							SolutionCmd step = new SolutionCmd(target, tr, 0);
+							solutionMgr.addStep(step);
+							lastTrainID = getPredicateID(predicates, 1, 5);
+							lastTargetID = getPredicateID(predicates, 3, 2);
+						}else {
+							lastTargetID = getPredicateID(predicates, 3, 2);
+							System.out.println("TARGET ID:"+lastTargetID);
+
+						}
+
+					}
+				} else if (type.equals("set-signal")) {
+					System.out.println("signal step");
+					Signal sig = signalsByID.get(getPredicateID(predicates, 4, 1));
+					boolean newValue = (predicates[5].equals("danger")) ? true : false;
+					SolutionCmd step = new SolutionCmd(sig, newValue);
+					solutionMgr.addStep(step);
+
+				} else if (type.equals("set-switch")) {
+					System.out.println("switch step");
+					Switch s = (Switch) tracksByID.get(getPredicateID(predicates, 1, 2));
+					boolean newValue = !s.isDiverging();
+					SolutionCmd step = new SolutionCmd(s, newValue);
+					solutionMgr.addStep(step);
+				}
+
+				actionIndex++;
+			}
+			;
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// read action and detect action
+		// if train has to wait after moving, create occ step
 	}
 
 	private static boolean checkExistsProblemFile(int scenarioChosen) {
-		File f = new File(MenuController.class.getResource(".").getPath().replace("bin", "src")  + "problem" + scenarioChosen+".pddl");
+		File f = new File(MenuController.class.getResource(".").getPath().replace("bin", "src") + "problem" + scenarioChosen + ".pddl");
 		System.out.println(f.getAbsolutePath());
 		System.out.println(f.exists());
 		if (f.exists()) {
@@ -204,7 +296,7 @@ public final class PlannerSolutions {
 	}
 
 	private static boolean checkExistsPlanFile(int scenarioChosen) {
-		File f = new File(MenuController.class.getResource(".").getPath().replace("bin", "src")  + "plan" + scenarioChosen+".json");
+		File f = new File(MenuController.class.getResource(".").getPath().replace("bin", "src") + "plan" + scenarioChosen + ".json");
 		System.out.println(f.getAbsolutePath());
 		System.out.println(f.exists());
 		if (f.exists()) {
@@ -214,18 +306,28 @@ public final class PlannerSolutions {
 		}
 	}
 
-
-	private static void makeProblemFile(int scenarioChosen, String problemContent) {
+	private static boolean makeProblemFile(int scenarioChosen, String problemContent) {
 		File f = new File(MenuController.class.getResource(".").getPath().replace("bin", "src") + "problem" + scenarioChosen + ".pddl");
-
 		System.out.println(f.getAbsolutePath());
+
 		try {
-			Files.write(Paths.get(f.getAbsolutePath()), problemContent.getBytes());
-			System.out.println("hello" + f.getAbsolutePath());
+			if (checkExistsProblemFile(scenarioChosen)) {
+				byte[] oldFile = Files.readAllBytes(Paths.get(f.getAbsolutePath()));
+				if (Arrays.equals(oldFile, problemContent.getBytes()))
+					System.out.println("IDENTICAL");
+				return true;
+			} else {
+				System.out.println("NOT NOT NOT IDENTICAL");
+
+				Files.write(Paths.get(f.getAbsolutePath()), problemContent.getBytes());
+				System.out.println("hello" + f.getAbsolutePath());
+				return false;
+			}
 		} catch (IOException e) {
 			System.out.println("Path does not exist!");
 			e.printStackTrace();
 		}
+		return false;
 
 	}
 
