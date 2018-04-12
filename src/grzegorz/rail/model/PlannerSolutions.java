@@ -119,7 +119,7 @@ public final class PlannerSolutions {
 						}
 					}
 				}
-				if (ts.getRightTrack() != null ) {
+				if (ts.getRightTrack() != null) {
 					boolean notSwitchExtra = true;
 					if (ts.getRightTrack().getClass() == Switch.class) {
 						if (((Switch) ts.getRightTrack()).getExtraTrack() == ts) {
@@ -163,7 +163,7 @@ public final class PlannerSolutions {
 						}
 					}
 				}
-				if (ts.getRightTrack() != null ) {
+				if (ts.getRightTrack() != null) {
 					boolean notSwitchExtra = true;
 					if (ts.getRightTrack().getClass() == Switch.class) {
 						if (((Switch) ts.getRightTrack()).getExtraTrack() == ts) {
@@ -198,9 +198,23 @@ public final class PlannerSolutions {
 				if (s.getSwitchDirection() == Direction.left) {
 					problemString.append("        (switch tc" + s.getTsID() + " tc" + s.getLeftTrack().getTsID() + " tc"
 							+ s.getExtraTrack().getTsID() + " tc" + s.getLeftTrack().getTsID() + ")\n");
+					if (!s.isDiverging()) {
+						problemString.append(
+								"        (disconnected tc" + s.getTsID() + " tc" + s.getExtraTrack().getTsID() + ")\n");
+					} else {
+						problemString.append(
+								"        (disconnected tc" + s.getTsID() + " tc" + s.getLeftTrack().getTsID() + ")\n");
+					}
 				} else {
 					problemString.append("        (switch tc" + s.getTsID() + " tc" + s.getRightTrack().getTsID()
 							+ " tc" + s.getExtraTrack().getTsID() + " tc" + s.getRightTrack().getTsID() + ")\n");
+					if (!s.isDiverging()) {
+						problemString.append(
+								"        (disconnected tc" + s.getTsID() + " tc" + s.getExtraTrack().getTsID() + ")\n");
+					} else {
+						problemString.append(
+								"        (disconnected tc" + s.getTsID() + " tc" + s.getRightTrack().getTsID() + ")\n");
+					}
 				}
 			}
 		});
@@ -268,38 +282,75 @@ public final class PlannerSolutions {
 			Integer lastTrainID = null;
 			Integer lastTargetID = null;
 			Integer lastStepIndex = null;
-
+			SolutionCmd lastStep = null;
+			boolean setStepsDetected = false;
+			boolean moveMade = false;
 			int actionIndex = 0;
+			HashMap<Integer, SolutionCmd> skippedSteps = new HashMap<Integer, SolutionCmd>();
+
 			List<SolutionCmd> sol = new LinkedList<SolutionCmd>();
 			for (String act : actions) {
 				String action = act.replaceAll("[()]", "");
 				String[] predicates = action.split(" ");
 				String type = predicates[0];
 				System.out.println(action);
+				boolean skip = false;
+				boolean readyToAdd = false;
 
 				if (type.equals("drive")) {
 					System.out.println("drive step");
-
+					moveMade = true;
 					if (lastTrainID == null) {
 						lastTrainID = getPredicateID(predicates, 1, 5);
 						lastTargetID = getPredicateID(predicates, 3, 2);
 						lastStepIndex = sol.size();
 					}
-					if (lastTrainID != getPredicateID(predicates, 1, 5) || actionIndex == (actions.size() - 1)) {
+					if (lastTrainID != getPredicateID(predicates, 1, 5) || setStepsDetected
+							|| actionIndex == (actions.size() - 1)) {
 						if (lastTrainID == getPredicateID(predicates, 1, 5)) {
 							lastTargetID = getPredicateID(predicates, 3, 2);
-							lastStepIndex = sol.size();
+							lastStepIndex = sol.size() + skippedSteps.size();
 						}
 						Train tr = trainsByID.get(lastTrainID);
 						TrackSection target = tracksByID.get(lastTargetID);
-						SolutionCmd step = new SolutionCmd(target, tr, 0);
-						sol.add(lastStepIndex, step);
+						SolutionCmd step = new SolutionCmd(target, tr, lastStepIndex);
+						if (lastStep != null) {
+							if (lastStep.targetTrain == step.targetTrain && lastStep.target == step.target) {
+								skip = true;
+							}
+						}
+						if (!skip) {
+							if (skippedSteps.containsKey(tr.getTrainID())) {
+								// skippedSteps.forEach((k,step)->
+								// step.setStepNumber(step.getStepNumber().get()-1));
+								for (Map.Entry<Integer, SolutionCmd> entry : skippedSteps.entrySet()) {
+									entry.getValue().setStepNumber(entry.getValue().getStepNumber().get() - 1);
+								}
+								step.setStepNumber(lastStepIndex - 1);
+							}
 
-						lastTrainID = getPredicateID(predicates, 1, 5);
-						lastTargetID = getPredicateID(predicates, 3, 2);
+							skippedSteps.put(tr.getTrainID(), step);
+							lastStep = step;
+						}
+						skip = false;
+						// }
+						if (lastTrainID != getPredicateID(predicates, 1, 5)) {
+							lastTrainID = getPredicateID(predicates, 1, 5);
+							lastTargetID = getPredicateID(predicates, 3, 2);
+							lastStepIndex = sol.size() + skippedSteps.size();
+						}
+						if (actionIndex == (actions.size() - 1)) {
+							lastTrainID = getPredicateID(predicates, 1, 5);
+							lastTargetID = getPredicateID(predicates, 3, 2);
+							lastStepIndex = sol.size();
+							Train trL = trainsByID.get(lastTrainID);
+							TrackSection targetL = tracksByID.get(lastTargetID);
+							SolutionCmd stepL = new SolutionCmd(targetL, trL, lastStepIndex);
+							skippedSteps.put(trL.getTrainID(), stepL);
+						}
 					} else {
 						lastTargetID = getPredicateID(predicates, 3, 2);
-						lastStepIndex = sol.size();
+						lastStepIndex = sol.size() + skippedSteps.size();
 						System.out.println("TARGET ID:" + lastTargetID);
 
 					}
@@ -310,6 +361,12 @@ public final class PlannerSolutions {
 					boolean newValue = (predicates[5].equals("danger")) ? true : false;
 					SolutionCmd step = new SolutionCmd(sig, newValue);
 					sol.add(step);
+					if (moveMade) {
+						readyToAdd = true;
+					}
+					setStepsDetected = true;
+					moveMade = false;
+					// }
 				} else if (type.equals("set-switch")) {
 					System.out.println("switch step");
 					Switch s = (Switch) tracksByID.get(getPredicateID(predicates, 1, 2));
@@ -323,8 +380,44 @@ public final class PlannerSolutions {
 
 					SolutionCmd step = new SolutionCmd(s, newValue);
 					sol.add(step);
+					// if (moveMade) {
+					if (moveMade) {
+						readyToAdd = true;
+					}
+					setStepsDetected = true;
+					moveMade = false;
+					// }
 				}
+				if ((setStepsDetected && readyToAdd) || actionIndex == actions.size() - 1) {
+					// sol.add(lastStepIndex, step);
 
+					Train tr = trainsByID.get(lastTrainID);
+					TrackSection target = tracksByID.get(lastTargetID);
+					SolutionCmd step = new SolutionCmd(target, tr, lastStepIndex);
+					if (lastStep == null) {
+						skippedSteps.put(tr.getTrainID(), step);
+						lastStep = step;
+					}
+					// skippedSteps.remove(lastTrainID);
+					if (!skippedSteps.isEmpty()) {
+						skippedSteps
+								.forEach((trainKey, stepToAdd) -> sol.add(stepToAdd.getStepNumber().get(), stepToAdd));
+						skippedSteps.clear();
+						setStepsDetected = false;
+						readyToAdd = false;
+					}
+					// if (lastTrainID != getPredicateID(predicates, 1, 5) && actionIndex ==
+					// (actions.size() - 1)) {
+					// lastTrainID = getPredicateID(predicates, 1, 5);
+					// lastTargetID = getPredicateID(predicates, 3, 2);
+					// lastStepIndex = sol.size();
+					// Train trLast = trainsByID.get(lastTrainID);
+					// TrackSection targetLast = tracksByID.get(lastTargetID);
+					// SolutionCmd stepLast = new SolutionCmd(targetLast, trLast, 0);
+					// sol.add(lastStepIndex, stepLast);
+					//
+					// }
+				}
 				actionIndex++;
 			}
 			;
@@ -396,6 +489,34 @@ public final class PlannerSolutions {
 
 	private static void generateBlocks(Map<TrackSection, Integer> tcInBlock, TrackSection ts, int block) {
 		tcInBlock.put(ts, block);
+		if (tcInBlock.containsKey(ts.getTrack(Direction.right))) {
+			if ((ts.getSignal(Direction.left) == null
+					&& ts.getTrack(Direction.right).getSignal(Direction.right) == null)) {
+				if (tcInBlock.get(ts.getTrack(Direction.right)) != block) {
+					Integer oldBlock = tcInBlock.get(ts.getTrack(Direction.right));
+					for (Map.Entry<TrackSection, Integer> entry : tcInBlock.entrySet()) {
+						if (entry.getValue() == oldBlock) {
+							entry.setValue(block);
+						}
+					}
+				}
+			}
+		}
+
+		if (tcInBlock.containsKey(ts.getTrack(Direction.left))) {
+			if (ts.getSignal(Direction.right) == null
+					&& ts.getTrack(Direction.left).getSignal(Direction.left) == null) {
+				if (tcInBlock.get(ts.getTrack(Direction.left)) != block) {
+					Integer oldBlock = tcInBlock.get(ts.getTrack(Direction.left));
+					for (Map.Entry<TrackSection, Integer> entry : tcInBlock.entrySet()) {
+						if (entry.getValue() == oldBlock) {
+							entry.setValue(block);
+						}
+					}
+				}
+			}
+		}
+
 		if (ts.getTrack(Direction.right) != null && !tcInBlock.containsKey(ts.getTrack(Direction.right))) {
 			if (ts.getSignal(Direction.left) != null
 					|| ts.getTrack(Direction.right).getSignal(Direction.right) != null) {
@@ -448,6 +569,21 @@ public final class PlannerSolutions {
 						generateBlocks(tcInBlock, s.getExtraTrack(), block);
 					}
 				}
+			} else if (tcInBlock.containsKey(s.getExtraTrack())) {
+				if (tcInBlock.get(s.getExtraTrack()) != block) {
+					if ((s.getSwitchDirection() == Direction.left
+							&& s.getExtraTrack().getSignal(Direction.right) == null)
+							|| s.getExtraTrack().getSignal(Direction.left) == null) {
+
+						Integer oldBlock = tcInBlock.get(s.getExtraTrack());
+						for (Map.Entry<TrackSection, Integer> entry : tcInBlock.entrySet()) {
+							if (entry.getValue() == oldBlock) {
+								entry.setValue(block);
+							}
+						}
+					}
+				}
+
 			}
 		}
 	}

@@ -53,6 +53,7 @@ public class SolutionCmd {
 		super();
 		this.target = target;
 		this.targetTrain = targetTrain;
+		this.stepNumber = new SimpleIntegerProperty(stepNum);
 		setType(CommandType.CheckLocation);
 	}
 

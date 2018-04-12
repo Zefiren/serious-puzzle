@@ -7,7 +7,7 @@ print sys.argv[2]
 data = {'domain': open(sys.argv[1], 'r').read(),
 		'problem': open(sys.argv[2], 'r').read()}
 
-req = urllib2.Request('http://solver.planning.domains/solve')
+req = urllib2.Request('https://still-beyond-77466.herokuapp.com/solve')
 req.add_header('Content-Type', 'application/json')
 resp = json.loads(urllib2.urlopen(req, json.dumps(data)).read())
 

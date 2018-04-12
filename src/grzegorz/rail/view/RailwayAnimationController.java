@@ -586,10 +586,6 @@ public class RailwayAnimationController {
 		Point sigLoc = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding,
 				(int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5 + vStartPos));
 		Color sigColour;
-		if (sig.getDirection() == Direction.left) {
-			sigLoc.x += trackLength * trackLengthRatio - diameter;
-
-		}
 
 		if (sig.isClear()) {
 			sigColour = Color.GREEN;
@@ -600,7 +596,24 @@ public class RailwayAnimationController {
 		double oldWidth = gc.getLineWidth();
 		gc.setStroke(Color.WHITE);
 		gc.setLineWidth(2);
-
+		gc.setFill(Color.WHITE);
+		if (sig.getDirection() == Direction.left) {
+			sigLoc.x += trackLength * trackLengthRatio - diameter;
+			gc.strokeLine(sigLoc.x, sigLoc.y + diameter * 0.5, sigLoc.x - diameter * 0.3, sigLoc.y + diameter * 0.5);
+			gc.strokeLine(sigLoc.x - diameter * 0.3, sigLoc.y + diameter * 0.5, sigLoc.x - diameter * 0.3,
+					sigLoc.y + diameter);
+			gc.fillPolygon(
+					new double[] { sigLoc.x - diameter * 0.2, sigLoc.x - diameter * 0.4, sigLoc.x - diameter * 0.3 },
+					new double[] { sigLoc.y + diameter, sigLoc.y + diameter, sigLoc.y + diameter * 1.5 }, 3);
+		} else {
+			gc.strokeLine(sigLoc.x + diameter, sigLoc.y + diameter * 0.5, sigLoc.x + diameter * 1.3,
+					sigLoc.y + diameter * 0.5);
+			gc.strokeLine(sigLoc.x + diameter * 1.3, sigLoc.y + diameter * 0.5, sigLoc.x + diameter * 1.3,
+					sigLoc.y + diameter);
+			gc.fillPolygon(
+					new double[] { sigLoc.x + diameter * 1.2, sigLoc.x + diameter * 1.4, sigLoc.x + diameter * 1.3 },
+					new double[] { sigLoc.y + diameter, sigLoc.y + diameter, sigLoc.y + diameter * 1.5 }, 3);
+		}
 		gc.setFill(sigColour);
 		gc.strokeOval(sigLoc.x, sigLoc.y, diameter, diameter);
 		gc.setStroke(sigColour);

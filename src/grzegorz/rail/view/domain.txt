@@ -24,6 +24,8 @@
         (track ?tc1 - loc ?tc2 - loc)
         (trackBlock ?tc - loc ?bl - block)
         
+        (disconnected ?tc_switch - loc ?tc_disc - loc)
+        
         (at  ?x - veh ?l - loc)
         (last  ?x - veh ?l - loc)
         (inBlock ?t - veh ?bl - block)
@@ -56,6 +58,10 @@
                 (trackBlock ?c2 ?bl_into)
                 (inBlock ?t ?bl_cur)
                 (fullBlock ?bl_cur)
+                (and
+                    (not (disconnected ?c1 ?c2))
+                    (not (disconnected ?c2 ?c1))
+                )
                 (or
                     (and
                         (not(= ?bl_cur ?bl_into))
@@ -147,25 +153,29 @@
     (:action set-switch
         :parameters 
             (
-                ?tc - loc 
+                ?tc_switch - loc 
                 ?tc_s1 - loc 
                 ?tc_s2 - loc 
                 ?tc_set - loc
             )
         :precondition 
             (and
-                (tc ?tc)
+                (tc ?tc_switch)
                 (tc ?tc_s1)
                 (tc ?tc_s2)
                 (tc ?tc_set)
-                (switch ?tc ?tc_s1 ?tc_s2 ?tc_set)
+                (switch ?tc_switch ?tc_s1 ?tc_s2 ?tc_set)
+                (or
+                    (disconnected ?tc_switch ?tc_s1)
+                    (disconnected ?tc_switch ?tc_s2)
+                )
                 (or 
-                    (track ?tc ?tc_set)
-                    (track ?tc_set ?tc)
+                    (track ?tc_switch ?tc_set)
+                    (track ?tc_set ?tc_switch)
                 )
                 (forall (?tr - veh)
                     (and 
-                        (not (at ?tr ?tc))
+                        (not (at ?tr ?tc_switch))
                     )
                 )
             )
@@ -173,21 +183,25 @@
             (and
                 (when (= ?tc_s1 ?tc_set)
                     (and
-                        (switch ?tc ?tc_s1 ?tc_s2 ?tc_s2)
-                        (not (switch ?tc ?tc_s1 ?tc_s2 ?tc_set))
-                        (track ?tc ?tc_s2)
-                        (not (track ?tc ?tc_s1))
-                        (not (track ?tc_s1 ?tc ))
+                        (switch ?tc_switch ?tc_s1 ?tc_s2 ?tc_s2)
+                        (not (switch ?tc_switch ?tc_s1 ?tc_s2 ?tc_set))
+                        (disconnected ?tc_switch ?tc_set)
+                        (not(disconnected ?tc_switch ?tc_s2))
+                        (track ?tc_switch ?tc_s2)
+                        (not (track ?tc_switch ?tc_s1))
+                        (not (track ?tc_s1 ?tc_switch ))
                     )
                 )
                 
                 (when (= ?tc_s2 ?tc_set)
                     (and
-                        (switch ?tc ?tc_s1 ?tc_s2 ?tc_s1)
-                        (not (switch ?tc ?tc_s1 ?tc_s2 ?tc_set))
-                        (track ?tc ?tc_s1)
-                        (not (track ?tc ?tc_s2))
-                        (not (track ?tc_s2 ?tc ))
+                        (switch ?tc_switch ?tc_s1 ?tc_s2 ?tc_s1)
+                        (not (switch ?tc_switch ?tc_s1 ?tc_s2 ?tc_set))
+                        (disconnected ?tc_switch ?tc_set)
+                        (not(disconnected ?tc_switch ?tc_s1))
+                        (track ?tc_switch ?tc_s1)
+                        (not (track ?tc_switch ?tc_s2))
+                        (not (track ?tc_s2 ?tc_switch ))
                     )
                 )
             )
