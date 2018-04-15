@@ -44,66 +44,6 @@ public class MainApp extends Application {
 	public final static int MINIMUM_WINDOW_WIDTH = 800;
 	public final static int MINIMUM_WINDOW_HEIGHT = 600;
 
-	/**
-	 * The data as an observable list of Persons.
-	 */
-
-	/**
-	 * Constructor
-	 */
-
-	private static final String USER_AGENT = "Mozilla/5.0";
-
-	private static final String GET_URL = "http://localhost:9090/SpringMVCExample";
-
-	private static final String POST_URL = "http://localhost:9090/SpringMVCExample/home";
-
-	private static final String POST_PARAMS = "userName=Pankaj";
-
-//	url: "http://solver.planning.domains/solve",
-//    type: "POST",
-//    contentType: 'application/json',
-//    data: JSON.stringify({
-//        "domain": domText,
-//        "problem": probText
-//    })
-
-
-	private static void sendPOST() throws IOException {
-
-		URL obj = new URL(POST_URL);
-		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-		con.setRequestMethod("POST");
-		con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-
-		// For POST only - START
-		con.setDoOutput(true);
-		OutputStream os = con.getOutputStream();
-		os.write(POST_PARAMS.getBytes());
-		os.flush();
-		os.close();
-		// For POST only - END
-
-		int responseCode = con.getResponseCode();
-		System.out.println("POST Response Code :: " + responseCode);
-
-		if (responseCode == HttpURLConnection.HTTP_OK) { //success
-			BufferedReader in = new BufferedReader(new InputStreamReader(
-					con.getInputStream()));
-			String inputLine;
-			StringBuffer response = new StringBuffer();
-
-			while ((inputLine = in.readLine()) != null) {
-				response.append(inputLine);
-			}
-			in.close();
-
-			// print result
-			System.out.println(response.toString());
-		} else {
-			System.out.println("POST request not worked");
-		}
-	}
 
 	public MainApp() {
 		scenario = ScenarioMaker.createScenario(1);

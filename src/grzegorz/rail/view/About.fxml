@@ -6,21 +6,21 @@
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.text.TextFlow?>
 
-<AnchorPane fx:id="scenarioAnchor" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="400.0" styleClass="background" stylesheets="@DarkTheme.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane fx:id="scenarioAnchor" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="450.0" styleClass="background" stylesheets="@DarkTheme.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <TextFlow layoutX="36.0" layoutY="59.0" prefHeight="285.0" prefWidth="464.0" styleClass="text-flow" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="30.0" AnchorPane.rightAnchor="30.0" AnchorPane.topAnchor="150.0">
          <children>
             <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-normal" text="Serious Puzzle About Railway Signalling (SPARS)" />
-            <Separator opacity="0.0" prefHeight="0.0" prefWidth="330.0" />
+            <Separator opacity="0.0" prefHeight="0.0" prefWidth="377.0" />
             <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-small" text="By Grzegorz Goral " wrappingWidth="195.46939849853516" />
-            <Separator minHeight="10.0" opacity="0.0" prefHeight="0.0" prefWidth="330.0" />
+            <Separator minHeight="7.0" opacity="0.0" prefHeight="7.0" prefWidth="379.0" />
             <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-small" text="This application aims to test personal problem solving skills together with forward-planning by using the domain of railway signalling scenarios. " wrappingWidth="195.46939849853516" />
-            <Separator minHeight="10.0" opacity="0.0" prefHeight="0.0" prefWidth="330.0" />
-            <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-small" text="There are 4 levels to play, with increasing difficulty (4 = hardest). To solve a level, create a solution to the given scenario which : " wrappingWidth="195.46939849853516" />
-            <Separator minHeight="2.0" opacity="0.0" prefHeight="0.0" prefWidth="330.0" />
-            <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-small" text="     • Lead all trains to their destinations. " wrappingWidth="195.46939849853516" />
-            <Separator minHeight="2.0" opacity="0.0" prefHeight="0.0" prefWidth="330.0" />
-            <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-small" text="     • Prevent trains from crashing." wrappingWidth="195.46939849853516" />
+            <Separator minHeight="10.0" opacity="0.0" prefHeight="13.0" prefWidth="381.0" />
+            <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-small" text="There are 3 levels to play, with increasing difficulty (3 = hardest). To solve a level, create a solution to the given scenario which : " wrappingWidth="195.46939849853516" />
+            <Separator minHeight="0.0" opacity="0.0" prefHeight="0.0" prefWidth="384.0" />
+            <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-small" text="     • Leads all trains to their destinations. " wrappingWidth="195.46939849853516" />
+            <Separator minHeight="0.0" opacity="0.0" prefHeight="0.0" prefWidth="374.0" />
+            <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-small" text="     • Prevents trains from crashing." wrappingWidth="195.46939849853516" />
          </children>
       </TextFlow>
       <Label alignment="CENTER" layoutX="136.0" layoutY="59.0" styleClass="label-title" text="S.P.A.R.S." AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10.0" />

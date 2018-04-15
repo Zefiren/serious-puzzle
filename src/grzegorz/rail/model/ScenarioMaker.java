@@ -24,30 +24,35 @@ public final class ScenarioMaker {
 	private static TrackSection createScene(int scenarioChosen) {
 		switch (scenarioChosen) {
 		case 0: {
-			TrackSection A, tc1, tc2, B;
+			TrackSection A, tc1, tc4, B;
+			Switch tc2s1;
 			tc1 = new TrackSection(1);
-			tc2 = new TrackSection(2);
+			tc4 = new TrackSection(4, "C", true, null);
 			A = new TrackSection(0, "A", false, tc1);
-			B = new TrackSection(3, "B", true, tc2);
+			B = new TrackSection(3, "B", true, null);
 
+			tc2s1 = new Switch(2, 1, tc1, B, Direction.right, Direction.left, tc4);
+			tc4.setLeftTrack(tc2s1);
+			
 			tc1.setLeftTrack(A);
-			tc1.setRightTrack(tc2);
+			tc1.setRightTrack(tc2s1);
+			B.setLeftTrack(tc2s1);
 
-			tc2.setLeftTrack(tc1);
-			tc2.setRightTrack(B);
+			
 
-			Train train1 = new Train(1, A, B, Direction.right);
+			Train train1 = new Train(1, A, tc4, Direction.right);
 
 			scenario.addTrain(train1);
 
-			Signal sig1 = new Signal(0, A, tc1, Direction.left);
+			Signal sig1 = new Signal(0, tc1, tc2s1, Direction.left);
 
 			List<TrackSection> tracks = new ArrayList<TrackSection>();
 			List<Signal> signals = new ArrayList<Signal>();
 			tracks.add(A);
 			tracks.add(tc1);
-			tracks.add(tc2);
+			tracks.add(tc4);
 			tracks.add(B);
+			tracks.add(tc2s1);
 
 			signals.add(sig1);
 			scenario.addSignal(sig1);

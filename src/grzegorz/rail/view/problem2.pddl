@@ -4,7 +4,7 @@
     (:objects 
         train1 train2 - veh 
         tc1 tc2 tc3 tc4 tc5 tc6 tc11 tc12 tc13 tc14 tc15 tc16 tc17 tc18 - loc 
-        b0 b1 b2 b4 b5  - block 
+        b0 b2 b3 b4 b5  - block 
         s1 s2 s3 s4 s5 - sigItem 
     ) 
  
@@ -28,8 +28,8 @@
         (tc tc18)
 
         (block b0)
-        (block b1)
         (block b2)
+        (block b3)
         (block b4)
         (block b5)
 
@@ -39,24 +39,24 @@
         (sigDef s4)
         (sigDef s5)
 
-        (trackBlock tc4 b1)
-        (trackBlock tc17 b1)
-        (trackBlock tc5 b1)
-        (trackBlock tc16 b2)
-        (trackBlock tc18 b0)
-        (trackBlock tc13 b1)
-        (trackBlock tc11 b2)
-        (trackBlock tc6 b1)
-        (trackBlock tc2 b1)
-        (trackBlock tc12 b1)
-        (trackBlock tc15 b5)
         (trackBlock tc14 b4)
-        (trackBlock tc3 b1)
-        (trackBlock tc1 b1)
+        (trackBlock tc6 b3)
+        (trackBlock tc5 b3)
+        (trackBlock tc16 b2)
+        (trackBlock tc2 b3)
+        (trackBlock tc1 b3)
+        (trackBlock tc15 b5)
+        (trackBlock tc17 b3)
+        (trackBlock tc3 b3)
+        (trackBlock tc4 b3)
+        (trackBlock tc13 b3)
+        (trackBlock tc18 b0)
+        (trackBlock tc11 b2)
+        (trackBlock tc12 b3)
 
         (safeBlock b0)
-        (safeBlock b1)
         (safeBlock b2)
+        (safeBlock b3)
         (safeBlock b4)
         (safeBlock b5)
 
@@ -82,11 +82,11 @@
         (disconnected tc13 tc15)
         (switch tc17 tc16 tc3 tc16)
         (disconnected tc17 tc3)
-        (signal s1 tc15 tc13 b1 DANGER)
-        (signal s2 tc18 tc17 b1 DANGER)
-        (signal s3 tc14 tc13 b1 DANGER)
-        (signal s4 tc11 tc12 b1 DANGER)
-        (signal s5 tc16 tc17 b1 DANGER)
+        (signal s1 tc15 tc13 b3 DANGER)
+        (signal s2 tc18 tc17 b3 DANGER)
+        (signal s3 tc14 tc13 b3 DANGER)
+        (signal s4 tc11 tc12 b3 DANGER)
+        (signal s5 tc16 tc17 b3 DANGER)
 
         (at train1 tc18)
         (inBlock train1 b0)

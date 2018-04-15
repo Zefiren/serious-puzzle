@@ -570,15 +570,16 @@ public final class PlannerSolutions {
 					}
 				}
 			} else if (tcInBlock.containsKey(s.getExtraTrack())) {
-				if (tcInBlock.get(s.getExtraTrack()) != block) {
+				if (tcInBlock.get(s.getExtraTrack()) != tcInBlock.get(ts)) {
 					if ((s.getSwitchDirection() == Direction.left
 							&& s.getExtraTrack().getSignal(Direction.right) == null)
-							|| s.getExtraTrack().getSignal(Direction.left) == null) {
-
+							|| (s.getSwitchDirection() == Direction.right
+									&& s.getExtraTrack().getSignal(Direction.left) == null)) {
+						Integer replacementBlock = tcInBlock.get(ts);
 						Integer oldBlock = tcInBlock.get(s.getExtraTrack());
 						for (Map.Entry<TrackSection, Integer> entry : tcInBlock.entrySet()) {
 							if (entry.getValue() == oldBlock) {
-								entry.setValue(block);
+								entry.setValue(replacementBlock);
 							}
 						}
 					}
