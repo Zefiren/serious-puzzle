@@ -21,13 +21,17 @@ import grzegorz.rail.model.TrackSection;
 import grzegorz.rail.model.Train;
 import grzegorz.rail.model.SolutionCmd.CommandType;
 import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
@@ -38,6 +42,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
@@ -204,8 +209,8 @@ public class RailwayPlannerController {
 		overlay.getChildren().add(notifAnchor);
 		notifAnchor.setVisible(false);
 
-		AnchorPane.setTopAnchor(notifAnchor, 10.0);
-		AnchorPane.setRightAnchor(notifAnchor, 10.0);
+		AnchorPane.setBottomAnchor(notifAnchor, 20.0);
+		AnchorPane.setLeftAnchor(notifAnchor, 10.0);
 
 		stepsAnchor.maxWidthProperty().bind(splitPane.widthProperty().multiply(0.29));
 		stepsAnchor.minWidthProperty().bind(splitPane.widthProperty().multiply(0.29));
@@ -224,15 +229,17 @@ public class RailwayPlannerController {
 			@Override
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
 				System.out.println(scenario.getHeight() + " is height");
+				double usableHeight = newSceneHeight.doubleValue();
 				if (scenario.getHeight() > 1) {
-					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
-					vPadding = (int) (newSceneHeight.doubleValue() * 0.1);
+					usableHeight -= 70;
+					trackVertGap = (int) (usableHeight * 0.8) / scenario.getHeight();
+					vPadding = (int) (usableHeight * 0.1);
 					vStartPos = trackVertGap / 4;
 				} else {
-					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.5) / scenario.getHeight();
-					vPadding = (int) (newSceneHeight.doubleValue() * 0.25);
+					trackVertGap = (int) (usableHeight * 0.5) / scenario.getHeight();
+					vPadding = (int) (usableHeight * 0.25);
 					vStartPos = trackVertGap / 2;
-					System.out.println("half size" + trackVertGap + "/" + newSceneHeight);
+					System.out.println("half size" + trackVertGap + "/" + usableHeight);
 				}
 				if (scenario != null) drawScenario(g);
 			}
@@ -324,15 +331,12 @@ public class RailwayPlannerController {
 		if (title != null) notifTitle.setText(title);
 		if (message != null) notifMessage.setText(message);
 		if (fading) {
-			FadeTransition ft = new FadeTransition(Duration.millis(3000), notifAnchor);
-			ft.setFromValue(1.0);
-			ft.setToValue(0.0);
-			ft.play();
-			ft.setOnFinished(new EventHandler<ActionEvent>() {
+			PauseTransition hideNotification = new PauseTransition(Duration.seconds(1));
+			hideNotification.play();
+			hideNotification.setOnFinished(new EventHandler<ActionEvent>() {
 
 				@Override
 				public void handle(ActionEvent arg0) {
-					notifAnchor.setOpacity(1);
 					notifAnchor.setVisible(false);
 				}
 			});
@@ -360,6 +364,38 @@ public class RailwayPlannerController {
 
 			// notifAnchor.setVisible(false);
 		}
+	}
+
+	private Label createInfoPane(double layoutX, double layoutY, double prefWidth, int seconds) {
+
+		AnchorPane tempPane = new AnchorPane();
+		overlay.getChildren().add(tempPane);
+		tempPane.getStyleClass().add("card");
+
+		tempPane.setLayoutX(layoutX);
+		tempPane.setLayoutY(layoutY);
+		tempPane.setPrefWidth(prefWidth);
+		Label info = new Label();
+		tempPane.getChildren().add(info);
+		AnchorPane.setBottomAnchor(info, 0.0);
+		AnchorPane.setLeftAnchor(info, 0.0);
+		AnchorPane.setTopAnchor(info, 0.0);
+		AnchorPane.setRightAnchor(info, 0.0);
+		info.setAlignment(Pos.CENTER);
+		if (seconds != 0) {
+			PauseTransition hideRectangle = new PauseTransition(Duration.seconds(seconds));
+			hideRectangle.setOnFinished(ev -> overlay.getChildren().remove(tempPane));
+			hideRectangle.play();
+		} else {
+			info.visibleProperty().addListener(new ChangeListener<Boolean>() {
+
+				@Override
+				public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldVal, Boolean newVal) {
+					tempPane.setVisible(newVal);
+				}
+			});
+		}
+		return info;
 	}
 
 	private void createTrain(Train tr) {
@@ -479,7 +515,27 @@ public class RailwayPlannerController {
 			sigLabel.layoutYProperty().set(sigLoc.y - 30);
 
 		}
+		if (initialFlag) {
+			Bounds buttonBounds = scenarioBtns.get(sig).get(0).getBoundsInParent();
+			Label infoLabel = createInfoPane(scenarioBtns.get(sig).get(0).getLayoutX() + scenarioBtns.get(sig).get(0).getWidth() / 2 - 30, sigLoc.y + diameter +5, 60, 0);
+			infoLabel.setVisible(false);
+			scenarioBtns.get(sig).get(0).setOnMouseEntered(e -> {
+				AnchorPane infoPane = (AnchorPane) infoLabel.getParent();
+//				Bounds curButtonBounds = scenarioBtns.get(sig).get(0).getBoundsInParent();
+				Point sigLocLocal = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding, (int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5 + vStartPos));
 
+				infoPane.setLayoutX(scenarioBtns.get(sig).get(0).getLayoutX() + scenarioBtns.get(sig).get(0).getWidth() / 2 - 30);
+				infoPane.setLayoutY(sigLocLocal.y + diameter +5);
+				infoLabel.setVisible(true);
+				infoPane.toFront();
+				String onHover = sig.isClear() ? "Proceed" : "Stop";
+				infoLabel.setText(onHover);
+			});
+
+			scenarioBtns.get(sig).get(0).setOnMouseExited(e -> {
+				infoLabel.setVisible(false);
+			});
+		}
 		scenarioBtns.get(sig).get(0).setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
@@ -489,7 +545,15 @@ public class RailwayPlannerController {
 				sig.setClear(!sig.isClear());
 				GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 				drawScenario(g);
+				Bounds buttonBounds = scenarioBtns.get(sig).get(0).getBoundsInParent();
 				setNotification("Step : Signal", "Signal Set step added to solution.", true);
+				Point sigLocLocal = new Point(sig.getSignalTC().getLocation().x * trackLength + hPadding, (int) (sig.getSignalTC().getLocation().y * trackVertGap + vPadding - diameter * 1.5 + vStartPos));
+
+				createInfoPane(scenarioBtns.get(sig).get(0).getLayoutX() + scenarioBtns.get(sig).get(0).getWidth() / 2 - 30, sigLocLocal.y + diameter +5, 60, 1).setText(newCmd.getNewValueString());
+				Event.fireEvent(scenarioBtns.get(sig).get(0), new MouseEvent(MouseEvent.MOUSE_EXITED, 0,0,0,0,  MouseButton.NONE, 0, true, true, true, true, true, true, true, true, true, true, null));
+				Event.fireEvent(scenarioBtns.get(sig).get(0), new MouseEvent(MouseEvent.MOUSE_ENTERED, 0,0,0,0,  MouseButton.NONE, 0, true, true, true, true, true, true, true, true, true, true, null));
+
+				;
 			}
 
 		});
@@ -543,7 +607,7 @@ public class RailwayPlannerController {
 				if (s.getSwitchDirection() == Direction.left)
 					gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (2.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos);
 				else
-					gc.strokeLine(loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (1.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio) , loc.y * trackVertGap + vPadding + vStartPos);
+					gc.strokeLine(loc.x * trackLength + hPadding + (trackLength * trackLengthRatio * (1.0 / 3.0)), loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
 
 			} else {
 				gc.strokeLine(loc.x * trackLength + hPadding, loc.y * trackVertGap + vPadding + vStartPos, loc.x * trackLength + hPadding + (trackLength * trackLengthRatio), loc.y * trackVertGap + vPadding + vStartPos);
@@ -552,12 +616,12 @@ public class RailwayPlannerController {
 
 			if (s.getSwitchDirection() == Direction.right) {
 				xPts = new double[] { xstart, (int) (trackLength * 0.2) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap*0.95 + ystart };
-				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap*0.95 + ystart };
+				if (s.getTurnDirection() == Direction.right) yPts = new double[] { yLevel + ystart, yLevel + ystart, trackVertGap * 0.95 + ystart };
+				else yPts = new double[] { -yLevel + ystart, -yLevel + ystart, -trackVertGap * 0.95 + ystart };
 			} else {
 				xPts = new double[] { xstart, (int) (trackLength * 0.7) + xstart, (int) (trackLength * trackLengthRatio) + xstart };
-				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap*0.95 + ystart, ystart + yLevel, ystart + yLevel };
-				else yPts = new double[] { -trackVertGap*0.95 + ystart, ystart - yLevel, ystart - yLevel };
+				if (s.getTurnDirection() == Direction.left) yPts = new double[] { trackVertGap * 0.95 + ystart, ystart + yLevel, ystart + yLevel };
+				else yPts = new double[] { -trackVertGap * 0.95 + ystart, ystart - yLevel, ystart - yLevel };
 			}
 
 			gc.strokePolyline(xPts, yPts, 3);
@@ -593,6 +657,27 @@ public class RailwayPlannerController {
 				swLabel.layoutYProperty().set(tsLabel.getLayoutY() + 20);
 
 			}
+			if (initialFlag) {
+				Bounds buttonBounds = scenarioBtns.get(s).get(1).getBoundsInParent();
+				Label infoLabel = createInfoPane(scenarioBtns.get(s).get(1).getLayoutX() + scenarioBtns.get(s).get(1).getWidth() / 2 - 30, buttonBounds.getMaxY(), 60, 0);
+				infoLabel.setVisible(false);
+
+				scenarioBtns.get(s).get(1).setOnMouseEntered(e -> {
+					Bounds curButtonBounds = scenarioBtns.get(s).get(1).getBoundsInParent();
+
+					infoLabel.getParent().setLayoutX(scenarioBtns.get(s).get(1).getLayoutX() + scenarioBtns.get(s).get(1).getWidth() / 2 - 30);
+					infoLabel.getParent().setLayoutY(curButtonBounds.getMaxY() + 10);
+					infoLabel.setVisible(true);
+					infoLabel.getParent().toFront();
+
+					String onHover = s.isDiverging() ? "Open" : "Closed";
+					infoLabel.setText(onHover);
+				});
+
+				scenarioBtns.get(s).get(1).setOnMouseExited(e -> {
+					infoLabel.setVisible(false);
+				});
+			}
 			scenarioBtns.get(s).get(1).setOnAction(new EventHandler<ActionEvent>() {
 
 				@Override
@@ -603,6 +688,14 @@ public class RailwayPlannerController {
 					GraphicsContext g = scenarioCanvas.getGraphicsContext2D();
 					drawScenario(g);
 					setNotification("Step : Switch", "Switch Set step added to solution.", true);
+
+					Bounds buttonBounds = scenarioBtns.get(s).get(1).getBoundsInParent();
+					createInfoPane(scenarioBtns.get(s).get(1).getLayoutX() + scenarioBtns.get(s).get(1).getWidth() / 2 - 30, buttonBounds.getMaxY()+10, 60, 1).setText(newCmd.getNewValueString());
+					Event.fireEvent(scenarioBtns.get(s).get(1), new MouseEvent(MouseEvent.MOUSE_EXITED, 0,0,0,0,  MouseButton.NONE, 0, true, true, true, true, true, true, true, true, true, true, null));
+					Event.fireEvent(scenarioBtns.get(s).get(1), new MouseEvent(MouseEvent.MOUSE_ENTERED, 0,0,0,0,  MouseButton.NONE, 0, true, true, true, true, true, true, true, true, true, true, null));
+
+					scenarioBtns.get(s).get(1)
+					;
 				}
 			});
 			/*
@@ -619,7 +712,7 @@ public class RailwayPlannerController {
 				} else {
 					labelPos.setLocation(loc.x * trackLength + hPadding - trackLength * 0.3, loc.y * trackVertGap + vPadding + vStartPos);
 				}
-//				System.out.println(labelPos + " is label position for " + ts.getLabel());
+				// System.out.println(labelPos + " is label position for " + ts.getLabel());
 				gc.setFont(new Font(trackVertGap / 4));
 				gc.fillText(ts.getLabel(), labelPos.getX(), labelPos.getY());
 			}

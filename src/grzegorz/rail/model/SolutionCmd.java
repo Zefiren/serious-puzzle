@@ -58,7 +58,6 @@ public class SolutionCmd {
 	}
 
 	public StringProperty getStep() {
-		// TODO Auto-generated method stub
 		switch (getType()) {
 		case SwitchChange:
 			if (newValue.getValue()) {
@@ -118,6 +117,27 @@ public class SolutionCmd {
 		}
 	}
 
+	public String getNewValueString() {
+		switch (getType()) {
+		case SwitchChange:
+			if (newValue.getValue()) {
+				return "Open";
+			}else {
+				return "Closed";
+			}
+		case SignalChange:
+			if (newValue.getValue()) {
+				return "Proceed";
+			}else {
+				return "Stop";
+			}
+		case CheckLocation:
+			return "";
+		default:
+			return "";
+		}
+	}
+
 	public IntegerProperty getStepNumber() {
 		return stepNumber;
 	}
@@ -141,4 +161,6 @@ public class SolutionCmd {
 	public void setType(CommandType type) {
 		this.type = type;
 	}
+
+
 }

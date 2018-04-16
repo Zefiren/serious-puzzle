@@ -597,7 +597,7 @@ public final class PlannerSolutions {
 		try {
 
 			Process p = Runtime.getRuntime().exec(
-					"python planner.py domain.txt problem" + scenarioChosen + ".pddl plan" + scenarioChosen + ".json",
+					"py planner.py domain.txt problem" + scenarioChosen + ".pddl plan" + scenarioChosen + ".json",
 					null, f);
 			// Process p = Runtime.getRuntime().exec("py src/grzegorz/rail/view/planner.py
 			// src/grzegorz/rail/view/domain.txt
