@@ -128,7 +128,8 @@ public class MenuController {
 					PlannerSolutions.setScenario(mainApp.getScenarioData());
 					mainApp.setSolutionData(false,PlannerSolutions.createSolution(x));
 					mainApp.setSolutionData(true,new SolutionManager());
-
+					mainApp.setAttemptNumber(1);
+					mainApp.setShowingHint(false);
 					mainApp.SwitchToPlanner();
 				}
 			});
@@ -176,6 +177,7 @@ public class MenuController {
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
 				trackLength = (int) (newSceneWidth.doubleValue() * 0.8) / scenario.getWidth();
 				hPadding = (int) (newSceneWidth.doubleValue() * 0.1);
+				scenarioCanvas.setWidth(newSceneWidth.doubleValue());
 				if (scenario != null) drawScenario(g);
 			}
 		});
@@ -183,6 +185,7 @@ public class MenuController {
 			@Override
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
 				System.out.println(scenario.getHeight() + " is height");
+				scenarioCanvas.setHeight(newSceneHeight.doubleValue());
 				if(scenario.getHeight()>1) {
 					trackVertGap = (int) (newSceneHeight.doubleValue() * 0.8) / scenario.getHeight();
 					vPadding = (int) (newSceneHeight.doubleValue() * 0.1);

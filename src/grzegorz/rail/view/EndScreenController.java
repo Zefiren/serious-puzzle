@@ -131,6 +131,9 @@ public class EndScreenController {
 
 	@FXML
 	private void returnToPlanning() {
+		for (int i = 0; i < userSolution.getLength(); i++) {
+			userSolution.getSolution().get(i).performStep();
+		}
 		mainApp.SwitchToPlanner();
 	}
 

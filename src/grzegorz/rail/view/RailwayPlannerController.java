@@ -150,6 +150,10 @@ public class RailwayPlannerController {
 		scenario = mainApp.getScenarioData();
 		if (mainApp.getSolutionData(true) != null) solMgr = mainApp.getSolutionData(true);
 		stepsTable.setItems(solMgr.getSolution());
+		
+		for (int i = 0; i < solMgr.getLength(); i++) {
+			solMgr.getSolution().get(i).performStep();
+		}
 	}
 
 	/**
@@ -185,17 +189,10 @@ public class RailwayPlannerController {
 		AnchorPane.setLeftAnchor(canvasPane, 0.0);
 		AnchorPane.setRightAnchor(canvasPane, 0.0);
 		scenarioCanvas = canvasPane.getCanvas();
-		scenarioAnchor.setOnScroll((ScrollEvent event) -> {
-
-			sizeCube += (event.getDeltaY() / (Math.abs(event.getDeltaY()))) * 2;
-
-			System.out.println(sizeCube);
-		});
+//		scenarioCanvas.res
 
 		scenarioBtns = new HashMap<Interactable<?>, ArrayList<Button>>();
-		// AnimationTimer loop = new AnimationTimer() {
-		// @Override
-		// public void handle(long now) {
+	
 		overlay = new AnchorPane();
 		scenarioAnchor.getChildren().add(overlay);
 		AnchorPane.setTopAnchor(overlay, 0.0);
@@ -222,6 +219,9 @@ public class RailwayPlannerController {
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
 				trackLength = (int) (newSceneWidth.doubleValue() * 0.8) / scenario.getWidth();
 				hPadding = (int) (newSceneWidth.doubleValue() * 0.1);
+				scenarioCanvas.setWidth(newSceneWidth.doubleValue());
+				System.out.println(scenarioAnchor.getParent().getParent().getBoundsInParent());
+
 				if (scenario != null) drawScenario(g);
 			}
 		});
@@ -229,6 +229,7 @@ public class RailwayPlannerController {
 			@Override
 			public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
 				System.out.println(scenario.getHeight() + " is height");
+				scenarioCanvas.setHeight(newSceneHeight.doubleValue());
 				double usableHeight = newSceneHeight.doubleValue();
 				if (scenario.getHeight() > 1) {
 					usableHeight -= 70;
@@ -241,6 +242,7 @@ public class RailwayPlannerController {
 					vStartPos = trackVertGap / 2;
 					System.out.println("half size" + trackVertGap + "/" + usableHeight);
 				}
+				System.out.println(scenarioAnchor.getParent().getParent().getBoundsInParent());
 				if (scenario != null) drawScenario(g);
 			}
 		});
@@ -423,6 +425,42 @@ public class RailwayPlannerController {
 		trainInfo.setStyle("-fx-font-size: " + fontSize + "px");
 
 		trainPane.getChildren().addAll(newTrainPol, trainInfo);
+		trainPane.setOnMouseEntered(new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent arg0) {
+				newTrainPol.setFill(Color.rgb(116, 255, 89));
+			}
+			
+		});
+		trainPane.setOnMouseExited(new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent arg0) {
+				newTrainPol.setFill(Color.CYAN);
+			}
+			
+		});
+		trainPane.setOnMousePressed(new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent arg0) {
+				newTrainPol.setFill(Color.WHITE);
+			}
+			
+		});
+		trainPane.setOnMouseReleased(new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent arg0) {
+				if (trainPane.contains(arg0.getSceneX(),arg0.getSceneY())) {
+					newTrainPol.setFill(Color.AQUAMARINE);
+				}else {
+				newTrainPol.setFill(Color.CYAN);
+				}
+			}
+			
+		});
 		trainPane.setOnMouseClicked(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent t) {

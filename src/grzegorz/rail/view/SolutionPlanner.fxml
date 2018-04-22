@@ -16,9 +16,9 @@
 
 <AnchorPane prefHeight="600.0" prefWidth="800.0" stylesheets="@DarkTheme.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="grzegorz.rail.view.RailwayPlannerController">
    <children>
-      <SplitPane fx:id="splitPane" dividerPositions="0.7" layoutX="6.0" prefHeight="300.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <SplitPane fx:id="splitPane" dividerPositions="0.7" layoutX="6.0" prefHeight="300.0" prefWidth="600.0" style="-fx-background-color: transparent;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <items>
-          <AnchorPane fx:id="scenarioAnchor" minHeight="0.0" minWidth="0.0" prefHeight="299.0" prefWidth="232.0" styleClass="background" />
+          <AnchorPane fx:id="scenarioAnchor" minHeight="0.0" minWidth="0.0" prefHeight="299.0" prefWidth="232.0" />
           <AnchorPane fx:id="stepsAnchor" minHeight="0.0" minWidth="0.0" styleClass="background">
                <children>
                   <Label layoutX="8.0" layoutY="6.0" styleClass="label-header" text="Planning" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0" />

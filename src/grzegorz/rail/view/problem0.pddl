@@ -22,11 +22,11 @@
 
         (sigDef s0)
 
-        (trackBlock tc0 b0)
+        (trackBlock tc3 b1)
         (trackBlock tc2 b1)
         (trackBlock tc1 b0)
+        (trackBlock tc0 b0)
         (trackBlock tc4 b1)
-        (trackBlock tc3 b1)
 
         (safeBlock b0)
         (safeBlock b1)

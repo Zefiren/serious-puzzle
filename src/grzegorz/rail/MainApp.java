@@ -28,7 +28,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-
 public class MainApp extends Application {
 
 	private Stage primaryStage;
@@ -41,9 +40,11 @@ public class MainApp extends Application {
 	private SolutionManager plannerSolution;
 	private boolean userAnimation;
 
+	private boolean showingHint = false;
+	private int attemptNumber = 1;
+
 	public final static int MINIMUM_WINDOW_WIDTH = 800;
 	public final static int MINIMUM_WINDOW_HEIGHT = 600;
-
 
 	public MainApp() {
 		scenario = ScenarioMaker.createScenario(1);
@@ -54,6 +55,21 @@ public class MainApp extends Application {
 
 	}
 
+	public int getAttemptNumber() {
+		return attemptNumber;
+	}
+
+	public void setAttemptNumber(int attemptNumber) {
+		this.attemptNumber = attemptNumber;
+	}
+	
+	public boolean isShowingHint() {
+		return showingHint;
+	}
+
+	public void setShowingHint(boolean showingHint) {
+		this.showingHint = showingHint;
+	}
 	public Scenario getScenarioData() {
 		return scenario;
 
@@ -110,7 +126,9 @@ public class MainApp extends Application {
 
 	public void SwitchToMenu() {
 		try {
-			// Load person overview.
+			userAnimation = true;
+
+			// Load menu.
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(MainApp.class.getResource("view/Menu.fxml"));
 			AnchorPane solutionAnimator = (AnchorPane) loader.load();
@@ -202,19 +220,20 @@ public class MainApp extends Application {
 			popup.setTitle("About");
 			popup.show();
 
+			this.primaryStage.setMinWidth(MINIMUM_WINDOW_WIDTH);
+			this.primaryStage.setMinHeight(MINIMUM_WINDOW_HEIGHT);
+			this.primaryStage.setWidth(MINIMUM_WINDOW_WIDTH);
+			this.primaryStage.setHeight(MINIMUM_WINDOW_HEIGHT);
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-
 	@Override
 	public void start(Stage primaryStage) {
 		this.primaryStage = primaryStage;
-		this.primaryStage.setMinWidth(MINIMUM_WINDOW_WIDTH);
-		this.primaryStage.setMinHeight(MINIMUM_WINDOW_HEIGHT);
-		this.primaryStage.setWidth(MINIMUM_WINDOW_WIDTH);
-		this.primaryStage.setHeight(MINIMUM_WINDOW_HEIGHT);
+
 		System.out.println("INIT WIDTH = " + this.primaryStage.getWidth());
 		// Set the application icon.
 		this.primaryStage.getIcons().add(new Image("file:resources/images/if_address-book_299084.png"));
@@ -235,22 +254,22 @@ public class MainApp extends Application {
 			loader.setLocation(MainApp.class.getResource("view/RootLayout.fxml"));
 			rootLayout = (BorderPane) loader.load();
 
-
 			RootController controller = loader.getController();
 			controller.setMainApp(this);
 
-
-
 			// Show the scene containing the root layout.
-			Scene scene = new Scene(rootLayout);
+			Scene scene = new Scene(rootLayout, MINIMUM_WINDOW_WIDTH, MINIMUM_WINDOW_HEIGHT);
 			primaryStage.setScene(scene);
 			primaryStage.show();
+
+			this.primaryStage.setMinWidth(MINIMUM_WINDOW_WIDTH);
+			this.primaryStage.setMinHeight(MINIMUM_WINDOW_HEIGHT);
+			this.primaryStage.setWidth(MINIMUM_WINDOW_WIDTH);
+			this.primaryStage.setHeight(MINIMUM_WINDOW_HEIGHT);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-
-
 
 	/**
 	 * Returns the main stage.
