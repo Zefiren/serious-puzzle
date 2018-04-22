@@ -1,52 +1,11 @@
 package grzegorz.rail.view;
 
-import java.awt.Point;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import grzegorz.rail.MainApp;
-import grzegorz.rail.model.Direction;
 import grzegorz.rail.model.Scenario;
-import grzegorz.rail.model.ScenarioMaker;
-import grzegorz.rail.model.Signal;
-import grzegorz.rail.model.SolutionCmd;
 import grzegorz.rail.model.SolutionManager;
-import grzegorz.rail.model.Switch;
-import grzegorz.rail.model.TrackSection;
-import grzegorz.rail.model.Train;
-import javafx.animation.FadeTransition;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
-import javafx.scene.Node;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.effect.MotionBlur;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Polygon;
-import javafx.scene.text.Font;
-import javafx.scene.text.TextAlignment;
-import javafx.scene.transform.Rotate;
-import javafx.util.Duration;
 
 public class EndScreenController {
 

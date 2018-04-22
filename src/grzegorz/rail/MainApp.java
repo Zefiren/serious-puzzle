@@ -1,14 +1,6 @@
 package grzegorz.rail;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.stream.Stream;
 
 import grzegorz.rail.model.Scenario;
 import grzegorz.rail.model.ScenarioMaker;

@@ -33,12 +33,12 @@ public final class ScenarioMaker {
 
 			tc2s1 = new Switch(2, 1, tc1, B, Direction.right, Direction.left, tc4);
 			tc4.setLeftTrack(tc2s1);
-			
+
 			tc1.setLeftTrack(A);
 			tc1.setRightTrack(tc2s1);
 			B.setLeftTrack(tc2s1);
 
-			
+
 
 			Train train1 = new Train(1, A, tc4, Direction.right);
 
@@ -110,8 +110,10 @@ public final class ScenarioMaker {
 
 			Train train = new Train(0, tc1, tc12, Direction.right);
 			Train train2 = new Train(1, tc11, tc9, Direction.left);
+			Train train3 = new Train(2, tc12, tc8, Direction.left);
 			scenario.addTrain(train);
 			scenario.addTrain(train2);
+			scenario.addTrain(train3);
 
 			Signal sig1 = new Signal(0, tc3, tc4s1, Direction.left);
 			// Signal sig2 = new Signal(1, tc5, tc4s1, Direction.right);
@@ -239,7 +241,7 @@ public final class ScenarioMaker {
 			tc3s1 = new Switch(3, 1, tc2, null, Direction.left, Direction.right, null);
 			tc2.setRightTrack(tc3s1);
 			tc4s2 = new Switch(4, 2, tc3s1, null, Direction.right, Direction.left, null);
-			
+
 			tc35 = new TrackSection(35, tc3s1, tc4s2);
 			tc3s1.setRightTrack(tc35);
 			tc4s2.setLeftTrack(tc35);
@@ -256,23 +258,23 @@ public final class ScenarioMaker {
 
 			tc17s4 = new Switch(17, 4, tc8s3, tc9, Direction.right, Direction.left, null);
 			tc9.setLeftTrack(tc17s4);
-			
+
 			tc18 = new TrackSection(18, tc17s4,null);
 			tc17s4.setExtraTrack(tc18);
-			
+
 			tc19 = new TrackSection(19, tc18,null);
 			tc18.setRightTrack(tc19);
-			
+
 			tc20 = new TrackSection(20, tc19,null);
 			tc19.setRightTrack(tc20);
 
 			tc21 = new TrackSection(21, tc20,null);
 			tc20.setRightTrack(tc21);
-			
-			
+
+
 			tc10 = new TrackSection(10, "D", false, tc8s3);
 			tc16 = new TrackSection(16, "G", false, tc8s3);
-			
+
 			tc8s3.setLeftTrack(tc10);
 			tc8s3.setRightTrack(tc9);
 			tc8s3.setExtraTrack(tc16);
@@ -414,10 +416,10 @@ public final class ScenarioMaker {
 
 			Train train = new Train(1, tc1, tc6, Direction.right);
 			scenario.addTrain(train);
-			
+
 //			Train train2 = new Train(2, tc14, tc1, Direction.left);
 //			scenario.addTrain(train2);
-			
+
 //			Train train3 = new Train(3, tc15, tc16, Direction.left);
 //			scenario.addTrain(train3);
 
@@ -468,7 +470,7 @@ public final class ScenarioMaker {
 
 			return tc1;
 		}
-		
+
 		case 3: {
 			TrackSection tc1, tc2, tc5, tc6, tc11, tc14, tc15, tc16,tc18;
 			Switch tc3s1, tc4s2, tc12s5, tc13s6,tc17s7;
@@ -506,23 +508,23 @@ public final class ScenarioMaker {
 
 			tc16 = new TrackSection(16,null,tc11);
 			tc11.setLeftTrack(tc16);
-			
+
 			tc17s7 = new Switch(17, 7, null, tc16, Direction.right, Direction.right, tc3s1);
 			tc3s1.setExtraTrack(tc17s7);
 			tc16.setLeftTrack(tc17s7);
 
 			tc18 = new TrackSection(18,"B",false,tc17s7);
 			tc17s7.setLeftTrack(tc18);
-//			
+//
 			Train train = new Train(1, tc1, tc6, Direction.right);
 			scenario.addTrain(train);
 
 			Train train2 = new Train(2, tc15, tc18, Direction.left);
 			scenario.addTrain(train2);
-			
+
 			Train train3 = new Train(3, tc14, tc1, Direction.left);
 			scenario.addTrain(train3);
-			
+
 			Signal sig1 = new Signal(0, tc2, tc3s1, Direction.left);
 			Signal sig2 = new Signal(1, tc15, tc13s6, Direction.right);
 //			Signal sig3 = new Signal(2, tc18, tc17s7, Direction.left);
@@ -554,7 +556,7 @@ public final class ScenarioMaker {
 			scenario.addSignal(sig2);
 //			scenario.addSignal(sig3);
 			scenario.addSignal(sig4);
-			
+
 
 			return tc1;
 		}
@@ -595,23 +597,23 @@ public final class ScenarioMaker {
 
 			tc16 = new TrackSection(16,null,tc11);
 			tc11.setLeftTrack(tc16);
-			
+
 			tc17s7 = new Switch(17, 7, null, tc16, Direction.right, Direction.right, tc3s1);
 			tc3s1.setExtraTrack(tc17s7);
 			tc16.setLeftTrack(tc17s7);
 
 			tc18 = new TrackSection(18,"B",false,tc17s7);
 			tc17s7.setLeftTrack(tc18);
-//			
+//
 			Train train = new Train(1, tc1, tc6, Direction.right);
 			scenario.addTrain(train);
 
 			Train train2 = new Train(2, tc15, tc18, Direction.left);
 			scenario.addTrain(train2);
-			
+
 			Train train3 = new Train(3, tc14, tc1, Direction.left);
 			scenario.addTrain(train3);
-			
+
 			Signal sig1 = new Signal(0, tc2, tc3s1, Direction.left);
 			Signal sig2 = new Signal(1, tc15, tc13s6, Direction.right);
 //			Signal sig3 = new Signal(2, tc18, tc17s7, Direction.left);
@@ -643,7 +645,7 @@ public final class ScenarioMaker {
 			scenario.addSignal(sig2);
 //			scenario.addSignal(sig3);
 			scenario.addSignal(sig4);
-			
+
 
 			return tc1;
 		}
@@ -684,23 +686,23 @@ public final class ScenarioMaker {
 
 			tc16 = new TrackSection(16,null,tc11);
 			tc11.setLeftTrack(tc16);
-			
+
 			tc17s7 = new Switch(17, 7, null, tc16, Direction.right, Direction.right, tc3s1);
 			tc3s1.setExtraTrack(tc17s7);
 			tc16.setLeftTrack(tc17s7);
 
 			tc18 = new TrackSection(18,"B",false,tc17s7);
 			tc17s7.setLeftTrack(tc18);
-//			
+//
 			Train train = new Train(1, tc18, tc15, Direction.right);
 			scenario.addTrain(train);
 
 			Train train2 = new Train(2, tc15, tc18, Direction.left);
 			scenario.addTrain(train2);
-//			
+//
 //			Train train3 = new Train(3, tc14, tc1, Direction.left);
 //			scenario.addTrain(train3);
-			
+
 //			Signal sig1 = new Signal(0, tc2, tc3s1, Direction.left);
 			Signal sig2 = new Signal(1, tc15, tc13s6, Direction.right);
 			Signal sig3 = new Signal(2, tc18, tc17s7, Direction.left);
@@ -738,14 +740,14 @@ public final class ScenarioMaker {
 			scenario.addSignal(sig4);
 			scenario.addSignal(sig5);
 			scenario.addSignal(sig6);
-			
+
 
 			return tc1;
 		}
 		case 6: {
 			TrackSection tc0, tc1, tc2,tc35, tc5, tc6, tc11, tc14, tc15, tc17,tc18;
 			Switch tc3s1, tc4s2, tc12s5, tc13s6,tc16s7;
-			
+
 			tc0 = new TrackSection(0, "A", false, null);
 
 			tc2 = new TrackSection(2);
@@ -760,7 +762,7 @@ public final class ScenarioMaker {
 			tc4s2 = new Switch(4, 2, tc3s1, null, Direction.right, Direction.left, null);
 			tc4s2.setLeftTrack(tc3s1);
 			tc3s1.setRightTrack(tc4s2);
-			
+
 			tc35 = new TrackSection(35, tc3s1, tc4s2);
 			tc3s1.setRightTrack(tc35);
 			tc4s2.setLeftTrack(tc35);
@@ -786,20 +788,20 @@ public final class ScenarioMaker {
 
 			tc16s7 = new Switch(16, 7, null, tc11, Direction.left, Direction.left, tc3s1);
 			tc11.setLeftTrack(tc16s7);
-			
+
 			tc17 = new TrackSection(17, null, tc16s7);
 			tc3s1.setExtraTrack(tc17);
 			tc16s7.setLeftTrack(tc17);
 
 			tc18 = new TrackSection(18,"B",false,tc17);
 			tc17.setLeftTrack(tc18);
-//			
+//
 			Train train = new Train(1, tc1, tc15, Direction.right);
 			scenario.addTrain(train);
 
 			Train train2 = new Train(2, tc14, tc18, Direction.left);
 			scenario.addTrain(train2);
-			
+
 			Signal sig1 = new Signal(0, tc1, tc2, Direction.left);
 			Signal sig2 = new Signal(1, tc15, tc13s6, Direction.right);
 			Signal sig3 = new Signal(2, tc18, tc17, Direction.left);
@@ -833,11 +835,11 @@ public final class ScenarioMaker {
 			scenario.addSignal(sig2);
 			scenario.addSignal(sig3);
 			scenario.addSignal(sig4);
-			
+
 
 			return tc1;
 		}
-		
+
 		default: {
 			TrackSection start, middle, upRightEnd, middle2, end, newEnd, newEnd2;
 			Switch s1, s2;

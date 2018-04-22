@@ -1,6 +1,5 @@
 package grzegorz.rail.model;
 
-import grzegorz.rail.model.SolutionCmd.CommandType;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
