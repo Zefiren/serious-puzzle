@@ -110,15 +110,15 @@ public final class ScenarioMaker {
 
 			Train train = new Train(0, tc1, tc12, Direction.right);
 			Train train2 = new Train(1, tc11, tc9, Direction.left);
-			Train train3 = new Train(2, tc12, tc8, Direction.left);
+//			Train train3 = new Train(2, tc12, tc8, Direction.left);
 			scenario.addTrain(train);
 			scenario.addTrain(train2);
-			scenario.addTrain(train3);
+//			scenario.addTrain(train3);
 
 			Signal sig1 = new Signal(0, tc3, tc4s1, Direction.left);
 			// Signal sig2 = new Signal(1, tc5, tc4s1, Direction.right);
 			Signal sig3 = new Signal(2, tc11, tc10s3, Direction.right);
-			// Signal sig4 = new Signal(3, tc12, tc10s3, Direction.right);
+//			 Signal sig4 = new Signal(3, tc12, tc10s3, Direction.right);
 
 			List<TrackSection> tracks = new ArrayList<TrackSection>();
 			List<Signal> signals = new ArrayList<Signal>();
@@ -136,10 +136,10 @@ public final class ScenarioMaker {
 			tracks.add(tc12);
 
 			signals.add(sig1);
-			// signals.add(sig2);
+//			 signals.add(sig4);
 			signals.add(sig3);
 			scenario.addSignal(sig1);
-			// scenario.addSignal(sig2);
+//			 scenario.addSignal(sig4);
 			scenario.addSignal(sig3);
 
 			return tc1;
