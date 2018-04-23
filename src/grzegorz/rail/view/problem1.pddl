@@ -33,20 +33,6 @@
         (sigDef s0)
         (sigDef s2)
 
-<<<<<<< Updated upstream
-        (trackBlock tc9 b0)
-        (trackBlock tc10 b0)
-        (trackBlock tc1 b2)
-        (trackBlock tc12 b0)
-        (trackBlock tc8 b0)
-        (trackBlock tc3 b2)
-        (trackBlock tc4 b0)
-        (trackBlock tc5 b0)
-        (trackBlock tc2 b2)
-        (trackBlock tc7 b0)
-        (trackBlock tc6 b0)
-        (trackBlock tc11 b1)
-=======
         (trackBlock tc7 b0)
         (trackBlock tc6 b0)
         (trackBlock tc1 b2)
@@ -59,7 +45,6 @@
         (trackBlock tc3 b2)
         (trackBlock tc10 b0)
         (trackBlock tc8 b0)
->>>>>>> Stashed changes
 
         (safeBlock b0)
         (safeBlock b1)
