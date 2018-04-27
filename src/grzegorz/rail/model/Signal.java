@@ -1,4 +1,4 @@
-package railwayPlanning;
+package grzegorz.rail.model;
 
 public class Signal extends Interactable<Signal>{
 
@@ -6,17 +6,16 @@ public class Signal extends Interactable<Signal>{
 	private TrackSection signalTC;
 	private TrackSection protectingTC;
 	private boolean isClear;
-	private boolean directionLeft;
+	private Direction direction;
 
-//	private SignalGraphic signalGraphic;
 
-	public Signal(int id, TrackSection signalTC, TrackSection protectingTC, boolean facingLeft) {
+	public Signal(int id, TrackSection signalTC, TrackSection protectingTC, Direction direction) {
 		super();
 		this.setId(id);
 		this.setSignalTC(signalTC);
 		this.setProtectingTC(protectingTC);
-		this.setDirectionLeft(facingLeft);
-//		signalGraphic = new SignalGraphic(50, facingLeft);
+		this.setDirection(direction);
+		signalTC.setSignal(direction, this);
 	}
 
 	public int getId() {
@@ -51,14 +50,15 @@ public class Signal extends Interactable<Signal>{
 		this.isClear = isClear;
 	}
 
-	public boolean isFacingLeft() {
-		return directionLeft;
+	public Direction getDirection() {
+		return direction;
 	}
 
-	public void setDirectionLeft(boolean directionLeft) {
-		this.directionLeft = directionLeft;
+	public void setDirection(Direction direction) {
+		this.direction = direction;
 	}
 
+	@Override
 	public Signal getInteractable() {
 		// TODO Auto-generated method stub
 		return this;

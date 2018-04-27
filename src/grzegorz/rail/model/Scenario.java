@@ -1,4 +1,4 @@
-package railwayPlanning;
+package grzegorz.rail.model;
 
 import java.awt.Point;
 import java.util.ArrayList;
@@ -12,6 +12,10 @@ public class Scenario {
 
 	private Map<Point,TrackSection> trackLayout = new HashMap<Point, TrackSection>();
 	private Map<TrackSection,Signal> signals = new HashMap<TrackSection, Signal>();
+	public Map<TrackSection, Signal> getSignals() {
+		return signals;
+	}
+
 	private List<Train> trains = new ArrayList<Train>();
 	private int width;
 	private int height;
