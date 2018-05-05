@@ -1,0 +1,172 @@
+﻿(define (domain domain1)
+    (:requirements
+        :strips
+        :typing
+        :equality
+        :conditional-effects
+    )
+    
+    (:types
+        veh loc block sig sigItem
+    )
+
+    (:constants
+        DANGER CLEAR - sig
+    )
+    (:predicates
+        (train ?t - veh)
+        (tc ?tc - loc)
+        (block ?bl - block)
+        (sigDef ?si - sigItem )
+        
+        (switch ?tc_switch - loc ?tc_1 - loc ?tc_2 - loc ?tc_set - loc)
+        (signal ?siDef - sigItem ?tc_in - loc ?tc_into - loc ?bl_into - block ?si - sig )
+        (track ?tc1 - loc ?tc2 - loc)
+        (trackBlock ?tc - loc ?bl - block)
+        
+        (at  ?x - veh ?l - loc)
+        (last  ?x - veh ?l - loc)
+        (inBlock ?t - veh ?bl - block)
+        (crash ?t - veh)
+        (fullBlock ?bl)
+        (safeBlock ?bl)
+    )
+
+    (:action drive
+        :parameters 
+            (
+                ?t - veh 
+                ?c1 - loc 
+                ?c2 - loc 
+                ?c3 - loc 
+                ?bl_cur - block
+                ?bl_into - block
+                ?si - sigItem
+                ?sigShow - sig
+            )
+        :precondition 
+            (and
+                (train ?t)
+                (not (crash ?t))
+                (tc ?c1)
+                (tc ?c2)
+                (at ?t ?c1)
+                
+                (trackBlock ?c1 ?bl_cur)
+                (trackBlock ?c2 ?bl_into)
+                (inBlock ?t ?bl_cur)
+                (fullBlock ?bl_cur)
+                ; (signal ?si ?c1 ?c2 ?bl_into ?sigShow)
+                (forall (?x - sigItem)
+                    (and 
+                        (not (signal ?x ?c1 ?c2 ?bl_into DANGER))
+                    )
+                )
+                (last ?t ?c3)
+                (not (last ?t ?c2))
+                (or                
+                    (track ?c1 ?c2)
+                    (track ?c2 ?c1)
+                )
+            )
+        :effect 
+            (and
+                (at ?t ?c2)
+                (not (at ?t ?c1))
+                (not (inBlock ?t ?bl_cur))
+                (inBlock ?t ?bl_into)
+                (not (fullBlock ?bl_cur))
+                (fullBlock ?bl_into)
+                
+                (last ?t ?c1)
+                (not (last ?t ?c3))
+                (forall (?z - veh ?x - loc)
+                    (when (and (not (= ?t ?z)) (at ?z ?x) (or (= ?c1 ?x)) )
+                        (and
+                            (crash ?t)
+                            (crash ?z)
+                        )
+
+                    )
+                )
+                
+            )
+    )
+    (:action set-signal
+        :parameters 
+            (
+                ?tc - loc 
+                ?tc_into - loc 
+                ?bl - block 
+                ?si - sigItem
+                ?sigShow - sig
+            )
+        :precondition 
+            (and
+                (signal ?si ?tc ?tc_into ?bl ?sigShow)
+                (not (fullBlock ?bl))
+            )
+        :effect 
+            (and
+                (when (and (= ?sigShow DANGER) (safeBlock ?bl)  )
+                    (and 
+                        (not (signal ?si ?tc ?tc_into ?bl DANGER))
+                        (signal ?si ?tc ?tc_into ?bl CLEAR)
+                        (not (safeBlock ?bl))
+                    )
+                )
+                (when (= ?sigShow CLEAR)
+                    (and 
+                        (not (signal ?si ?tc ?tc_into ?bl CLEAR))
+                        (signal ?si ?tc ?tc_into ?bl DANGER)
+                        (safeBlock ?bl)
+                    )
+                )
+            )
+
+    )
+    
+    (:action set-switch
+        :parameters 
+            (
+                ?tc - loc 
+                ?tc_s1 - loc 
+                ?tc_s2 - loc 
+                ?tc_set - loc
+            )
+        :precondition 
+            (and
+                (tc ?tc)
+                (tc ?tc_s1)
+                (tc ?tc_s2)
+                (tc ?tc_set)
+                (switch ?tc ?tc_s1 ?tc_s2 ?tc_set)
+                (or 
+                    (track ?tc ?tc_set)
+                    (track ?tc_set ?tc)
+                )
+            )
+        :effect 
+            (and
+                (when (= ?tc_s1 ?tc_set)
+                    (and
+                        (switch ?tc ?tc_s1 ?tc_s2 ?tc_s2)
+                        (not (switch ?tc ?tc_s1 ?tc_s2 ?tc_set))
+                        (track ?tc ?tc_s2)
+                        (not (track ?tc ?tc_s1))
+                        (not (track ?tc_s1 ?tc ))
+                    )
+                )
+                
+                (when (= ?tc_s2 ?tc_set)
+                    (and
+                        (switch ?tc ?tc_s1 ?tc_s2 ?tc_s1)
+                        (not (switch ?tc ?tc_s1 ?tc_s2 ?tc_set))
+                        (track ?tc ?tc_s1)
+                        (not (track ?tc ?tc_s2))
+                        (not (track ?tc_s2 ?tc ))
+                    )
+                )
+            )
+    )   
+)
